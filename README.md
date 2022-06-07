@@ -31,7 +31,7 @@ Converter uma posição de xadrez num tabuleiro real para a notação FEN consis
 7. Aplicar algoritmo morfológico de detecão de linhas retas menores (casas) para distinguir das peças (linhas curvas).
 8. Remover cor das peças para considerar apenas o formato das mesmas.
 9. Utilizar o algoritmo de machine learning para determinar a probabilidade de cada peça.
-10. A partir dos resultados do passo 9, eliminar possibilidades restritas (ver [Limitações](## Limitações))
+10. A partir dos resultados do passo 9, eliminar possibilidades restritas (ver [Limitações](##Limitações))
 11. Aplicar threshold na foto do passo 6 para determinar cores das casas e das peças.
 12. Juntar as informações do passo 10 e 11 para determinar a posição completa do tabuleiro.
 13. Converter informação do programa para a notação FEN.
