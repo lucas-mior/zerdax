@@ -5,13 +5,14 @@
 [Notação FEN](https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation)
 
 ## Projetos semelhantes
-1. [chess_recongition](https://github.com/estebanuri/chess_recongition)
-2. [chessboard-recognizer](https://github.com/linrock/chessboard-recognizer)
-3. [Chess-Board-Recognition](https://github.com/DavidDavidsonDK/Chess-Board-Recognition)
-4. [ChessBoardRecognition](https://github.com/aKostic91/ChessBoardRecognition)
-5. [Chess-Board-Recognition](https://github.com/SukritGupta17/Chess-Board-Recognition)
-6. [chess-cheat](https://github.com/GabrieleMaurina/chess-cheat)
-7. [neural-chessboard](https://github.com/maciejczyzewski/neural-chessboard)
-8. [project_MYM](https://github.com/andrewleeunderwood/project_MYM)
-9. [chessboard2fen](https://github.com/aelmiger/chessboard2fen)
-10. [Chessboard-Importer](https://github.com/LuQ232/Chessboard-Importer)
+1. [estebanuri - chess_recongition](https://github.com/estebanuri/chess_recongition) - Detector de tabuleiro em foto de tela
+2. [linrock - chessboard-recognizer](https://github.com/linrock/chessboard-recognizer) - Print de tabuleiro online para FEN
+3. [DavidDavidsonDK - Chess-Board-Recognition](https://github.com/DavidDavidsonDK/Chess-Board-Recognition)
+4. [aKostic91 - ChessBoardRecognition](https://github.com/aKostic91/ChessBoardRecognition)
+5. [SukritGupta17 - Chess-Board-Recognition](https://github.com/SukritGupta17/Chess-Board-Recognition) - Reconhecedor de foto de tabuleiro escrito em matlab
+6. [GabrieleMaurina - chess-cheat](https://github.com/GabrieleMaurina/chess-cheat) - Reconhecedor de tabuleiro online para trapacear baseado no tensorflow_chessbot
+7. [Elucidation - tensorflow_chessbot](https://github.com/Elucidation/tensorflow_chessbot) - Predicts chessboards layouts from online chessboard screenshots
+8. [maciejczyzewski - neural-chessboard](https://github.com/maciejczyzewski/neural-chessboard) - Detector de tabuleiro a partir de foto
+9. [andrewleeunderwood - project_MYM](https://github.com/andrewleeunderwood/project_MYM) - Reconhecedor de foto de tabuleiro
+10. [aelmiger - chessboard2fen](https://github.com/aelmiger/chessboard2fen) - Reconhecedor a partir de vídeo de tabuleiro durante o jogo
+11. [LuQ232 - Chessboard-Importer](https://github.com/LuQ232/Chessboard-Importer) - Aplicativo completo
