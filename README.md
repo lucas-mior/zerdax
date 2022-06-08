@@ -15,9 +15,9 @@ Atualmente, algumas restrições são feitas para garantir o funcionamento:
     * 1 bispo de casas escuras
     * 3 cavalos
     * 8 peões
-- É ignorada a possibilidade de *en passant*.
 - O usuário possívelmente terá de efetuar pequenos ajustes na posição
-encontrada, uma vez que o algoritmo não é perfeito. 
+encontrada, uma vez que o algoritmo não é perfeito.
+Também será necessário especificar possibilidade de roque e *en passant*, assim como qual jogador está na vez.
 Pode-se usar o lichess: https://lichess.org/editor
 
 ## Descrição do algoritmo
