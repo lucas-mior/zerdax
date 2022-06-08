@@ -33,6 +33,6 @@ Converter uma posição de xadrez num tabuleiro real para a notação FEN consis
 8. Remover cor das peças para considerar apenas o formato das mesmas.
 9. Utilizar o algoritmo de machine learning para determinar a probabilidade de cada peça.
 10. Aplicar threshold na foto do passo 6 para determinar cores das casas e das peças.
-11. A partir dos resultados dos passos 9 e 10, eliminar possibilidades restritas (ver [Limitações](##Limitações))
+11. A partir dos resultados dos passos 9 e 10, eliminar possibilidades restritas (ver [Limitações](#Limitações))
 12. Juntar as informações dos passos 10 e 11 para determinar a posição completa do tabuleiro.
 13. Converter informação do programa para a notação FEN.
