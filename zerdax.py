@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 def Main():
     print("Zerdax")
 
