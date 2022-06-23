@@ -16,3 +16,4 @@
 9. [andrewleeunderwood - project_MYM](https://github.com/andrewleeunderwood/project_MYM) - Reconhecedor de foto de tabuleiro
 10. [aelmiger - chessboard2fen](https://github.com/aelmiger/chessboard2fen) - Reconhecedor a partir de vídeo de tabuleiro durante o jogo
 11. [LuQ232 - Chessboard-Importer](https://github.com/LuQ232/Chessboard-Importer) - Aplicativo completo
+12. [gkao123 - Chess-Piece-and-Board-Recognition](https://github.com/gkao123/Chess-Piece-and-Board-Recognition)
