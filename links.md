@@ -23,10 +23,10 @@
 
 ## Artigos
 
-Referente ao projeto 12 - https://digitalcommons.calpoly.edu/cgi/viewcontent.cgi?article=1617&context=eesp
-Referente ao projeto 9 - https://towardsdatascience.com/board-game-image-recognition-using-neural-networks-116fc876dafa
+- Referente ao projeto 12 - https://digitalcommons.calpoly.edu/cgi/viewcontent.cgi?article=1617&context=eesp
+- Referente ao projeto 9 - https://towardsdatascience.com/board-game-image-recognition-using-neural-networks-116fc876dafa
 
 ## Datasets
-Dataset 1 - https://osf.io/xf3ka/wiki/home/
-Dataset 2 - https://public.roboflow.com/object-detection/chess-full
-Dataset 3 - https://github.com/andrewleeunderwood/project_MYM
+- Dataset 1 - https://osf.io/xf3ka/wiki/home/
+- Dataset 2 - https://public.roboflow.com/object-detection/chess-full
+- Dataset 3 - https://github.com/andrewleeunderwood/project_MYM
