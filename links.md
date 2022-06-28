@@ -13,8 +13,7 @@
 6. [GabrieleMaurina - chess-cheat](https://github.com/GabrieleMaurina/chess-cheat) - Reconhecedor de tabuleiro online para trapacear baseado no tensorflow_chessbot
 7. [Elucidation - tensorflow_chessbot](https://github.com/Elucidation/tensorflow_chessbot) - Predicts chessboards layouts from online chessboard screenshots
 8. [maciejczyzewski - neural-chessboard](https://github.com/maciejczyzewski/neural-chessboard) - Detector de tabuleiro a partir de foto
-9. [andrewleeunderwood - project_MYM]([https://github.com/andrewleeunderwood/project_MYM
-](https://github.com/andrewleeunderwood/project_MYM)) - Reconhecedor de foto de tabuleiro
+9. [andrewleeunderwood - project_MYM](https://github.com/andrewleeunderwood/project_MYM) - Reconhecedor de foto de tabuleiro
 10. [aelmiger - chessboard2fen](https://github.com/aelmiger/chessboard2fen) - Reconhecedor a partir de vídeo de tabuleiro durante o jogo
 11. [LuQ232 - Chessboard-Importer](https://github.com/LuQ232/Chessboard-Importer) - Aplicativo completo
 12. [gkao123 - Chess-Piece-and-Board-Recognition](https://github.com/gkao123/Chess-Piece-and-Board-Recognition) -
