@@ -27,7 +27,7 @@
 \usepackage{fancyhdr} %pagenumber top right
 \fancyhf{}
 \fancyheadoffset{0cm}
-\renewcommand{\headrulewidth}{0pt} 
+\renewcommand{\headrulewidth}{0pt}
 \renewcommand{\footrulewidth}{0pt}
 \fancyhead[R]{\thepage}
 \fancypagestyle{plain}{%
@@ -48,7 +48,7 @@
 \input{/home/lucas/docs/latex/hyper}
 
 \hypersetup{
-    pdftitle={Detecção e Reconhecimento de Peças e Posições 
+    pdftitle={Detecção e Reconhecimento de Peças e Posições
     em um Tabuleiro de Xadrez},
     pdfkeywords={Xadrez} {Zerdax} {Machine Learning} {Computer Vision},
     % pdftitle={My title},          % title
@@ -117,9 +117,24 @@
 
 \pagestyle{plain}
 \section{Introdução} % revisão bibliográfica, justificativa e objetivos
-Identificar, através de uma foto, peças de xadrez e sua localização em um tabuleiro não é tarefa fácil, nem rápida. Mesmo para humanos, de acordo com a distância e ângulo com a qual se vê um tabuleiro, é possível se confundir. Porém, esta é uma atividade recorrente entre a comunidade enxadrística. Por vezes, durante uma partida, é interessante gravar uma determinada posição crítica para posterior avaliação (possivelmente, utilizando computadores).
-Durante torneios, as transmissões precisam, de alguma forma, conhecer a posição atual para informar aos narradores e telespectadores. Além disso, torneios oficiais (especialmente aqueles realizados em países mais pobres como o Brasil), nem sempre contam com um tabuleiro capaz de determinar a localização de cada peça automaticamente. Sem este tabuleiro, é necessário inferir a posição manualmente.
-Este projeto propõe uma solução para esses problemas. O programa seria muito útil se utilizado, por exemplo, em um smartphone, onde o usuário poderia utilizar a saída (notação FEN da posição) como entrada de um programa de avaliação de melhores lances, como o Stockfish, por exemplo, ou mesmo realizar pequenos ajustes devido a erros de predição do modelo.
+Identificar, através de uma foto,
+peças de xadrez e sua localização em um tabuleiro não é tarefa fácil, nem rápida.
+Mesmo para humanos, de acordo com a distância e ângulo com a qual se vê um tabuleiro,
+é possível se confundir.
+Porém, esta é uma atividade recorrente entre a comunidade enxadrística.
+Por vezes, durante uma partida,
+é interessante gravar uma determinada posição crítica para posterior avaliação
+(possivelmente, utilizando computadores).
+Durante torneios, as transmissões precisam, de alguma forma,
+conhecer a posição atual para informar aos narradores e telespectadores.
+Além disso, torneios oficiais (especialmente aqueles realizados em países mais pobres como o Brasil),
+nem sempre contam com um tabuleiro capaz de determinar a localização de cada peça automaticamente.
+Sem este tabuleiro, é necessário inferir a posição manualmente.
+Este projeto propõe uma solução para esses problemas.
+O programa seria muito útil se utilizado, por exemplo, em um smartphone,
+onde o usuário poderia utilizar a saída
+(notação FEN da posição) como entrada de um programa de avaliação de melhores lances,
+como o Stockfish, por exemplo, ou mesmo realizar pequenos ajustes devido a erros de predição do modelo.
 
 \vspace{0.3in}
 \setlength{\parindent}{0in}
@@ -142,12 +157,17 @@ A partir da importação de uma foto nas seguintes condições:
 
 \begin{enumerate}
     \item{O tabuleiro ocupando a maior parte da foto}
-    \item{A ângulo da câmera em aproximadamente 30° do chão, o suficiente para visualizar o perfil das peças, sem que haja muita sobreposição}
-    \item{Peças de plástico ou madeira, ambos com um nível baixo ou moderado de reflexão no tabuleiro, de acordo aos datasets em posse.}
+    \item{A ângulo da câmera em aproximadamente 30° do chão,
+          o suficiente para visualizar o perfil das peças, sem que haja muita sobreposição}
+    \item{Peças de plástico ou madeira, ambos com um nível baixo ou moderado de reflexão no tabuleiro,
+          de acordo aos datasets em posse.}
 \end{enumerate}
 
-O sistema deverá ser capaz de reconhecer e segmentar a superfície do tabuleiro, segmentar as casas deste, detectar peças então classificá-las com o uso de redes neurais convolucionais profundas. 
-Após cruzar as peças com suas respectivas casas, o programa fornecerá em notação FEN uma string ou uma URL da partida de xadrez no lichess.
+O sistema deverá ser capaz de reconhecer e segmentar a superfície do tabuleiro,
+segmentar as casas deste, detectar peças,
+então classificá-las com o uso de redes neurais convolucionais profundas.
+Após cruzar as peças com suas respectivas casas,
+o programa fornecerá em notação FEN uma string ou uma URL da partida de xadrez no lichess.
 
 Três desafios nortearão o desenvolvimento do projeto:
 
@@ -157,12 +177,21 @@ Três desafios nortearão o desenvolvimento do projeto:
     \item{Detecção das peças}
 \end{enumerate}
 
-As primeiras duas etapas serão atingidas por técnicas de Visão Computacional (CV), enquanto a última, por meio de machine learning.
+As primeiras duas etapas serão atingidas por técnicas de Visão Computacional (CV),
+enquanto a última, por meio de machine learning.
 
 \subsection{Computer Vision}
 
-A primeira coisa a ser feita com as imagens fornecidas ao sistema, seja para treino ou teste, é filtrá-las para garantir seu melhor aproveitamento.
-A princípio, a segmentação do tabuleiro, determinação das cores (das casas e peças) e determinação da localização das casas e posição das peças será feita utilizando técnicas tradicionais de processamento de imagem, como equalização de histograma, detecção de borda, threshold, morfologia etc. O objetivo principal da etapa de CV é obter as melhores segmentações a serem usadas pela rede neural que será encarregada de reconhecer as peças. Inclusive, a ser definido, existe a possibilidade de o reconhecimento de peças ser feito utilizando apenas a forma das peças, desconsiderando as cores.
+A primeira coisa a ser feita com as imagens fornecidas ao sistema,
+seja para treino ou teste, é filtrá-las para garantir seu melhor aproveitamento.
+A princípio, a segmentação do tabuleiro,
+determinação das cores (das casas e peças) e determinação da localização das casas e posição das peças
+será feita utilizando técnicas tradicionais de processamento de imagem,
+como equalização de histograma, detecção de borda, threshold, morfologia etc.
+O objetivo principal da etapa de CV é obter as melhores segmentações a serem usadas pela rede neural
+que será encarregada de reconhecer as peças.
+Inclusive, a ser definido, existe a possibilidade de o reconhecimento de peças ser feito utilizando apenas a forma das peças,
+desconsiderando as cores.
 
 \begin{figure}[h!]
 \centering
@@ -172,32 +201,34 @@ A princípio, a segmentação do tabuleiro, determinação das cores (das casas 
 \end{figure}
 
 Esta fatia do projeto será elaborada na disciplina de Projeto Nível I em Controle e Processamento de Sinais,
-com o apoio do colega Lucas Budde Mior e do professor Joceli Meyer. 
-O terceiro integrante, Lucas, é aluno de engenharia elétrica, já possui uma experiência prévia com processamento de imagens, 
-porém não teve a oportunidade de se interar com Machine Learning. 
-Esta parte, portanto, ficará a cargo dos alunos Alexandre e Vítor.
+com o apoio do professor Joceli Meyer.
 
 \subsection{Machine Learning}
 
 \subsubsection{Datasets}
 
-Foi dada atenção especial ao conjunto de dados, pois boa parte do resultado deste projeto dependerá deste. Após vasta pesquisa no Google, foram encontrados alguns datasets interessantes:
+Foi dada atenção especial ao conjunto de dados,
+pois boa parte do resultado deste projeto dependerá deste.
+Após vasta pesquisa no Google, foram encontrados alguns datasets interessantes:
 
 \begin{enumerate}
-    \item{Dataset of Rendered Chess Game State Images – 
-          \textbf{4888} imagens renderizadas, com informações ricas em json sobre: bordas do tabuleiro, nome das peças, posições, ângulo de câmera, iluminação etc. 
+    \item{Dataset of Rendered Chess Game State Images –
+          \textbf{4888} imagens renderizadas, com informações ricas em json sobre: bordas do tabuleiro, nome das peças, posições, ângulo de câmera, iluminação etc.
                         Disponível em: \url{https://osf.io/xf3ka/}}
-    \item{Chess Pieces Dataset – 
-          \textbf{289} fotografias de um tabuleiro, tiradas do mesmo ângulo já rotulado. Diversas informações 
+    \item{Chess Pieces Dataset –
+          \textbf{289} fotografias de um tabuleiro, tiradas do mesmo ângulo já rotulado. Diversas informações
                         Disponível em: \url{https://public.roboflow.com/object-detection/chess-full/}}
-    \item{Make Your Move Dataset – 
-          \textbf{7} fotografias de um tabuleiro, obtidas a partir de um projeto do Github. 
+    \item{Make Your Move Dataset –
+          \textbf{7} fotografias de um tabuleiro, obtidas a partir de um projeto do Github.
                         Disponível em: \url{https://github.com/andrewleeunderwood/project\_MYM}}
 \end{enumerate}
 
-Há um severo desbalanço na quantidade de imagens nos Datasets. Portanto, o Dataset 1 provavelmente não será utilizado completamente, até mesmo por limitações de processamento (+7GB de imagens).
+Há um severo desbalanço na quantidade de imagens nos Datasets.
+Portanto, o Dataset 1 provavelmente não será utilizado completamente,
+até mesmo por limitações de processamento (+7GB de imagens).
 
-No Dataset 2 serão aplicadas técnicas de Data Augmentation, como rotação, espelhamento ou mesmo variações de tom nas imagens.
+No Dataset 2 serão aplicadas técnicas de Data Augmentation,
+como rotação, espelhamento ou mesmo variações de tom nas imagens.
 
 \begin{figure}[h!]
 \centering
@@ -206,10 +237,14 @@ No Dataset 2 serão aplicadas técnicas de Data Augmentation, como rotação, es
 \label{fig:treino}
 \end{figure}
 
-O Dataset 3 provavelmente será utilizado apenas na etapa de avaliação do programa, aliado de outras figuras obtidas na internet e fotografadas pelos próprios projetistas.
+O Dataset 3 provavelmente será utilizado apenas na etapa de avaliação do programa,
+aliado de outras figuras obtidas na internet e fotografadas pelos próprios projetistas.
 Os Datasets 1 e 2 já são estão com suas bounding boxes anotadas e rotuladas.
-O primeiro possui um arquivo em .csv para cada imagem, com informações detalhadas sobre as características com que o 3d foi elaborado. Já o segundo é obtido a partir do RoboFlow, que permite download dos detalhes em diversos formatos.
-Roboflow é uma plataforma para machine learning que fornece gratuitamente alguns serviços como anotação de figuras, data augmentation, estatísticas sobre datasets, e até treinamento de modelos.
+O primeiro possui um arquivo em .csv para cada imagem,
+com informações detalhadas sobre as características com que o 3d foi elaborado.
+Já o segundo é obtido a partir do RoboFlow, que permite download dos detalhes em diversos formatos.
+Roboflow é uma plataforma para machine learning que fornece gratuitamente alguns serviços como anotação de figuras,
+data augmentation, estatísticas sobre datasets, e até treinamento de modelos.
 Provavelmente será utilizada na anotação de figuras não-rotuladas.
 Além disso, será necessário unificar o formato de anotação entre os datasets.
 Caso não seja encontrado um código pronto para estas conversões, os alunos criarão um algoritmo para tal.
@@ -219,8 +254,10 @@ Caso não seja encontrado um código pronto para estas conversões, os alunos cr
 Com os datasets analisados e organizados, é hora de treinar o modelo.
 Diversas condições de treinamento serão avaliadas, priorizando aquelas já abordadas pela literatura.
 Com um modelo treinado, será possível fornecer imagens para avaliação.
-A detecção e reconhecimento das peças se dará por meio do TensorFlow e suas APIs. No início, a imagem (filtrada) será encaminhada ao TensorFlow Object Detection que detectará as features na figura.
-Com as coordenadas das caixas delimitadores, as peças serão selecionadas e avaliadas no modelo, obtendo-se assim, a melhor estimativa para o rótulo daquela imagem.
+A detecção e reconhecimento das peças se dará por meio do TensorFlow e suas APIs.
+No início, a imagem (filtrada) será encaminhada ao TensorFlow Object Detection que detectará as features na figura.
+Com as coordenadas das caixas delimitadores,
+as peças serão selecionadas e avaliadas no modelo, obtendo-se assim, a melhor estimativa para o rótulo daquela imagem.
 
 \begin{figure}[h!]
 \centering
@@ -234,30 +271,57 @@ Com as coordenadas das caixas delimitadores, as peças serão selecionadas e ava
 A integração entre o mundo de inteligência artificial e visão computacional é uma etapa crucial deste projeto.
 Ela permitirá indicar em qual posição do tabuleiro cada uma das peças detectadas pelo TensorFlow pertence.
 Aqui, o conteúdo das caixas delimitadoras será segmentado com uso de computação visual, separando a peça do tabuleiro.
-Com apenas a área da peça em mãos, é possível verificar com qual casa há maior intersecção desta (por produto interno, por exemplo).
-Por que segmentar as peças, e não utilizar apenas a caixa como um todo? Pois de acordo com o ângulo no qual o tabuleiro se encontra, a maior parte da caixa pode ocupar outra posição, o que reduziria drasticamente a eficácia.
-De acordo com cor das casas nas "esquinas" do tabuleiro, é possível saber a direção onde os jogadores estão posicionados, porém muitas vezes não é possível aferir com certeza de qual lado cada um está baseado unicamente na distribuição das peças.
-Portanto, este projeto se propõe a fornecer duas posições considerando as duas possibilidades (lado das pretas e lado das brancas).
-Outras possibilidades para esse problema são: Restringir o usuário do sistema a utilizar fotos somente de um mesmo lado do tabuleiro, ou utilizar um software de avaliação de posição para determinar a posição mais provável (posições com grande vantagem para um jogador são mais improváveis).
+Com apenas a área da peça em mãos,
+é possível verificar com qual casa há maior intersecção desta (por produto interno, por exemplo).
+Por que segmentar as peças, e não utilizar apenas a caixa como um todo?
+Pois de acordo com o ângulo no qual o tabuleiro se encontra,
+a maior parte da caixa pode ocupar outra posição, o que reduziria drasticamente a eficácia.
+De acordo com cor das casas nas "esquinas" do tabuleiro,
+é possível saber a direção onde os jogadores estão posicionados,
+porém muitas vezes não é possível aferir com certeza de qual lado cada um está baseado unicamente na distribuição das peças.
+Portanto, este projeto se propõe a fornecer duas posições considerando as duas possibilidades
+(lado das pretas e lado das brancas).
+Outras possibilidades para esse problema são:
+Restringir o usuário do sistema a utilizar fotos somente de um mesmo lado do tabuleiro,
+ou utilizar um software de avaliação de posição para determinar a posição mais provável
+(posições com grande vantagem para um jogador são mais improváveis).
 
 \section{Ferramentas}
-Este projeto será desenvolvido na linguagem Python em Jupyter Notebooks, com o auxílio de diversas bibliotecas, principalmente: TensonFlow, Keras, OpenCV, Scikit-Image, Pandas, Matplotlib, entre outras.
-Para maior comodidade nos testes e garantia de cumprimento do prazo, os alunos se propõem a investir em acesso a computação em nuvem se necessário.
-Até o momento, a plataforma Google Cloud se mostrou mais atrativa por conceder 300 dólares de crédito para novos usuários, mas outras soluções poderão ser adotadas.
+Este projeto será desenvolvido na linguagem Python em Jupyter Notebooks,
+com o auxílio de diversas bibliotecas, principalmente:
+TensonFlow, Keras, OpenCV, Scikit-Image, Pandas, Matplotlib, entre outras.
+Para maior comodidade nos testes e garantia de cumprimento do prazo,
+os alunos se propõem a investir em acesso a computação em nuvem se necessário.
+Até o momento, a plataforma Google Cloud se mostrou mais atrativa por conceder 300 dólares de crédito para novos usuários,
+mas outras soluções poderão ser adotadas.
 
 \section{Projetos semelhantes}
-Durante a quarentena, a busca por xadrez aumentou vertiginosamente, este aumento de interesse se manifestou também nos desenvolvedores. Foram encontrados alguns projetos semelhantes ao nosso na internet. O mais interessante foi o de Maciej A. Czyzewski, Artur Laskowski, e Szymon Wasik. O algoritmo por eles desenvolvido obteve bons resultados:
+Durante a quarentena, a busca por xadrez aumentou vertiginosamente,
+este aumento de interesse se manifestou também nos desenvolvedores.
+Foram encontrados alguns projetos semelhantes ao nosso na internet.
+O mais interessante foi o de Maciej A. Czyzewski, Artur Laskowski, e Szymon Wasik.
+O algoritmo por eles desenvolvido obteve bons resultados:
 \cite{czy20}:
-\blockquote{The described method performs extraordinarily well and achieves an accuracy over 99.5\% for detecting chessboard lattice points (compared to the 74\% for the best alternative), 95\% (compared to 60\% for the best alternative) for positioning the chessboard in an image, and almost 95\% for chess piece recognition. (CZYZEWSKI; LASKOWSKI; WASIK; 2020)}
+\blockquote{The described method performs extraordinarily well and achieves an accuracy over
+            99.5\% for detecting chessboard lattice points (compared to the 74\% for the best alternative),
+            95\% (compared to 60\% for the best alternative) for positioning the chessboard in an image, and almost
+            95\% for chess piece recognition. (CZYZEWSKI; LASKOWSKI; WASIK; 2020)}
 
-A abordagem deles consiste em usar um mapa de calor para determinar a localização do tabuleiro na foto, detecção de linhas retas, algoritmo de determinação dos vértices, e uso de rede neural para reconhecer as peças.
-A maioria dos outros projetos semelhantes utilizaram datasets de apenas um tabuleiro, a proposta deste projeto é criar um modelo para auxiliar no reconhecimento de qualquer tabuleiro de xadrez.
-Além disso, nenhum dos projetos que se propôs a identificar fotografias de tabuleiros foi implementado com TensorFlow (maioria usou PyTorch).
-Outros programas também foram utilizados com foco em imagens de tabuleiros online ou de livros de xadrez, que pode auxiliar o desenvolvimento do algoritmo.
+A abordagem deles consiste em usar um mapa de calor para determinar a localização do tabuleiro na foto,
+detecção de linhas retas, algoritmo de determinação dos vértices, e uso de rede neural para reconhecer as peças.
+A maioria dos outros projetos semelhantes utilizaram datasets de apenas um tabuleiro,
+a proposta deste projeto é criar um modelo para auxiliar no reconhecimento de qualquer tabuleiro de xadrez.
+Além disso, nenhum dos projetos que se propôs a identificar fotografias de tabuleiros foi implementado com TensorFlow
+(maioria usou PyTorch).
+Outros programas também foram utilizados com foco em imagens de tabuleiros online ou de livros de xadrez,
+que pode auxiliar o desenvolvimento do algoritmo.
 
 \section{Avaliação do Modelo}
-O modelo será avaliado de acordo com a acurácia, serão analisadas as matrizes confusão de cada peça e é possível também gerar um heatmap com a matriz de probabilidades de engano entre as peças.
-Neste sentido, também se buscará ter uma noção para cada tipo de peça fazendo o uso de sua matriz confusão. Outra ferramenta utilizada será a matriz de correlação das probabilidades.
+O modelo será avaliado de acordo com a acurácia,
+serão analisadas as matrizes confusão de cada peça e é possível também gerar um
+heatmap com a matriz de probabilidades de engano entre as peças.
+Neste sentido, também se buscará ter uma noção para cada tipo de peça fazendo o uso de sua matriz confusão.
+Outra ferramenta utilizada será a matriz de correlação das probabilidades.
 
 \nocite{*}
 \printbibliography
