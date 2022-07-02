@@ -8,5 +8,14 @@ def full(image):
     print("algo.full: {}".format(image))
     cvcolor = cv2.imread(image)
     cvgray = cv2.cvtColor(cvcolor, cv2.COLOR_BGR2GRAY)
-    cv2.imwrite("{}.jpg".format(image), cvgray)
+
+    scale_percent = 25
+    width = int(cvgray.shape[1] * scale_percent / 100)
+    height = int(cvgray.shape[0] * scale_percent / 100)
+    dsize = (width, height)
+    cvres = cv2.resize(cvgray, dsize)
+
+    cv2.imwrite('resize.jpg', cvres) 
+    cv2.imwrite('gray.jpg', cvgray)
+
     return predicted_fen
