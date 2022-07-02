@@ -214,30 +214,30 @@ Após vasta pesquisa no Google, foram encontrados alguns datasets interessantes:
 \begin{enumerate}
     \item{Dataset of Rendered Chess Game State Images –
           \textbf{4888} imagens renderizadas, com informações ricas em json sobre: bordas do tabuleiro, nome das peças, posições, ângulo de câmera, iluminação etc.
-                        Disponível em: \url{https://osf.io/xf3ka/}}
+      Disponível em: \url{https://osf.io/xf3ka/}}\label{osf}
     \item{Chess Pieces Dataset –
           \textbf{289} fotografias de um tabuleiro, tiradas do mesmo ângulo já rotulado. Diversas informações
-                        Disponível em: \url{https://public.roboflow.com/object-detection/chess-full/}}
+      Disponível em: \url{https://public.roboflow.com/object-detection/chess-full/}}\label{roboflow}
     \item{Make Your Move Dataset –
           \textbf{7} fotografias de um tabuleiro, obtidas a partir de um projeto do Github.
-                        Disponível em: \url{https://github.com/andrewleeunderwood/project\_MYM}}
+      Disponível em: \url{https://github.com/andrewleeunderwood/project\_MYM}}\label{MYM}
 \end{enumerate}
 
 Há um severo desbalanço na quantidade de imagens nos Datasets.
-Portanto, o Dataset 1 provavelmente não será utilizado completamente,
+Portanto, o Dataset \ref{osf} provavelmente não será utilizado completamente,
 até mesmo por limitações de processamento (+7GB de imagens).
 
-No Dataset 2 serão aplicadas técnicas de Data Augmentation,
+No Dataset \ref{roboflow} serão aplicadas técnicas de Data Augmentation,
 como rotação, espelhamento ou mesmo variações de tom nas imagens.
 
 \begin{figure}[h!]
 \centering
   \includegraphics[width=\linewidth]{fig/treino.jpg}
-\caption{Exemplo de Treino (Dataset 1)}
+  \caption{Exemplo de Treino (Dataset \ref{osf})}
 \label{fig:treino}
 \end{figure}
 
-O Dataset 3 provavelmente será utilizado apenas na etapa de avaliação do programa,
+O Dataset \ref{MYM} provavelmente será utilizado apenas na etapa de avaliação do programa,
 aliado de outras figuras obtidas na internet e fotografadas pelos próprios projetistas.
 Os Datasets 1 e 2 já são estão com suas bounding boxes anotadas e rotuladas.
 O primeiro possui um arquivo em .csv para cada imagem,
@@ -262,7 +262,7 @@ as peças serão selecionadas e avaliadas no modelo, obtendo-se assim, a melhor 
 \begin{figure}[h!]
 \centering
   \includegraphics[width=\linewidth]{fig/delimitar.jpg}
-  \caption{Exemplo de caixas de delimitação nas peças (Dataset 2)}
+  \caption{Exemplo de caixas de delimitação nas peças (Dataset \ref{roboflow})}
 \label{fig:delimitar}
 \end{figure}
 
