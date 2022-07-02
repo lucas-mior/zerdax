@@ -188,17 +188,46 @@ A princípio, a segmentação do tabuleiro,
 determinação das cores (das casas e peças) e determinação da localização das casas e posição das peças
 será feita utilizando técnicas tradicionais de processamento de imagem,
 como equalização de histograma, detecção de borda, threshold, morfologia etc.
+
+\subsubsection{Segmentação do Tabuleiro}
+Uma abordagem possível para esse problema consiste no uso das seguintes técnicas:
+\begin{itemize}
+    \item{Determinar região provável que exista um tabuleiro de acordo com a frequência (Transformada de Fourier)}
+    \item{Utilizar algoritmo de Canny (ver figura \ref{fig:detector}) para detectar bordas}
+    \item{Obter cantos do tabuleiro e corrigir perspectiva}
+\end{itemize}
+
+\subsubsection{Determinação da localização das casas}
+Para dividir o tabuleiro em suas 64 casas,
+é possível utilizar a transformada \textit{Hough} para detectar intersecções das linhas do passo anterior.
+Selecionando as intersecções que formam um arranjo de 8 fileiras de 8 quadrados,
+obtemos a localização das casas.
+
+\begin{figure}[h!]
+\centering
+  \includegraphics[width=0.6\linewidth]{fig/detector.png}
+\caption{Exemplo de detector de bordas de Canny}
+\label{fig:detector}
+\end{figure}
+
+\subsubsection{Determinação das cores das casas e peças}
+Precisaremos escolher um limiar de separação.
+Para isso, filtraremos a imagem para remover pontos "fora da curva",
+e escolheremos se a casa é preta ou branca de acordo com os 4 níveis de amplitude esperados 
+(casa branca, casa preta, peça branca, peça preta).
+O reflexo causado por luzes incidentes nas peças pode atrapalhar esse processo,
+portanto tentaremos utilizar a melhor filtragem para isso.
+
+\subsubsection{Segmentação de Região com Peça}
+Essa parte envolve uma combinação dos resultados de localização das casas,
+com técnicas de reconhecimento de objetos.
+Pode-se usar técnicas de morfologia sobre as segmentações das casas,
+e combinar esse processo com técnicas de aprendizado de máquina que também reconhecem objetos.
+
 O objetivo principal da etapa de CV é obter as melhores segmentações a serem usadas pela rede neural
 que será encarregada de reconhecer as peças.
 Inclusive, a ser definido, existe a possibilidade de o reconhecimento de peças ser feito utilizando apenas a forma das peças,
 desconsiderando as cores.
-
-\begin{figure}[h!]
-\centering
-  \includegraphics[width=\linewidth]{fig/detector.png}
-\caption{Exemplo de detector de bordas de Canny}
-\label{fig:detector}
-\end{figure}
 
 Esta fatia do projeto será elaborada na disciplina de Projeto Nível I em Controle e Processamento de Sinais,
 com o apoio do professor Joceli Meyer.
@@ -232,7 +261,7 @@ como rotação, espelhamento ou mesmo variações de tom nas imagens.
 
 \begin{figure}[h!]
 \centering
-  \includegraphics[width=\linewidth]{fig/treino.jpg}
+  \includegraphics[width=0.8\linewidth]{fig/treino.jpg}
   \caption{Exemplo de Treino (Dataset \ref{osf})}
 \label{fig:treino}
 \end{figure}
@@ -261,7 +290,7 @@ as peças serão selecionadas e avaliadas no modelo, obtendo-se assim, a melhor 
 
 \begin{figure}[h!]
 \centering
-  \includegraphics[width=\linewidth]{fig/delimitar.jpg}
+  \includegraphics[width=0.7\linewidth]{fig/delimitar.jpg}
   \caption{Exemplo de caixas de delimitação nas peças (Dataset \ref{roboflow})}
 \label{fig:delimitar}
 \end{figure}
