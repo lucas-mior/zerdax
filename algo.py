@@ -8,9 +8,6 @@ def testes(cvgray):
     dsize = (width, height)
     cvres = cv2.resize(cvgray, dsize)
 
-    cvgauss = cv2.GaussianBlur(cvgray, [5,5], 0)
-    cvmedian = cv2.medianBlur(cvgray, 5)
-
     kernel = np.array([[-1.0, -1.0, 2.0], 
                        [-1.0, 2.0, -1.0],
                        [2.0, -1.0, -1.0]])
@@ -23,16 +20,23 @@ def testes(cvgray):
 
     cveq = cv2.equalizeHist(cvres)
 
-    for ts in range(1,16):
-        for cl in range(1,5):
-            clahe = cv2.createCLAHE(clipLimit=float(cl), tileGridSize=(ts,ts))
-            cvclahe = clahe.apply(cvgray)
-            cv2.imwrite('{}{}cvclahe.jpg'.format(ts, cl), cvclahe)
+    cvgauss = cv2.GaussianBlur(cvgray, [5,5], 0)
+    cvmedian = cv2.medianBlur(cvgray, 5)
+
+    ts = 5
+    cl = 2 
+    clahe = cv2.createCLAHE(clipLimit=float(cl), tileGridSize=(ts,ts))
+
+    cvclahe_before = clahe.apply(cvgray)
+    cvmedian = cv2.medianBlur(cvclahe_before, 5)
+    cvclahe_after = clahe.apply(cvmedian)
 
     # cv2.findChessboardCorners()
 
-    # cv2.imwrite('cvgauss.jpg', cvgauss)
+    cv2.imwrite('cvgauss.jpg', cvgauss)
     cv2.imwrite('cvmedian.jpg', cvmedian)
+    cv2.imwrite('cvclahe_aftermedian.jpg', cvclahe_after)
+    cv2.imwrite('cvclahe_beforemedian.jpg', cvclahe_before)
     # cv2.imwrite('cveq.jpg', cveq)
     # cv2.imwrite('cvthr.jpg', cvthr)
     # cv2.imwrite('cvhf.jpg', cvhf)
