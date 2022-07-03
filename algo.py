@@ -23,14 +23,16 @@ def testes(cvgray):
 
     cveq = cv2.equalizeHist(cvres)
 
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-    cvclahe = clahe.apply(cvgray)
+    for ts in range(1,16):
+        for cl in range(1,5):
+            clahe = cv2.createCLAHE(clipLimit=float(cl), tileGridSize=(ts,ts))
+            cvclahe = clahe.apply(cvgray)
+            cv2.imwrite('{}{}cvclahe.jpg'.format(ts, cl), cvclahe)
 
     # cv2.findChessboardCorners()
 
     # cv2.imwrite('cvgauss.jpg', cvgauss)
     cv2.imwrite('cvmedian.jpg', cvmedian)
-    # cv2.imwrite('cvclahe.jpg', cvclahe)
     # cv2.imwrite('cveq.jpg', cveq)
     # cv2.imwrite('cvthr.jpg', cvthr)
     # cv2.imwrite('cvhf.jpg', cvhf)
