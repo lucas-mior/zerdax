@@ -14,11 +14,11 @@ def testes(cvgray):
 
     kernel = kernel / (np.sum(kernel) if np.sum(kernel) != 0 else 1)
 
-    cvhf = cv2.filter2D(cvres, -1, kernel)
+    cvhf = cv2.filter2D(cvgray, -1, kernel)
 
-    ret, cvthr = cv2.threshold(cvres, 160, 255, cv2.THRESH_BINARY)
+    ret, cvthr = cv2.threshold(cvgray, 160, 255, cv2.THRESH_BINARY)
 
-    cveq = cv2.equalizeHist(cvres)
+    cveq = cv2.equalizeHist(cvgray)
 
     cvgauss = cv2.GaussianBlur(cvgray, [5,5], 0)
     cvmedian = cv2.medianBlur(cvgray, 5)
@@ -37,11 +37,11 @@ def testes(cvgray):
     cv2.imwrite('cvmedian.jpg', cvmedian)
     cv2.imwrite('cvclahe_aftermedian.jpg', cvclahe_after)
     cv2.imwrite('cvclahe_beforemedian.jpg', cvclahe_before)
-    # cv2.imwrite('cveq.jpg', cveq)
-    # cv2.imwrite('cvthr.jpg', cvthr)
-    # cv2.imwrite('cvhf.jpg', cvhf)
-    # cv2.imwrite('cvres.jpg', cvres) 
-    # cv2.imwrite('cvgray.jpg', cvgray)
+    cv2.imwrite('cveq.jpg', cveq)
+    cv2.imwrite('cvthr.jpg', cvthr)
+    cv2.imwrite('cvhf.jpg', cvhf)
+    cv2.imwrite('cvres.jpg', cvres) 
+    cv2.imwrite('cvgray.jpg', cvgray)
 
 def full(image):
     """ given a file path to a chessboard image,
