@@ -1,6 +1,29 @@
 import cv2
 import numpy as np
 
+def find_board(cvgray)
+    fil = cv2.GaussianBlur(cvgray, (3,3), 0)
+    can = cv2.Canny(fil, 100, 180)
+
+    rho = 1             # distance resolution in pixels of the Hough grid
+    theta = np.pi / 180 # angular resolution in radians of the Hough grid
+    threshold = 15      # minimum number of votes (intersections in Hough grid cell)
+
+    lines = cv2.HoughLinesP(can, rho, theta, threshold)
+    print(image, lines[0][0])
+
+    line_image = cv2.cvtColor(cvgray, cv2.COLOR_GRAY2BGR) * 0
+
+    cvgray3ch = cv2.cvtColor(cvgray, cv2.COLOR_GRAY2BGR)
+
+    for line in lines:
+        for x1,y1,x2,y2 in line:
+            cv2.line(line_image,(x1,y1),(x2,y2),(0,0,250),10)
+
+    hou = cv2.addWeighted(cvgray3ch, 1, line_image, 0.8, 0)
+
+    cv2.imwrite("{}hough.jpg".format(image), hou)
+
 def testes(name, cvgray):
     scale_percent = 25
     width = int(cvgray.shape[1] * scale_percent / 100)
@@ -8,7 +31,7 @@ def testes(name, cvgray):
     dsize = (width, height)
     cvres = cv2.resize(cvgray, dsize)
 
-    kernel = np.array([[-1.0, -1.0, 2.0], 
+    kernel = np.array([[-1.0, -1.0, 2.0],
                        [-1.0, 2.0, -1.0],
                        [2.0, -1.0, -1.0]])
 
@@ -21,7 +44,7 @@ def testes(name, cvgray):
     cveq = cv2.equalizeHist(cvgray)
 
     ts = 5
-    cl = 2 
+    cl = 2
 
     cvgauss = cv2.GaussianBlur(cvgray, [5,5], 0)
     cvmedian = cv2.medianBlur(cvgray, 5)
@@ -32,17 +55,7 @@ def testes(name, cvgray):
     cvmedian = cv2.medianBlur(cvclahe_before, 5)
     cvclahe_after = clahe.apply(cvmedian)
 
-    # cv2.findChessboardCorners()
-
-    # cv2.imwrite('cvgauss.jpg', cvgauss)
-    # cv2.imwrite('cvmedian.jpg', cvmedian)
     cv2.imwrite('{}clahe.jpg'.format(name), cvclahe_after)
-    # cv2.imwrite('cvclahe_beforemedian.jpg', cvclahe_before)
-    # cv2.imwrite('cveq.jpg', cveq)
-    # cv2.imwrite('cvthr.jpg', cvthr)
-    # cv2.imwrite('cvhf.jpg', cvhf)
-    # cv2.imwrite('cvres.jpg', cvres) 
-    # cv2.imwrite('cvgray.jpg', cvgray)
 
 def full(image):
     """ given a file path to a chessboard image,
