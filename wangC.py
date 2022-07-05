@@ -2,12 +2,11 @@
 
 import sys
 import ctypes as ct
-from numpy.ctypeslib import ndpointer
+from numpy.ctypeslib import ndpointer as ndp
 import numpy as np
 import sys
 import cv2
 import math
-import time
 
 image = sys.argv[1]
 img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
@@ -23,14 +22,12 @@ libwang = ct.CDLL("./libwang.so")
 libwang_weight_array = libwang.weight_array
 
 libwang_weight_array.restype = None
-libwang_weight_array.argtypes = [ndpointer(ct.c_double, flags="C_CONTIGUOUS"), ct.c_size_t, ct.c_size_t, ndpointer(ct.c_double, flags="C_CONTIGUOUS")]
+libwang_weight_array.argtypes = [ndp(ct.c_double, flags="C_CONTIGUOUS"), ct.c_size_t, ct.c_size_t, ndp(ct.c_double, flags="C_CONTIGUOUS")]
 
 libwang_weight_array(fimg, fimg.shape[0], fimg.shape[1], W)
-W = W.reshape(fimg.shape)
+W = W.reshape(fimg.shape[0], fimg.shape[1], order='F')
 
-print("W :",W.shape)
 cv2.imwrite("{}weight_C.jpg".format(image), W*255);
-print("W[200:200] =", W[200,200])
 
 exit()
 

@@ -20,14 +20,9 @@ img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
 W = np.copy(img/255) * 0
 out = np.copy(img) * 0
 
-print(np.min(img))
-print(np.max(img))
-
 for x in range(1, len(img) - 1):
     for y in range(1, len(img[x]) - 1):
         W[x,y] = weight(img, x, y)
-
-print("W[200,200] =", W[200,200])
 
 cv2.imwrite("{}weight_py.jpg".format(image), W*255)
 exit()
