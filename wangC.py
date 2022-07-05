@@ -7,6 +7,7 @@ import numpy as np
 import sys
 import cv2
 import math
+import time
 
 image = sys.argv[1]
 img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
@@ -22,7 +23,7 @@ libwang = ct.CDLL("./libwang.so")
 libwang_weight_array = libwang.weight_array
 libwang_weight_array.argtypes = [DOUBLEPtrPtr]
 # libwang_weight_array.restype = ct.c_double
-libwang_weight_array.restype = ndpointer(dtype = ct.c_double, shape = fimg.shape)
+libwang_weight_array.restype = ndpointer(dtype = ct.c_double, shape = (fimg.shape[1],fimg.shape[0]))
 
 # np_arr_2d = np.empty([10, 10], dtype=np.double)
 np_arr_2d = np.copy(fimg);
@@ -32,10 +33,12 @@ fimg_c = np.ctypeslib.as_ctypes(np_arr_2d)
 DOUBLEPtrArr = DOUBLEPtr * fimg_c._length_
 fimg_ptr = ct.cast(DOUBLEPtrArr(*(ct.cast(row, DOUBLEPtr) for row in fimg_c)), DOUBLEPtrPtr)
 
-W = np.ctypeslib.as_array(libwang_weight_array(fimg_ptr, fimg.shape[0], fimg.shape[1]), fimg.shape)
-W = 255*W
+W = libwang_weight_array(fimg_ptr, fimg.shape[0], fimg.shape[1])
 
-print(W)
+time.sleep(5)
+print("voltei pro python")
+print("W[20,1] =", W[20,1])
+
 cv2.imwrite("teste.jpg", W);
 
 exit()

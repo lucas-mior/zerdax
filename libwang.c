@@ -31,6 +31,7 @@ double *weight_array(double **f, int xx, int yy) {
             W[xx*x + y] = weight(f, x, y);
         }
     }
+    printf("C: W[%d*20 + 1] = %f", xx, W[xx*20 + 1]);
 
     return W;
 }
