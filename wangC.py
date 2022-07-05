@@ -16,8 +16,6 @@ filt = np.copy(img) * 0
 
 fimg = np.copy(img/255)
 
-DOUBLEPtr = ct.POINTER(ct.c_double)
-DOUBLEPtrPtr = ct.POINTER(DOUBLEPtr)
 libwang = ct.CDLL("./libwang.so")
 libwang_weight_array = libwang.weight_array
 
