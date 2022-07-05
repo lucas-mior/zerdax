@@ -12,22 +12,30 @@ image = sys.argv[1]
 img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
 
 W = np.copy(img/255) * 0
-filt = np.copy(img) * 0
+N = np.copy(img/255) * 0
+g = np.copy(img/255) * 0
 
 fimg = np.copy(img/255)
 
 libwang = ct.CDLL("./libwang.so")
-libwang_weight_array = libwang.weight_array
+libwang_wang_filter = libwang.wang_filter
 
-libwang_weight_array.restype = None
-libwang_weight_array.argtypes = [ndp(ct.c_double, flags="C_CONTIGUOUS"), ct.c_size_t, ct.c_size_t, ndp(ct.c_double, flags="C_CONTIGUOUS")]
+libwang_wang_filter.restype = None
+libwang_wang_filter.argtypes = [ndp(ct.c_double, flags="C_CONTIGUOUS"), 
+                                ct.c_size_t, ct.c_size_t, 
+                                ndp(ct.c_double, flags="C_CONTIGUOUS"),
+                                ndp(ct.c_double, flags="C_CONTIGUOUS"),
+                                ndp(ct.c_double, flags="C_CONTIGUOUS")]
 
-libwang_weight_array(fimg, fimg.shape[0], fimg.shape[1], W)
-W = W.reshape(fimg.shape[0], fimg.shape[1], order='F')
-
-cv2.imwrite("{}weight_C.jpg".format(image), W*255);
+libwang_wang_filter(fimg, fimg.shape[0], fimg.shape[1], W, N, g)
+print(g)
+cv2.imwrite("{}filt_C.jpg".format(image), g);
 
 exit()
+
+# W = W.reshape(fimg.shape[0], fimg.shape[1], order='F')
+
+# cv2.imwrite("{}weight_C.jpg".format(image), W*255);
 
 N = np.copy(W) * 0
 
@@ -36,8 +44,6 @@ for x in range(1, len(img) - 1):
         for i in range(-1,2):
             for j in range(-1,2):
                 N[x,y] += W[x+i,y+j]
-                if W[x+i,y+j] > 0.99:
-                    print("N[x,y] = {} + W[x+{},y+{}], {}".format(N[x,y], i, j, W[x+i,y+j]))
 
 for x in range(1, len(img) - 1):
     for y in range(1, len(img[x]) - 1):
