@@ -27,9 +27,9 @@ for x in range(1, len(img) - 1):
     for y in range(1, len(img[x]) - 1):
         W[x,y] = weight(img, x, y)
 
-print("W[20,1] =", W[20,1])
+print("W[200,200] =", W[200,200])
 
-cv2.imwrite("{}weights.jpg".format(image), W*255)
+cv2.imwrite("{}weight_py.jpg".format(image), W*255)
 exit()
 
 N = np.copy(W) * 0

@@ -15,31 +15,22 @@ img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
 W = np.copy(img/255) * 0
 filt = np.copy(img) * 0
 
-fimg = img / 255
+fimg = np.copy(img/255)
 
 DOUBLEPtr = ct.POINTER(ct.c_double)
 DOUBLEPtrPtr = ct.POINTER(DOUBLEPtr)
 libwang = ct.CDLL("./libwang.so")
 libwang_weight_array = libwang.weight_array
-libwang_weight_array.argtypes = [DOUBLEPtrPtr]
-# libwang_weight_array.restype = ct.c_double
-libwang_weight_array.restype = ndpointer(dtype = ct.c_double, shape = (fimg.shape[1],fimg.shape[0]))
 
-# np_arr_2d = np.empty([10, 10], dtype=np.double)
-np_arr_2d = np.copy(fimg);
+libwang_weight_array.restype = None
+libwang_weight_array.argtypes = [ndpointer(ct.c_double, flags="C_CONTIGUOUS"), ct.c_size_t, ct.c_size_t, ndpointer(ct.c_double, flags="C_CONTIGUOUS")]
 
-# magic
-fimg_c = np.ctypeslib.as_ctypes(np_arr_2d)
-DOUBLEPtrArr = DOUBLEPtr * fimg_c._length_
-fimg_ptr = ct.cast(DOUBLEPtrArr(*(ct.cast(row, DOUBLEPtr) for row in fimg_c)), DOUBLEPtrPtr)
+libwang_weight_array(fimg, fimg.shape[0], fimg.shape[1], W)
+W = W.reshape(fimg.shape)
 
-W = libwang_weight_array(fimg_ptr, fimg.shape[0], fimg.shape[1])
-
-time.sleep(5)
-print("voltei pro python")
-print("W[20,1] =", W[20,1])
-
-cv2.imwrite("teste.jpg", W);
+print("W :",W.shape)
+cv2.imwrite("{}weight_C.jpg".format(image), W*255);
+print("W[200:200] =", W[200,200])
 
 exit()
 
