@@ -2,11 +2,18 @@ import cv2
 import numpy as np
 import math
 
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+
 import ctypes as ct
 from numpy.ctypeslib import ndpointer as ndp
 
 def dist(x1,y1,x2,y2):
     return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
+
+def inclina(x1,y1,x2,y2):
+    return math.atan2((y2-y1),(x2-x1))
 
 def wang_filter(img):
     f = np.copy(img/255)
@@ -63,16 +70,20 @@ def find_board(img):
     lines_gaus = lines_gaus / img.fact
     lines_gaus = lines_gaus.astype(int)
 
+    i = 0
+    line_wang_polar = np.empty((lines_wang.shape[0], 1, 2))
     for line in lines_wang:
         for x1,y1,x2,y2 in line:
+            line_wang_polar[i] = (dist(x1,y1,x2,y2), inclina(x1,y1,x2,y2))
             cv2.line(line_image_wang,(x1,y1),(x2,y2),(0,0,250),2)
+            i += 1
 
-    for line in lines_gaus:
-        for x1,y1,x2,y2 in line:
-            cv2.line(line_image_gaus,(x1,y1),(x2,y2),(0,0,250),2)
+    # for line in lines_gaus:
+    #     for x1,y1,x2,y2 in line:
+    #         cv2.line(line_image_gaus,(x1,y1),(x2,y2),(0,0,250),2)
 
     hough_wang = cv2.addWeighted(gray3ch, 0.5, line_image_wang, 10, 0)
-    hough_gaus = cv2.addWeighted(gray3ch, 0.5, line_image_gaus, 10, 0)
+    # hough_gaus = cv2.addWeighted(gray3ch, 0.5, line_image_gaus, 10, 0)
 
     # cv2.imwrite("{}hough_wang.jpg".format(img.basename), hough_wang)
     # cv2.imwrite("{}hough_gaus.jpg".format(img.basename), hough_gaus)
@@ -84,6 +95,16 @@ def find_board(img):
 
     print("linha(x1_max): ", lin)
     print("comprimento:", dist(lin[0],lin[1],lin[2],lin[3]))
+    print("inclina:", inclina(lin[0],lin[1],lin[2],lin[3]))
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    # ax.plot(lines_wang[:,0,:])
+    ax.plot(line_wang_polar[:,0,1], line_wang_polar[:,0,0], linestyle='', marker='o')
+    fig.savefig('temp.png')
+
+    # plt.plot(line_wang_polar, color = 'red', label = 'Polar').savefig("testep.png")
+    # plt.plot(line_wang, color = 'red', label = 'Cartesian').savefig("testec.png")
 
     # ret, cvthr = cv2.threshold(img.gray, 160, 255, cv2.THRESH_BINARY)
     return (10, 300, 110, 310)
