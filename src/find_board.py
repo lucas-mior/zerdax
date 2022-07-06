@@ -36,12 +36,18 @@ def find_board(img):
     cv2.imwrite("{}canny_wang.jpg".format(img.basename), canny_wang)
     cv2.imwrite("{}canny_gaus.jpg".format(img.basename), canny_gaus)
 
-    rho = 1             # distance resolution in pixels of the Hough grid
-    theta = np.pi / 180 # angular resolution in radians of the Hough grid
-    threshold = 15      # minimum number of votes (intersections in Hough grid cell)
+    
+    lines_wang = cv2.HoughLinesP(canny_wang, 1, np.pi / 180, 50,        None,  50,        10)
+    lines_gaus = cv2.HoughLinesP(canny_gaus, 1, np.pi / 180, 50,        None,  50,        10)
+                   # HoughLinesP(image,    RHo,       theta, threshold, lines, minLength, maxGap)
 
-    lines_wang = cv2.HoughLinesP(canny_wang, rho, theta, threshold)
-    lines_gaus = cv2.HoughLinesP(canny_gaus, rho, theta, threshold)
+    # dst: Output of the edge detector. It should be a grayscale image (although in fact it is a binary one)
+    # rho : The resolution of the parameter r in pixels. We use 1 pixel.
+    # lines: A vector that will store the parameters (xstart,ystart,xend,yend) of the detected lines
+    # theta: The resolution of the parameter θ in radians. We use 1 degree (CV_PI/180)
+    # threshold: The minimum number of intersections to "*detect*" a line
+    # minLineLength: The minimum number of points that can form a line. Lines with less than this number of points are disregarded.
+    # maxLineGap: The maximum gap between two points to be considered in the same line.
 
     ## draw hough
     line_image_wang = cv2.cvtColor(img.gray, cv2.COLOR_GRAY2BGR) * 0
@@ -61,8 +67,8 @@ def find_board(img):
         for x1,y1,x2,y2 in line:
             cv2.line(line_image_gaus,(x1,y1),(x2,y2),(0,0,250),2)
 
-    hough_wang = cv2.addWeighted(gray3ch, 1, line_image_wang, 0.8, 0)
-    hough_gaus = cv2.addWeighted(gray3ch, 1, line_image_gaus, 0.8, 0)
+    hough_wang = cv2.addWeighted(gray3ch, 1, line_image_wang, 0.92, 0)
+    hough_gaus = cv2.addWeighted(gray3ch, 1, line_image_gaus, 0.92, 0)
 
     cv2.imwrite("{}hough_wang.jpg".format(img.basename), hough_wang)
     cv2.imwrite("{}hough_gaus.jpg".format(img.basename), hough_gaus)
