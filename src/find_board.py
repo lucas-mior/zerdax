@@ -47,8 +47,8 @@ def find_board(img):
     cv2.imwrite("test/{}1canny_wang.jpg".format(img.basename), canny_wang)
     cv2.imwrite("test/{}1canny_gaus.jpg".format(img.basename), canny_gaus)
 
-    lines_wang = cv2.HoughLinesP(canny_wang, 1, np.pi / 180, 50,        None,  50,        20)
-    lines_gaus = cv2.HoughLinesP(canny_gaus, 1, np.pi / 180, 50,        None,  50,        20)
+    lines_wang = cv2.HoughLinesP(canny_wang, 1, np.pi / 180, 50,        None, 75,        15)
+    lines_gaus = cv2.HoughLinesP(canny_gaus, 1, np.pi / 180, 50,        None, 75,        15)
                    # HoughLinesP(image,    RHo,       theta, threshold, lines, minLength, maxGap)
 
     # dst: Output of the edge detector. It should be a grayscale image (although in fact it is a binary one)
@@ -96,13 +96,10 @@ def find_board(img):
 
     fig_wang = plt.figure()
     ax = fig_wang.add_subplot(111)
-    ax.plot(line_wang_polar[:,0,1], line_wang_polar[:,0,0], linestyle='', marker='o', color='red')
-    fig_wang.savefig('test/{}3wang_polar.png'.format(img.basename))
-
-    fig_gaus = plt.figure()
-    ax = fig_gaus.add_subplot(111)
-    ax.plot(line_gaus_polar[:,0,1], line_gaus_polar[:,0,0], linestyle='', marker='o', color='red')
-    fig_gaus.savefig('test/{}3gaus_polar.png'.format(img.basename))
+    ax.plot(line_wang_polar[:,0,1], line_wang_polar[:,0,0], linestyle='', marker='o', color='red', label='wang')
+    ax.plot(line_gaus_polar[:,0,1], line_gaus_polar[:,0,0], linestyle='', marker='o', color='blue', label='gauss')
+    ax.legend()
+    fig_wang.savefig('test/{}3_polar.png'.format(img.basename))
 
 
     # plt.plot(line_wang_polar, color = 'red', label = 'Polar').savefig("testep.png")
