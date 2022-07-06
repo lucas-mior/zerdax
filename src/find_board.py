@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 import ctypes as ct
 from numpy.ctypeslib import ndpointer as ndp
 
-def dist(x1,y1,x2,y2):
+def radius(x1,y1,x2,y2):
     return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
 
-def inclina(x1,y1,x2,y2):
-    return math.atan2((y2-y1),(x2-x1))
+def theta(x1,y1,x2,y2):
+    return math.degrees(math.atan2((y2-y1),(x2-x1)))
 
 def wang_filter(img):
     f = np.copy(img/255)
@@ -73,7 +73,7 @@ def find_board(img):
     line_wang_polar = np.empty((lines_wang.shape[0], 1, 2))
     for line in lines_wang:
         for x1,y1,x2,y2 in line:
-            line_wang_polar[i] = (dist(x1,y1,x2,y2), inclina(x1,y1,x2,y2))
+            line_wang_polar[i] = (radius(x1,y1,x2,y2), theta(x1,y1,x2,y2))
             cv2.line(line_image_wang,(x1,y1),(x2,y2),(0,0,250),2)
             i += 1
 
@@ -81,12 +81,12 @@ def find_board(img):
     line_gaus_polar = np.empty((lines_gaus.shape[0], 1, 2))
     for line in lines_gaus:
         for x1,y1,x2,y2 in line:
-            line_gaus_polar[i] = (dist(x1,y1,x2,y2), inclina(x1,y1,x2,y2))
+            line_gaus_polar[i] = (radius(x1,y1,x2,y2), theta(x1,y1,x2,y2))
             cv2.line(line_image_gaus,(x1,y1),(x2,y2),(0,0,250),2)
             i += 1
 
-    hough_wang = cv2.addWeighted(gray3ch, 0.5, line_image_wang, 10, 0)
-    hough_gaus = cv2.addWeighted(gray3ch, 0.5, line_image_gaus, 10, 0)
+    hough_wang = cv2.addWeighted(gray3ch, 0.5, line_image_wang, round(7/img.fact), 0)
+    hough_gaus = cv2.addWeighted(gray3ch, 0.5, line_image_gaus, round(7/img.fact), 0)
 
     cv2.imwrite("test/{}2hough_wang.jpg".format(img.basename), hough_wang)
     cv2.imwrite("test/{}2hough_gaus.jpg".format(img.basename), hough_gaus)
@@ -95,15 +95,11 @@ def find_board(img):
     # lin = lines_wang[index, 0, :]
 
     fig_wang = plt.figure()
-    ax = fig_wang.add_subplot(111)
-    ax.plot(line_wang_polar[:,0,1], line_wang_polar[:,0,0], linestyle='', marker='o', color='red', label='wang')
-    ax.plot(line_gaus_polar[:,0,1], line_gaus_polar[:,0,0], linestyle='', marker='o', color='blue', label='gauss')
+    ax = fig_wang.add_subplot(111, xlabel='angle', ylabel='radius', xlim=(-90, 90))
+    ax.plot(line_wang_polar[:,0,1], line_wang_polar[:,0,0], linestyle='', marker='.', color='blue', label='wang', alpha=0.8)
+    ax.plot(line_gaus_polar[:,0,1], line_gaus_polar[:,0,0], linestyle='', marker='.', color='red', label='gauss', alpha=0.8)
     ax.legend()
     fig_wang.savefig('test/{}3_polar.png'.format(img.basename))
-
-
-    # plt.plot(line_wang_polar, color = 'red', label = 'Polar').savefig("testep.png")
-    # plt.plot(line_wang, color = 'red', label = 'Cartesian').savefig("testec.png")
 
     # ret, cvthr = cv2.threshold(img.gray, 160, 255, cv2.THRESH_BINARY)
     return (10, 300, 110, 310)
