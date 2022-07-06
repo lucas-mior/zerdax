@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
+from Image import Image
 
-def find_board(cvgray)
+def find_board(cvgray):
     fil = cv2.GaussianBlur(cvgray, (3,3), 0)
     can = cv2.Canny(fil, 100, 180)
 
@@ -57,15 +58,15 @@ def testes(name, cvgray):
 
     cv2.imwrite('{}clahe.jpg'.format(name), cvclahe_after)
 
-def full(image):
+def full(filename):
     """ given a file path to a chessboard image,
         returns a FEN notation
     """
-    print("algo.full: {}".format(image))
-    cvcolor = cv2.imread(image)
-    cvgray = cv2.cvtColor(cvcolor, cv2.COLOR_BGR2GRAY)
+    img = Image(filename)
+    img.reduce()
 
-    testes(image, cvgray)
+    cv2.imwrite("small.jpg", img.small)
+    exit()
 
     predicted_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
     return predicted_fen
