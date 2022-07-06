@@ -22,9 +22,9 @@ def find_board(img):
     lines_wang = cv2.HoughLinesP(canny_wang, rho, theta, threshold)
     lines_gaus = cv2.HoughLinesP(canny_gaus, rho, theta, threshold)
 
-    line_image_wang = cv2.cvtColor(img.gray, cv2.COLOR_GRAY2BGR) * 0
-    line_image_gaus = cv2.cvtColor(img.gray, cv2.COLOR_GRAY2BGR) * 0
-    gray3ch = cv2.cvtColor(img.gray, cv2.COLOR_GRAY2BGR)
+    line_image_wang = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
+    line_image_gaus = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
+    gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     for line in lines_wang:
         for x1,y1,x2,y2 in line:
