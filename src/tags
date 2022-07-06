@@ -1,0 +1,16 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_EXCMD	mixed	/number, pattern, mixed, or combineV2/
+!_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
+!_TAG_PROC_CWD	/home/lucas/docs/UFSC_elétrica/2022.1/EEL7815_Projeto_Proc_1/zerdax/	//
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	5.9.0	/p5.9.20210905.0/
+convolute	src/libwang.c	/^void convolute(double *f, int xx, int yy, double *W, double *N, double *g) {$/;"	f	typeref:typename:void
+norm_array	src/libwang.c	/^void norm_array(double *f, int xx, int yy, double *W, double *N) {$/;"	f	typeref:typename:void
+wang_filter	src/libwang.c	/^void wang_filter(double *f, int xx, int yy, double *W, double *N, double *g) {$/;"	f	typeref:typename:void
+weight	src/libwang.c	/^double weight(double *f, int x, int y, int xx, int yy) {$/;"	f	typeref:typename:double
+weight_array	src/libwang.c	/^void weight_array(double *f, int xx, int yy, double *W) {$/;"	f	typeref:typename:void
