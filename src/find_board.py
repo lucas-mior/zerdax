@@ -1,8 +1,29 @@
 import cv2
 import numpy as np
 
+import ctypes as ct
+from numpy.ctypeslib import ndpointer as ndp
+
 def wang_filter(img):
-    return img
+    f = np.copy(img/255)
+    W = np.copy(img/255) * 0
+    N = np.copy(img/255) * 0
+    g = np.copy(img/255)
+
+    libwang = ct.CDLL("./libwang.so")
+    libwang_wang_filter = libwang.wang_filter
+
+    libwang_wang_filter.restype = None
+    libwang_wang_filter.argtypes = [ndp(ct.c_double, flags="C_CONTIGUOUS"), 
+                                    ct.c_size_t, ct.c_size_t, 
+                                    ndp(ct.c_double, flags="C_CONTIGUOUS"),
+                                    ndp(ct.c_double, flags="C_CONTIGUOUS"),
+                                    ndp(ct.c_double, flags="C_CONTIGUOUS")]
+
+    libwang_wang_filter(f, f.shape[0], f.shape[1], W, N, g)
+
+    G = np.array(g*255, dtype='uint8')
+    return G
 
 def find_board(img):
 
@@ -28,11 +49,11 @@ def find_board(img):
 
     for line in lines_wang:
         for x1,y1,x2,y2 in line:
-            cv2.line(line_image_wang,(x1,y1),(x2,y2),(0,0,250),10)
+            cv2.line(line_image_wang,(x1,y1),(x2,y2),(0,0,250),2)
 
     for line in lines_gaus:
         for x1,y1,x2,y2 in line:
-            cv2.line(line_image_gaus,(x1,y1),(x2,y2),(0,0,250),10)
+            cv2.line(line_image_gaus,(x1,y1),(x2,y2),(0,0,250),2)
 
     hough_wang = cv2.addWeighted(gray3ch, 1, line_image_wang, 0.8, 0)
     hough_gaus = cv2.addWeighted(gray3ch, 1, line_image_gaus, 0.8, 0)

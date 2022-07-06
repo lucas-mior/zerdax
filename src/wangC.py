@@ -31,8 +31,3 @@ libwang_wang_filter(f, f.shape[0], f.shape[1], W, N, g)
 G = np.array(g*255, dtype='uint8')
 
 cv2.imwrite("{}filter_C.jpg".format(image), G);
-
-# can1 = cv2.Canny(filt, 100, 180)
-# cv2.imwrite("{}canny_with.jpg".format(image), can1)
-# can2 = cv2.Canny(img, 100, 180)
-# cv2.imwrite("{}canny_noot.jpg".format(image), can2)
