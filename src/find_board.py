@@ -1,8 +1,12 @@
 import cv2
 import numpy as np
+import math
 
 import ctypes as ct
 from numpy.ctypeslib import ndpointer as ndp
+
+def dist(x1,y1,x2,y2):
+    return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
 
 def wang_filter(img):
     f = np.copy(img/255)
@@ -33,12 +37,12 @@ def find_board(img):
     canny_wang = cv2.Canny(small_wang, 100, 180)
     canny_gaus = cv2.Canny(small_gaus, 100, 180)
 
-    cv2.imwrite("{}canny_wang.jpg".format(img.basename), canny_wang)
-    cv2.imwrite("{}canny_gaus.jpg".format(img.basename), canny_gaus)
+    # cv2.imwrite("{}canny_wang.jpg".format(img.basename), canny_wang)
+    # cv2.imwrite("{}canny_gaus.jpg".format(img.basename), canny_gaus)
 
     
-    lines_wang = cv2.HoughLinesP(canny_wang, 1, np.pi / 180, 50,        None,  50,        10)
-    lines_gaus = cv2.HoughLinesP(canny_gaus, 1, np.pi / 180, 50,        None,  50,        10)
+    lines_wang = cv2.HoughLinesP(canny_wang, 1, np.pi / 180, 50,        None,  100,        10)
+    lines_gaus = cv2.HoughLinesP(canny_gaus, 1, np.pi / 180, 50,        None,  100,        10)
                    # HoughLinesP(image,    RHo,       theta, threshold, lines, minLength, maxGap)
 
     # dst: Output of the edge detector. It should be a grayscale image (although in fact it is a binary one)
@@ -67,11 +71,19 @@ def find_board(img):
         for x1,y1,x2,y2 in line:
             cv2.line(line_image_gaus,(x1,y1),(x2,y2),(0,0,250),2)
 
-    hough_wang = cv2.addWeighted(gray3ch, 1, line_image_wang, 0.92, 0)
-    hough_gaus = cv2.addWeighted(gray3ch, 1, line_image_gaus, 0.92, 0)
+    hough_wang = cv2.addWeighted(gray3ch, 0.5, line_image_wang, 10, 0)
+    hough_gaus = cv2.addWeighted(gray3ch, 0.5, line_image_gaus, 10, 0)
 
-    cv2.imwrite("{}hough_wang.jpg".format(img.basename), hough_wang)
-    cv2.imwrite("{}hough_gaus.jpg".format(img.basename), hough_gaus)
+    # cv2.imwrite("{}hough_wang.jpg".format(img.basename), hough_wang)
+    # cv2.imwrite("{}hough_gaus.jpg".format(img.basename), hough_gaus)
+
+    print("lines_wang", lines_wang[:,0,0])
+
+    index = lines_wang[:,0,0].argmax()
+    lin = lines_wang[index, 0, :]
+
+    print("linha(x1_max): ", lin)
+    print("comprimento:", dist(lin[0],lin[1],lin[2],lin[3]))
 
     # ret, cvthr = cv2.threshold(img.gray, 160, 255, cv2.THRESH_BINARY)
     return (10, 300, 110, 310)
