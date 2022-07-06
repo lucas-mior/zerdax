@@ -20,7 +20,7 @@ def full(filename):
     print(img.basename)
 
     img.small = reduce(img)
-    cv2.imwrite('{}small.jpg'.format(img.filename), img.small)
+    # cv2.imwrite('{}0small.jpg'.format(img.filename), img.small)
 
     img.board = find_board(img)
 

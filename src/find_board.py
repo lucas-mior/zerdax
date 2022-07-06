@@ -41,14 +41,14 @@ def find_board(img):
     small_wang = wang_filter(img.small)
     small_gaus = cv2.GaussianBlur(img.small, (3,3), 0)
 
-    canny_wang = cv2.Canny(small_wang, 100, 180)
-    canny_gaus = cv2.Canny(small_gaus, 100, 180)
+    canny_wang = cv2.Canny(small_wang, 80, 170)
+    canny_gaus = cv2.Canny(small_gaus, 80, 170)
 
-    cv2.imwrite("{}canny_wang.jpg".format(img.basename), canny_wang)
-    cv2.imwrite("{}canny_gaus.jpg".format(img.basename), canny_gaus)
+    cv2.imwrite("test/{}1canny_wang.jpg".format(img.basename), canny_wang)
+    cv2.imwrite("test/{}1canny_gaus.jpg".format(img.basename), canny_gaus)
 
-    lines_wang = cv2.HoughLinesP(canny_wang, 1, np.pi / 180, 50,        None,  100,        10)
-    lines_gaus = cv2.HoughLinesP(canny_gaus, 1, np.pi / 180, 50,        None,  100,        10)
+    lines_wang = cv2.HoughLinesP(canny_wang, 1, np.pi / 180, 50,        None,  50,        20)
+    lines_gaus = cv2.HoughLinesP(canny_gaus, 1, np.pi / 180, 50,        None,  50,        20)
                    # HoughLinesP(image,    RHo,       theta, threshold, lines, minLength, maxGap)
 
     # dst: Output of the edge detector. It should be a grayscale image (although in fact it is a binary one)
@@ -69,38 +69,41 @@ def find_board(img):
     lines_gaus = lines_gaus / img.fact
     lines_gaus = lines_gaus.astype(int)
 
-    # i = 0
-    # line_wang_polar = np.empty((lines_wang.shape[0], 1, 2))
+    i = 0
+    line_wang_polar = np.empty((lines_wang.shape[0], 1, 2))
     for line in lines_wang:
         for x1,y1,x2,y2 in line:
-            # line_wang_polar[i] = (dist(x1,y1,x2,y2), inclina(x1,y1,x2,y2))
+            line_wang_polar[i] = (dist(x1,y1,x2,y2), inclina(x1,y1,x2,y2))
             cv2.line(line_image_wang,(x1,y1),(x2,y2),(0,0,250),2)
-            # i += 1
+            i += 1
 
+    i = 0
+    line_gaus_polar = np.empty((lines_gaus.shape[0], 1, 2))
     for line in lines_gaus:
         for x1,y1,x2,y2 in line:
+            line_gaus_polar[i] = (dist(x1,y1,x2,y2), inclina(x1,y1,x2,y2))
             cv2.line(line_image_gaus,(x1,y1),(x2,y2),(0,0,250),2)
+            i += 1
 
     hough_wang = cv2.addWeighted(gray3ch, 0.5, line_image_wang, 10, 0)
     hough_gaus = cv2.addWeighted(gray3ch, 0.5, line_image_gaus, 10, 0)
 
-    cv2.imwrite("{}hough_wang.jpg".format(img.basename), hough_wang)
-    cv2.imwrite("{}hough_gaus.jpg".format(img.basename), hough_gaus)
-
-    # print("lines_wang", lines_wang[:,0,0])
+    cv2.imwrite("test/{}2hough_wang.jpg".format(img.basename), hough_wang)
+    cv2.imwrite("test/{}2hough_gaus.jpg".format(img.basename), hough_gaus)
 
     # index = lines_wang[:,0,0].argmax()
     # lin = lines_wang[index, 0, :]
 
-    # print("linha(x1_max): ", lin)
-    # print("comprimento:", dist(lin[0],lin[1],lin[2],lin[3]))
-    # print("inclina:", inclina(lin[0],lin[1],lin[2],lin[3]))
+    fig_wang = plt.figure()
+    ax = fig_wang.add_subplot(111)
+    ax.plot(line_wang_polar[:,0,1], line_wang_polar[:,0,0], linestyle='', marker='o', color='red')
+    fig_wang.savefig('test/{}3wang_polar.png'.format(img.basename))
 
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111)
-    # # ax.plot(lines_wang[:,0,:])
-    # ax.plot(line_wang_polar[:,0,1], line_wang_polar[:,0,0], linestyle='', marker='o')
-    # fig.savefig('temp.png')
+    fig_gaus = plt.figure()
+    ax = fig_gaus.add_subplot(111)
+    ax.plot(line_gaus_polar[:,0,1], line_gaus_polar[:,0,0], linestyle='', marker='o', color='red')
+    fig_gaus.savefig('test/{}3gaus_polar.png'.format(img.basename))
+
 
     # plt.plot(line_wang_polar, color = 'red', label = 'Polar').savefig("testep.png")
     # plt.plot(line_wang, color = 'red', label = 'Cartesian').savefig("testec.png")
