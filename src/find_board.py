@@ -19,7 +19,9 @@ def wang_filter(img):
     f = np.copy(img/255)
     W = np.copy(img/255) * 0
     N = np.copy(img/255) * 0
-    g = np.copy(img/255)
+    g1 = np.copy(img/255)
+    g2 = np.copy(g1)
+    g3 = np.copy(g2)
 
     libwang = ct.CDLL("./libwang.so")
     libwang_wang_filter = libwang.wang_filter
@@ -31,24 +33,26 @@ def wang_filter(img):
                                     ndp(ct.c_double, flags="C_CONTIGUOUS"),
                                     ndp(ct.c_double, flags="C_CONTIGUOUS")]
 
-    libwang_wang_filter(f, f.shape[0], f.shape[1], W, N, g)
+    libwang_wang_filter(f, f.shape[0], f.shape[1], W, N, g1)
+    libwang_wang_filter(g1, f.shape[0], f.shape[1], W, N, g2)
+    libwang_wang_filter(g2, f.shape[0], f.shape[1], W, N, g3)
 
-    G = np.array(g*255, dtype='uint8')
+    G = np.array(g3*255, dtype='uint8')
     return G
 
 def find_board(img):
 
-    small_wang = wang_filter(img.gray)
-    small_gaus = cv2.GaussianBlur(img.gray, (3,3), 0)
+    small_wang = wang_filter(img.small)
+    # small_gaus = cv2.GaussianBlur(img.small, (3,3), 30)
 
     canny_wang = cv2.Canny(small_wang, 80, 170)
-    canny_gaus = cv2.Canny(small_gaus, 80, 170)
+    # canny_gaus = cv2.Canny(small_gaus, 80, 170)
 
     cv2.imwrite("test/{}1canny_wang.jpg".format(img.basename), canny_wang)
-    cv2.imwrite("test/{}1canny_gaus.jpg".format(img.basename), canny_gaus)
+    # cv2.imwrite("test/{}1canny_gaus_sig.jpg".format(img.basename), canny_gaus)
 
     lines_wang = cv2.HoughLinesP(canny_wang, 1, np.pi / 180, 70,        None, 75,        15)
-    lines_gaus = cv2.HoughLinesP(canny_gaus, 1, np.pi / 180, 70,        None, 75,        15)
+    # lines_gaus = cv2.HoughLinesP(canny_gaus, 1, np.pi / 180, 70,        None, 75,        15)
                    # HoughLinesP(image,    RHo,       theta, threshold, lines, minLength, maxGap)
 
     # dst: Output of the edge detector. It should be a grayscale image (although in fact it is a binary one)
@@ -60,12 +64,12 @@ def find_board(img):
     # maxLineGap: The maximum gap between two points to be considered in the same line.
 
     ## draw hough
-    line_image_wang = cv2.cvtColor(img.gray, cv2.COLOR_GRAY2BGR) * 0
-    line_image_gaus = cv2.cvtColor(img.gray, cv2.COLOR_GRAY2BGR) * 0
-    gray3ch = cv2.cvtColor(img.gray, cv2.COLOR_GRAY2BGR)
+    line_image_wang = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
+    # line_image_gaus = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
+    gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     gray3ch_canny_wang = cv2.cvtColor(canny_wang, cv2.COLOR_GRAY2BGR)
-    gray3ch_canny_gaus = cv2.cvtColor(canny_gaus, cv2.COLOR_GRAY2BGR)
+    # gray3ch_canny_gaus = cv2.cvtColor(canny_gaus, cv2.COLOR_GRAY2BGR)
 
     # lines_wang = lines_wang / img.fact
     # lines_wang = lines_wang.astype(int)
@@ -80,25 +84,25 @@ def find_board(img):
             cv2.line(line_image_wang,(x1,y1),(x2,y2),(0,0,250), round(2/img.fact))
             i += 1
 
-    i = 0
-    line_gaus_polar = np.empty((lines_gaus.shape[0], 1, 2))
-    for line in lines_gaus:
-        for x1,y1,x2,y2 in line:
-            line_gaus_polar[i] = (radius(x1,y1,x2,y2), theta(x1,y1,x2,y2))
-            cv2.line(line_image_gaus,(x1,y1),(x2,y2),(0,0,255), round(2/img.fact))
-            i += 1
+    # i = 0
+    # line_gaus_polar = np.empty((lines_gaus.shape[0], 1, 2))
+    # for line in lines_gaus:
+    #     for x1,y1,x2,y2 in line:
+    #         line_gaus_polar[i] = (radius(x1,y1,x2,y2), theta(x1,y1,x2,y2))
+    #         cv2.line(line_image_gaus,(x1,y1),(x2,y2),(0,0,255), round(2/img.fact))
+    #         i += 1
 
     hough_wang = cv2.addWeighted(gray3ch, 0.5, line_image_wang, 0.8, 0)
-    hough_gaus = cv2.addWeighted(gray3ch, 0.5, line_image_gaus, 0.8, 0)
+    # hough_gaus = cv2.addWeighted(gray3ch, 0.5, line_image_gaus, 0.8, 0)
 
     cv2.imwrite("test/{}2hough_wang.jpg".format(img.basename), hough_wang)
-    cv2.imwrite("test/{}2hough_gaus.jpg".format(img.basename), hough_gaus)
+    # cv2.imwrite("test/{}2hough_gaus.jpg".format(img.basename), hough_gaus)
 
     hough_on_canny_wang = cv2.addWeighted(cv2.bitwise_not(gray3ch_canny_wang), 0.2, line_image_wang, 0.8, 0)
-    hough_on_canny_gaus = cv2.addWeighted(cv2.bitwise_not(gray3ch_canny_gaus), 0.2, line_image_gaus, 0.8, 0)
+    # hough_on_canny_gaus = cv2.addWeighted(cv2.bitwise_not(gray3ch_canny_gaus), 0.2, line_image_gaus, 0.8, 0)
 
     cv2.imwrite("test/{}3hough_on_canny_wang.jpg".format(img.basename), hough_on_canny_wang)
-    cv2.imwrite("test/{}3hough_on_canny_gaus.jpg".format(img.basename), hough_on_canny_gaus)
+    # cv2.imwrite("test/{}3hough_on_canny_gaus.jpg".format(img.basename), hough_on_canny_gaus)
 
     # index = lines_wang[:,0,0].argmax()
     # lin = lines_wang[index, 0, :]
@@ -106,9 +110,9 @@ def find_board(img):
     fig_wang = plt.figure()
     ax = fig_wang.add_subplot(111, xlabel='angle', ylabel='radius', xlim=(-90, 90))
     ax.plot(line_wang_polar[:,0,1], line_wang_polar[:,0,0], linestyle='', marker='.', color='blue', label='wang', alpha=0.8)
-    ax.plot(line_gaus_polar[:,0,1], line_gaus_polar[:,0,0], linestyle='', marker='.', color='red', label='gauss', alpha=0.8)
+    # ax.plot(line_gaus_polar[:,0,1], line_gaus_polar[:,0,0], linestyle='', marker='.', color='red', label='gauss', alpha=0.8)
     ax.legend()
-    fig_wang.savefig('test/{}3_polar.png'.format(img.basename))
+    fig_wang.savefig('test/{}4_polar.png'.format(img.basename))
 
     # ret, cvthr = cv2.threshold(img.gray, 160, 255, cv2.THRESH_BINARY)
     return (10, 300, 110, 310)

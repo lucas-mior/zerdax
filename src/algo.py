@@ -5,7 +5,7 @@ from Image import Image
 from find_board import find_board
 
 def reduce(img):
-    new_width = 400
+    new_width = 1000
     img.fact = new_width / img.gray.shape[1]
     new_height = round(img.fact * img.gray.shape[0])
 
