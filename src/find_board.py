@@ -15,9 +15,47 @@ def radius(x1,y1,x2,y2):
 def theta(x1,y1,x2,y2):
     return math.degrees(math.atan2((y2-y1),(x2-x1)))
 
-def high_theta(image, thetas):
+def high_theta(image, thetas, basename):
     print("high_theta(theta = {})", thetas)
-    return image
+    # k = np.array([
+    #                    [ +2.0,  -1.0, +1.0, -1.0, -0.0,],
+    #                    [ -1.0,  +2.0, -1.0, +1.0, -1.0,],
+    #                    [ +1.0,  -1.0, +2.0, -1.0, +1.0,],
+    #                    [ -1.0,  +1.0, -1.0, +2.0, -1.0,],
+    #                    [ -0.0,  -1.0, +1.0, -1.0, +2.0,],
+    #                    ])
+    k450 = np.array([
+                       [ +0.0,  -1.0, -2.0,],
+                       [ +1.0,  +0.0, -1.0,],
+                       [ +2.0,  +1.0, +0.0,],
+                       ])
+    k451 = -k450
+    k250 = np.array([
+                       [ -1.0,  -1.0, +0.0,],
+                       [ -0.5,  +0.0, +0.5,],
+                       [ +0.0,  +1.0, +1.0,],
+                       ])
+    k251 = -k250
+
+    k450 = k450/(np.sum(k450) if np.sum(k450) != 0 else 1)
+    k451 = k451/(np.sum(k451) if np.sum(k451) != 0 else 1)
+
+    #filter the source image
+    image = wang_filter(image)
+
+    img_450 = cv2.medianBlur(cv2.filter2D(image, -1, k450), 5)
+    img_451 = cv2.medianBlur(cv2.filter2D(image, -1, k451), 5)
+    img_250 = cv2.medianBlur(cv2.filter2D(image, -1, k250), 5)
+    img_251 = cv2.medianBlur(cv2.filter2D(image, -1, k251), 5)
+
+    cv2.imwrite("0{}450.jpg".format(basename), img_450)
+    cv2.imwrite("0{}451.jpg".format(basename), img_451)
+    cv2.imwrite("0{}250.jpg".format(basename), img_250)
+    cv2.imwrite("0{}251.jpg".format(basename), img_251)
+
+    img_high = np.copy(img_450 + img_451 + img_250 + img_251)
+    # img_high = img_high.astype(int)
+    return img_high
 
 def find_straight_lines(basename, img_canny):
 
@@ -70,14 +108,14 @@ def find_thetas(img):
             line_polar[i] = (radius(x1,y1,x2,y2), theta(x1,y1,x2,y2))
             i += 1
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, xlabel='angle', ylabel='radius', xlim=(-90, 90))
-    ax.plot(line_polar[:,0,1], line_polar[:,0,0],
-            linestyle='', marker='.', color='blue', label='line', alpha=0.8)
-    ax.legend()
-    fig.savefig('test/{}4_polar.png'.format(img.basename))
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, xlabel='angle', ylabel='radius', xlim=(-90, 90))
+    # ax.plot(line_polar[:,0,1], line_polar[:,0,0],
+    #         linestyle='', marker='.', color='blue', label='line', alpha=0.8)
+    # ax.legend()
+    # fig.savefig('test/{}4_polar.png'.format(img.basename))
 
-    return np.array([25, 55])
+    return np.array([-35, 45])
 
 def wang_filter(image):
     f = np.copy(image/255)
@@ -104,8 +142,13 @@ def wang_filter(image):
 
 def find_board(img):
     img.thetas = find_thetas(img)
-    img_high = high_theta(img.small, img.thetas)
-    img_wang = wang_filter(img_high)
-    find_straight_lines(img.basename, img_wang)
+    print("thetas: ", img.thetas)
+    img_high = high_theta(img.small, img.thetas, img.basename)
+    print(img_high.max())
+    print(img_high.dtype)
+    cv2.imwrite("0{}hightheta.jpg".format(img.basename), img_high)
+    img_canny = cv2.Canny(img_high, 170, 230)
+    lines = find_straight_lines(img.basename, img_canny)
+    draw_hough(img.basename, lines, img, img_canny)
 
     return (10, 300, 110, 310)
