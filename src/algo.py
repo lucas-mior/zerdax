@@ -6,13 +6,14 @@ import glob
 
 from find_board import find_board
 
-def reduce(img):
+def reduce():
     new_width = 1000
     img.fact = new_width / img.gray.shape[1]
     new_height = round(img.fact * img.gray.shape[0])
 
     dsize = (new_width, new_height)
-    return cv2.resize(img.gray, dsize)
+    img.small = cv2.resize(img.gray, dsize)
+    return
 
 def full(filename):
     """ given a file path to a chessboard image,
@@ -20,12 +21,10 @@ def full(filename):
     """
     img = Image(filename)
 
-    img.small = reduce(img)
-    # cv2.imwrite('{}0small.jpg'.format(img.filename), img.small)
+    reduce()
+    img.board = find_board()
 
-    img.board = find_board(img)
+    print("board:", img.board)
 
-    print(img.board)
-
-    predicted_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+    predicted_fen = "FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
     return predicted_fen
