@@ -15,12 +15,13 @@ def radius(x1,y1,x2,y2):
 def theta(x1,y1,x2,y2):
     return math.degrees(math.atan2((y2-y1),(x2-x1)))
 
-def find_straight_lines(basename, img_wang):
-    canny_wang = cv2.Canny(img_wang, 80, 170)
+def high_theta(image, thetas):
+    print("high_theta(theta = {})", thetas)
+    return image
 
-    cv2.imwrite("test/{}1canny_wang.jpg".format(basename), canny_wang)
+def find_straight_lines(basename, img_canny):
 
-    lines_wang = cv2.HoughLinesP(canny_wang, 1, np.pi / 180, 70,        None, 75,        15)
+    lines_wang = cv2.HoughLinesP(img_canny, 1, np.pi / 180, 70,        None, 75,        15)
                    # HoughLinesP(image,    RHo,       theta, threshold, lines, minLength, maxGap)
     # dst: Output of the edge detector. It should be a grayscale image (although in fact it is a binary one)
     # rho : The resolution of the parameter r in pixels. We use 1 pixel.
@@ -32,46 +33,49 @@ def find_straight_lines(basename, img_wang):
 
     return lines_wang
 
-def draw_hough(basename, lines_wang):
-    ## draw hough
-    line_image_wang = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
+def draw_hough(basename, lines, img, img_canny):
+    line_image = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
-    gray3ch_canny_wang = cv2.cvtColor(canny_wang, cv2.COLOR_GRAY2BGR)
+    gray3ch_canny = cv2.cvtColor(img_canny, cv2.COLOR_GRAY2BGR)
 
-    # lines_wang = lines_wang / img.fact
-    # lines_wang = lines_wang.astype(int)
+    # lines = lines / img.fact
+    # lines = lines.astype(int)
 
-    for line in lines_wang:
+    for line in lines:
         for x1,y1,x2,y2 in line:
-            cv2.line(line_image_wang,(x1,y1),(x2,y2),(0,0,250), round(2/img.fact))
+            cv2.line(line_image,(x1,y1),(x2,y2),(0,0,250), round(2/img.fact))
 
-    hough_wang = cv2.addWeighted(gray3ch, 0.5, line_image_wang, 0.8, 0)
+    hough = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
 
-    cv2.imwrite("test/{}2hough_wang.jpg".format(basename), hough_wang)
-    hough_on_canny_wang = cv2.addWeighted(cv2.bitwise_not(gray3ch_canny_wang), 0.2, line_image_wang, 0.8, 0)
-    cv2.imwrite("test/{}3hough_on_canny_wang.jpg".format(basename), hough_on_canny_wang)
+    cv2.imwrite("test/{}2hough.jpg".format(basename), hough)
+    hough_on_canny = cv2.addWeighted(cv2.bitwise_not(gray3ch_canny), 0.2, line_image, 0.8, 0)
+    cv2.imwrite("test/{}3hough_on_canny.jpg".format(basename), hough_on_canny)
 
 def find_thetas(img):
     img_wang = wang_filter(img.small)
-    lines_wang = find_straight_lines(img_wang)
-    draw_hough(lines_wang)
 
-    # index = lines_wang[:,0,0].argmax()
-    # lin = lines_wang[index, 0, :]
+    img_canny = cv2.Canny(img_wang, 80, 170)
+    cv2.imwrite("test/{}1canny.jpg".format(img.basename), img_canny)
+
+    lines = find_straight_lines(img.basename, img_canny)
+    draw_hough(img.basename, lines, img, img_canny)
+
+    # index = lines[:,0,0].argmax()
+    # lin = lines[index, 0, :]
     i = 0
-    line_wang_polar = np.empty((lines_wang.shape[0], 1, 2))
-    for line in lines_wang:
+    line_polar = np.empty((lines.shape[0], 1, 2))
+    for line in lines:
         for x1,y1,x2,y2 in line:
-            line_wang_polar[i] = (radius(x1,y1,x2,y2), theta(x1,y1,x2,y2))
+            line_polar[i] = (radius(x1,y1,x2,y2), theta(x1,y1,x2,y2))
             i += 1
 
-    fig_wang = plt.figure()
-    ax = fig_wang.add_subplot(111, xlabel='angle', ylabel='radius', xlim=(-90, 90))
-    ax.plot(line_wang_polar[:,0,1], line_wang_polar[:,0,0],
-            linestyle='', marker='.', color='blue', label='wang', alpha=0.8)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, xlabel='angle', ylabel='radius', xlim=(-90, 90))
+    ax.plot(line_polar[:,0,1], line_polar[:,0,0],
+            linestyle='', marker='.', color='blue', label='line', alpha=0.8)
     ax.legend()
-    fig_wang.savefig('test/{}4_polar.png'.format(basename))
+    fig.savefig('test/{}4_polar.png'.format(img.basename))
 
     return np.array([25, 55])
 
@@ -95,7 +99,7 @@ def wang_filter(image):
     libwang_wang_filter(g, f.shape[0], f.shape[1], W, N, f)
     libwang_wang_filter(f, f.shape[0], f.shape[1], W, N, g)
 
-    G = np.array(g3*255, dtype='uint8')
+    G = np.array(g*255, dtype='uint8')
     return G
 
 def find_board(img):
