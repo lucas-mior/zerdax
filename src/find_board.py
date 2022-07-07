@@ -17,49 +17,41 @@ def theta(x1,y1,x2,y2):
 
 def high_theta(image, thetas, basename):
     print("high_theta(theta = {})", thetas)
-    # k = np.array([
-    #                    [ +2.0,  -1.0, +1.0, -1.0, -0.0,],
-    #                    [ -1.0,  +2.0, -1.0, +1.0, -1.0,],
-    #                    [ +1.0,  -1.0, +2.0, -1.0, +1.0,],
-    #                    [ -1.0,  +1.0, -1.0, +2.0, -1.0,],
-    #                    [ -0.0,  -1.0, +1.0, -1.0, +2.0,],
-    #                    ])
     k450 = np.array([
-                       [ +0.0,  -1.0, -2.0,],
-                       [ +1.0,  +0.0, -1.0,],
-                       [ +2.0,  +1.0, +0.0,],
-                       ])
+                    [ -1.0, -1.0, -1.0, -1.0,-0.0, ],
+                    [ -1.0, -1.0, -1.0, +0.0,+1.0, ],
+                    [ -1.0, -1.0, +0.0, +1.0,+1.0, ],
+                    [ -1.0, +0.0, +1.0, +1.0,+1.0, ],
+                    [ +0.0, +1.0, +1.0, +1.0,+1.0, ],
+                    ])
     k451 = -k450
     k250 = np.array([
-                       [ -1.0,  -1.0, +0.0,],
-                       [ -0.5,  +0.0, +0.5,],
-                       [ +0.0,  +1.0, +1.0,],
-                       ])
+                    [ -0.0,  +1.0, +1.0,],
+                    [ -0.5,  +0.0, +0.5,],
+                    [ -1.0,  -1.0, +0.0,],
+                    ])
     k251 = -k250
 
     k450 = k450/(np.sum(k450) if np.sum(k450) != 0 else 1)
     k451 = k451/(np.sum(k451) if np.sum(k451) != 0 else 1)
 
-    #filter the source image
-    image = wang_filter(image)
+    img_450 = cv2.filter2D(image, -1, k450)
+    img_451 = cv2.filter2D(image, -1, k451)
+    img_250 = cv2.filter2D(image, -1, k250)
+    img_251 = cv2.filter2D(image, -1, k251)
 
-    img_450 = cv2.medianBlur(cv2.filter2D(image, -1, k450), 5)
-    img_451 = cv2.medianBlur(cv2.filter2D(image, -1, k451), 5)
-    img_250 = cv2.medianBlur(cv2.filter2D(image, -1, k250), 5)
-    img_251 = cv2.medianBlur(cv2.filter2D(image, -1, k251), 5)
-
-    cv2.imwrite("0{}450.jpg".format(basename), img_450)
-    cv2.imwrite("0{}451.jpg".format(basename), img_451)
-    cv2.imwrite("0{}250.jpg".format(basename), img_250)
-    cv2.imwrite("0{}251.jpg".format(basename), img_251)
+    cv2.imwrite("test/0{}450.jpg".format(basename), img_450)
+    cv2.imwrite("test/0{}451.jpg".format(basename), img_451)
+    cv2.imwrite("test/0{}250.jpg".format(basename), img_250)
+    cv2.imwrite("test/0{}251.jpg".format(basename), img_251)
 
     img_high = np.copy(img_450 + img_451 + img_250 + img_251)
     # img_high = img_high.astype(int)
     return img_high
 
-def find_straight_lines(basename, img_canny):
+def find_straight_lines(basename, img_canny, thr, minl, maxg):
 
-    lines_wang = cv2.HoughLinesP(img_canny, 1, np.pi / 180, 70,        None, 75,        15)
+    lines_wang = cv2.HoughLinesP(img_canny, 1, np.pi / 180,  thr,        None, minl,        maxg)
                    # HoughLinesP(image,    RHo,       theta, threshold, lines, minLength, maxGap)
     # dst: Output of the edge detector. It should be a grayscale image (although in fact it is a binary one)
     # rho : The resolution of the parameter r in pixels. We use 1 pixel.
@@ -96,7 +88,10 @@ def find_thetas(img):
     img_canny = cv2.Canny(img_wang, 80, 170)
     cv2.imwrite("test/{}1canny.jpg".format(img.basename), img_canny)
 
-    lines = find_straight_lines(img.basename, img_canny)
+    thr = 70
+    minl = 75
+    maxg = 15
+    lines = find_straight_lines(img.basename, img_canny, thr, minl, maxg)
     draw_hough(img.basename, lines, img, img_canny)
 
     # index = lines[:,0,0].argmax()
@@ -144,11 +139,13 @@ def find_board(img):
     img.thetas = find_thetas(img)
     print("thetas: ", img.thetas)
     img_high = high_theta(img.small, img.thetas, img.basename)
-    print(img_high.max())
-    print(img_high.dtype)
-    cv2.imwrite("0{}hightheta.jpg".format(img.basename), img_high)
-    img_canny = cv2.Canny(img_high, 170, 230)
-    lines = find_straight_lines(img.basename, img_canny)
-    draw_hough(img.basename, lines, img, img_canny)
+    cv2.imwrite("test/0{}hightheta.jpg".format(img.basename), img_high)
+    # img_canny = cv2.Canny(img_high, 170, 230)
+
+    thr = 200
+    minl = 200
+    maxg = 50
+    lines = find_straight_lines(img.basename, img_high, thr, minl, maxg)
+    draw_hough(img.basename, lines, img, img_high)
 
     return (10, 300, 110, 310)
