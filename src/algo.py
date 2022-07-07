@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 
 from Image import Image
+import glob
+
 from find_board import find_board
 
 def reduce(img):
@@ -17,7 +19,6 @@ def full(filename):
         returns a FEN notation
     """
     img = Image(filename)
-    print(img.basename)
 
     img.small = reduce(img)
     # cv2.imwrite('{}0small.jpg'.format(img.filename), img.small)
