@@ -2,9 +2,6 @@ import cv2
 import numpy as np
 import math
 
-from Image import Image
-import glob
-
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -18,10 +15,10 @@ def radius(x1,y1,x2,y2):
 def theta(x1,y1,x2,y2):
     return math.degrees(math.atan2((y2-y1),(x2-x1)))
 
-def find_straight_lines(img_wang):
+def find_straight_lines(basename, img_wang):
     canny_wang = cv2.Canny(img_wang, 80, 170)
 
-    cv2.imwrite("test/{}1canny_wang.jpg".format(img.basename), canny_wang)
+    cv2.imwrite("test/{}1canny_wang.jpg".format(basename), canny_wang)
 
     lines_wang = cv2.HoughLinesP(canny_wang, 1, np.pi / 180, 70,        None, 75,        15)
                    # HoughLinesP(image,    RHo,       theta, threshold, lines, minLength, maxGap)
@@ -35,7 +32,7 @@ def find_straight_lines(img_wang):
 
     return lines_wang
 
-def draw_hough(lines_wang):
+def draw_hough(basename, lines_wang):
     ## draw hough
     line_image_wang = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
@@ -51,11 +48,11 @@ def draw_hough(lines_wang):
 
     hough_wang = cv2.addWeighted(gray3ch, 0.5, line_image_wang, 0.8, 0)
 
-    cv2.imwrite("test/{}2hough_wang.jpg".format(img.basename), hough_wang)
+    cv2.imwrite("test/{}2hough_wang.jpg".format(basename), hough_wang)
     hough_on_canny_wang = cv2.addWeighted(cv2.bitwise_not(gray3ch_canny_wang), 0.2, line_image_wang, 0.8, 0)
-    cv2.imwrite("test/{}3hough_on_canny_wang.jpg".format(img.basename), hough_on_canny_wang)
+    cv2.imwrite("test/{}3hough_on_canny_wang.jpg".format(basename), hough_on_canny_wang)
 
-def find_thetas():
+def find_thetas(img):
     img_wang = wang_filter(img.small)
     lines_wang = find_straight_lines(img_wang)
     draw_hough(lines_wang)
@@ -74,7 +71,7 @@ def find_thetas():
     ax.plot(line_wang_polar[:,0,1], line_wang_polar[:,0,0],
             linestyle='', marker='.', color='blue', label='wang', alpha=0.8)
     ax.legend()
-    fig_wang.savefig('test/{}4_polar.png'.format(img.basename))
+    fig_wang.savefig('test/{}4_polar.png'.format(basename))
 
     return np.array([25, 55])
 
@@ -82,9 +79,7 @@ def wang_filter(image):
     f = np.copy(image/255)
     W = np.copy(image/255) * 0
     N = np.copy(image/255) * 0
-    g1 = np.copy(image/255)
-    g2 = np.copy(g1)
-    g3 = np.copy(g2)
+    g = np.copy(image/255)
 
     libwang = ct.CDLL("./libwang.so")
     libwang_wang_filter = libwang.wang_filter
@@ -96,17 +91,17 @@ def wang_filter(image):
                                     ndp(ct.c_double, flags="C_CONTIGUOUS"),
                                     ndp(ct.c_double, flags="C_CONTIGUOUS")]
 
-    libwang_wang_filter(f, f.shape[0], f.shape[1], W, N, g1)
-    libwang_wang_filter(g1, f.shape[0], f.shape[1], W, N, g2)
-    libwang_wang_filter(g2, f.shape[0], f.shape[1], W, N, g3)
+    libwang_wang_filter(f, f.shape[0], f.shape[1], W, N, g)
+    libwang_wang_filter(g, f.shape[0], f.shape[1], W, N, f)
+    libwang_wang_filter(f, f.shape[0], f.shape[1], W, N, g)
 
     G = np.array(g3*255, dtype='uint8')
     return G
 
-def find_board():
-    img.thetas = find_thetas()
-    img_high = high_theta(img.small)
+def find_board(img):
+    img.thetas = find_thetas(img)
+    img_high = high_theta(img.small, img.thetas)
     img_wang = wang_filter(img_high)
-    find_straight_lines(img_wang)
+    find_straight_lines(img.basename, img_wang)
 
     return (10, 300, 110, 310)
