@@ -15,7 +15,7 @@ def reduce(img):
     img.small = cv2.resize(img.gray, dsize)
     return img
 
-def full(filename):
+def full(filename, c_thl, c_thh, h_th, h_minl, h_maxg):
     """ given a file path to a chessboard image,
         returns a FEN notation
     """
@@ -25,7 +25,7 @@ def full(filename):
     img.gray = cv2.cvtColor(img.color, cv2.COLOR_BGR2GRAY)
 
     img = reduce(img)
-    img.board = find_board(img)
+    img.board = find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg)
 
     print("board:", img.board)
 

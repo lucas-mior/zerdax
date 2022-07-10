@@ -38,10 +38,10 @@ def high_theta(image, thetas, basename):
     img_250 = cv2.filter2D(image, -1, k250)
     img_251 = cv2.filter2D(image, -1, k251)
 
-    cv2.imwrite("1{}450.jpg".format(basename), img_450)
-    cv2.imwrite("1{}451.jpg".format(basename), img_451)
-    cv2.imwrite("1{}250.jpg".format(basename), img_250)
-    cv2.imwrite("1{}251.jpg".format(basename), img_251)
+    # cv2.imwrite("1{}450.jpg".format(basename), img_450)
+    # cv2.imwrite("1{}451.jpg".format(basename), img_451)
+    # cv2.imwrite("1{}250.jpg".format(basename), img_250)
+    # cv2.imwrite("1{}251.jpg".format(basename), img_251)
 
     img_high = np.copy(img_450 + img_451 + img_250 + img_251)
     # img_high = img_high.astype(int)
@@ -61,7 +61,8 @@ def find_straight_lines(basename, img_canny, h_th, h_minl, h_maxg):
 
     return lines
 
-def draw_hough(basename, lines, img, img_canny):
+def draw_hough(basename, lines, img, img_canny, a, b, c, d, e):
+    print(a, b, c, d, e)
     line_image = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
@@ -76,21 +77,18 @@ def draw_hough(basename, lines, img, img_canny):
 
     hough = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
 
-    cv2.imwrite("1{}2hough.jpg".format(basename), hough)
-    hough_on_canny = cv2.addWeighted(cv2.bitwise_not(gray3ch_canny), 0.2, line_image, 0.8, 0)
-    cv2.imwrite("1{}3hough_on_canny.jpg".format(basename), hough_on_canny)
+    cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e), hough)
+    # hough_on_canny = cv2.addWeighted(cv2.bitwise_not(gray3ch_canny), 0.2, line_image, 0.8, 0)
+    # cv2.imwrite("1{}3hough_on_canny.jpg".format(basename), hough_on_canny)
 
 def find_thetas(img):
     img_wang = wang_filter(img.small)
 
     img_canny = cv2.Canny(img_wang, 80, 170, None, 3, True)
 
-    cv2.imwrite("1{}1canny.jpg".format(img.basename), img_canny)
+    # cv2.imwrite("1{}1canny.jpg".format(img.basename), img_canny)
 
-    thr = 70
-    minl = 75
-    maxg = 15
-    lines = find_straight_lines(img.basename, img_canny, thr, minl, maxg)
+    lines = find_straight_lines(img.basename, img_canny, 30, 100, 15)
     draw_hough(img.basename, lines, img, img_canny)
 
     # index = lines[:,0,0].argmax()
@@ -135,17 +133,17 @@ def wang_filter(image):
     return G
 
 def find_board(img, c_thl = 30, c_thh = 150, h_th = 50, h_minl = 150, h_maxg = 15):
-    # img.thetas = find_thetas(img)
-    # print("thetas: ", img.thetas)
+
+    # img.thetas = find_thetas(img)nn
+    # print("theas: ", img.thetas)
     # img_high = high_theta(img.small, img.thetas, img.basename)
     # cv2.imwrite("test/0{}hightheta.jpg".format(img.basename), img_high)
 
     img_wang = wang_filter(img.small)
-
     img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
-    cv2.imwrite("1{}1canny.jpg".format(img.basename), img_canny)
+    cv2.imwrite("1{}1canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
     lines = find_straight_lines(img.basename, img_canny, h_th, h_minl, h_maxg)
-    draw_hough(img.basename, lines, img, img.small)
+    draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg)
 
     return (10, 300, 110, 310)
