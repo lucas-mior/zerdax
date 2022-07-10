@@ -48,14 +48,14 @@ def draw_hough(basename, lines, img, img_canny, a, b, c, d, e):
 
     hough = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
 
-    # cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e), hough)
+    cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e), hough)
 
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
 
     img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
 
-    # cv2.imwrite("1{}1canny.jpg".format(img.basename), img_canny)
+    cv2.imwrite("1{}1canny.jpg".format(img.basename), img_canny)
 
     lines = find_straight_lines(img.basename, img_canny, h_th, h_minl, h_maxg)
     draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg)
