@@ -8,7 +8,7 @@ def parseargs():
     parser.add_argument('image', type=str, help='Nome do arquivo da foto')
     parser.add_argument('-a', nargs='?', type=int, default=20,  help='Canny: low threshold')
     parser.add_argument('-b', nargs='?', type=int, default=120, help='Canny: high threshold')
-    parser.add_argument('-c', nargs='?', type=int, default=70,  help='Hough: votes')
+    parser.add_argument('-c', nargs='?', type=int, default=60,  help='Hough: votes')
     parser.add_argument('-d', nargs='?', type=int, default=150, help='Hough: minLen')
     parser.add_argument('-e', nargs='?', type=int, default=15,  help='Hough: maxGap')
     args = parser.parse_args()

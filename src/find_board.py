@@ -48,9 +48,7 @@ def draw_hough(basename, lines, img, img_canny, a, b, c, d, e):
 
     hough = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
 
-    cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e), hough)
-    # hough_on_canny = cv2.addWeighted(cv2.bitwise_not(gray3ch_canny), 0.2, line_image, 0.8, 0)
-    # cv2.imwrite("1{}3hough_on_canny.jpg".format(basename), hough_on_canny)
+    # cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e), hough)
 
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
@@ -64,21 +62,43 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     # index = lines[:,0,0].argmax()
     # lin = lines[index, 0, :]
+    # line_polar = np.empty((lines.shape[0], 1, 2))
     i = 0
-    line_polar = np.empty((lines.shape[0], 1, 2))
+    lines = np.float32(lines)
     for line in lines:
         for x1,y1,x2,y2 in line:
-            line_polar[i] = (radius(x1,y1,x2,y2), theta(x1,y1,x2,y2))
+            lines[i, 0, 2] = radius(x1,y1,x2,y2)
+            lines[i, 0, 3] = theta(x1,y1,x2,y2)
             i += 1
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, xlabel='angle', ylabel='radius', xlim=(-90, 90))
-    ax.plot(line_polar[:,0,1], line_polar[:,0,0],
-            linestyle='', marker='.', color='blue', label='line', alpha=0.8)
-    ax.legend()
-    fig.savefig('1{}4_polar.png'.format(img.basename))
+    print("lines: ", lines[:,:,3])
+    print("shape: ", lines[:,:,3].shape)
+    print("tyoe: ", type(lines[1,0,3]))
 
-    return np.array([-35, 45])
+    fig = plt.figure()
+    plt.hist(lines[:,0,3], 180, [-90, 90])
+    fig.savefig('1{}4_zzzzz.png'.format(img.basename))
+
+    # Define criteria = ( type, max_iter = 10 , epsilon = 1.0 )
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    # Set flags (Just to avoid line break in the code)
+    flags = cv2.KMEANS_RANDOM_CENTERS
+    # Apply KMeans
+    compactness,labels,centers = cv2.kmeans(lines[:,:,3], 2, None, criteria, 10, flags)
+
+    A = lines[labels==0, 0]
+    B = lines[labels==1, 0]
+    print("A: ", A)
+    print("B: ", B)
+
+    # Now plot 'A' in red, 'B' in blue, 'centers' in yellow
+    fig = plt.figure()
+    plt.hist(A, 180, [-90, 90], color = 'r')
+    plt.hist(B, 180, [-90, 90], color = 'b')
+    plt.hist(centers, 45, [-90, 90], color = 'y')
+    fig.savefig('1{}4_kmeans.png'.format(img.basename))
+
+    return np.array(centers)
 
 def wang_filter(image):
     f = np.copy(image/255)
