@@ -57,7 +57,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     # cv2.imwrite("1{}1canny.jpg".format(img.basename), img_canny)
 
-    lines = find_straight_lines(img.basename, img_canny, 30, 100, 15)
+    lines = find_straight_lines(img.basename, img_canny, h_th, h_minl, h_maxg)
     draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg)
 
     # index = lines[:,0,0].argmax()
