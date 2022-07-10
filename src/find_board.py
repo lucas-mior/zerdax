@@ -63,20 +63,19 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     # index = lines[:,0,0].argmax()
     # lin = lines[index, 0, :]
     # line_polar = np.empty((lines.shape[0], 1, 2))
+    new = np.zeros((lines.shape[0], lines.shape[1], 6))
+    new[:,0,0:3] = np.copy(lines[:,0,0:3])
+    lines = np.float32(new)
+
     i = 0
-    lines = np.float32(lines)
     for line in lines:
-        for x1,y1,x2,y2 in line:
-            lines[i, 0, 2] = radius(x1,y1,x2,y2)
-            lines[i, 0, 3] = theta(x1,y1,x2,y2)
+        for x1,y1,x2,y2,r,t in line:
+            lines[i, 0, 4] = radius(x1,y1,x2,y2)
+            lines[i, 0, 5] = theta(x1,y1,x2,y2)
             i += 1
 
-    print("lines: ", lines[:,:,3])
-    print("shape: ", lines[:,:,3].shape)
-    print("tyoe: ", type(lines[1,0,3]))
-
     fig = plt.figure()
-    plt.hist(lines[:,0,3], 180, [-90, 90])
+    plt.hist(lines[:,0,5], 180, [-90, 90])
     fig.savefig('1{}4_zzzzz.png'.format(img.basename))
 
     # Define criteria = ( type, max_iter = 10 , epsilon = 1.0 )
@@ -84,10 +83,10 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     # Set flags (Just to avoid line break in the code)
     flags = cv2.KMEANS_RANDOM_CENTERS
     # Apply KMeans
-    compactness,labels,centers = cv2.kmeans(lines[:,:,3], 2, None, criteria, 10, flags)
+    compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
 
-    A = lines[labels==0, 0]
-    B = lines[labels==1, 0]
+    A = lines[labels==0, 5]
+    B = lines[labels==1, 5]
     print("A: ", A)
     print("B: ", B)
 
