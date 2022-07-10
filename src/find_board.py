@@ -52,7 +52,7 @@ def find_straight_lines(basename, img_canny, h_th, h_minl, h_maxg):
     lines = cv2.HoughLinesP(img_canny, 1, np.pi / 180,  h_th,        None, h_minl,   h_maxg)
                    # HoughLinesP(image,    RHo,       theta, threshold, lines, minLength, maxGap)
     # dst: Output of the edge detector. It should be a grayscale image (although in fact it is a binary one)
-    # rho : The resolution of the parameter r in pixels. We use 1 pixel.
+    # Rho : The resolution of the parameter r in pixels. We use 1 pixel.
     # theta: The resolution of the parameter θ in radians. We use 1 degree (CV_PI/180)
     # threshold: The minimum number of intersections to "*detect*" a line
     # lines: A vector that will store the parameters (xstart,ystart,xend,yend) of the detected lines
@@ -81,10 +81,10 @@ def draw_hough(basename, lines, img, img_canny, a, b, c, d, e):
     # hough_on_canny = cv2.addWeighted(cv2.bitwise_not(gray3ch_canny), 0.2, line_image, 0.8, 0)
     # cv2.imwrite("1{}3hough_on_canny.jpg".format(basename), hough_on_canny)
 
-def find_thetas(img):
+def find_thetas(img, c_thl, c_thh):
     img_wang = wang_filter(img.small)
 
-    img_canny = cv2.Canny(img_wang, 80, 170, None, 3, True)
+    img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
 
     # cv2.imwrite("1{}1canny.jpg".format(img.basename), img_canny)
 
@@ -134,7 +134,7 @@ def wang_filter(image):
 
 def find_board(img, c_thl = 30, c_thh = 150, h_th = 50, h_minl = 150, h_maxg = 15):
 
-    # img.thetas = find_thetas(img)nn
+    # img.thetas = find_thetas(img)
     # print("theas: ", img.thetas)
     # img_high = high_theta(img.small, img.thetas, img.basename)
     # cv2.imwrite("test/0{}hightheta.jpg".format(img.basename), img_high)
