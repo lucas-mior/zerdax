@@ -18,44 +18,6 @@ def radius(x1,y1,x2,y2):
 def theta(x1,y1,x2,y2):
     return math.degrees(math.atan2((y2-y1),(x2-x1)))
 
-def high_theta(image, thetas, basename):
-    print("high_theta(theta = {})", thetas)
-    k450 = np.array([
-                    [ -3.0,  -2.0, -1.0, -1.0, +0.0,],
-                    [ -2.0,  -1.0, -1.0, +0.0, +1.0,],
-                    [ -1.0,  -1.0, +0.0, +1.0, +1.0,],
-                    [ -1.0,  +0.0, +1.0, +1.0, +2.0,],
-                    [ -0.0,  +1.0, +1.0, +2.0, +3.0,],
-                    ])
-    # k451 = -k450
-    k250 = np.array([
-                    [ -2.0,  -2.0, -1.0, -1.0, +0.0,],
-                    [ -2.0,  -1.0, -1.0, +0.0, +1.0,],
-                    [ -1.0,  -1.0, +0.0, +1.0, +1.0,],
-                    [ -1.0,  +0.0, +1.0, +1.0, +1.0,],
-                    [ -0.0,  +1.0, +1.0, +1.0, +2.0,],
-                    ])
-    # k251 = -k250
-
-    k450 = k450/(np.sum(k450) if np.sum(k450) != 0 else 1)
-    # k451 = k451/(np.sum(k451) if np.sum(k451) != 0 else 1)
-    k250 = k250/(np.sum(k250) if np.sum(k250) != 0 else 1)
-    # k251 = k251/(np.sum(k251) if np.sum(k251) != 0 else 1)
-
-    img_450 = cv2.filter2D(image, -1, k450)
-    # img_451 = cv2.filter2D(image, -1, k451)
-    img_250 = cv2.filter2D(image, -1, k250)
-    # img_251 = cv2.filter2D(image, -1, k251)
-
-    cv2.imwrite("1{}450.jpg".format(basename), img_450)
-    # cv2.imwrite("1{}451.jpg".format(basename), img_451)
-    cv2.imwrite("1{}250.jpg".format(basename), img_250)
-    # cv2.imwrite("1{}251.jpg".format(basename), img_251)
-
-    img_high = np.copy(img_450 + img_250)
-    # img_high = img_high.astype(int)
-    return img_high
-
 def find_straight_lines(basename, img_canny, h_th, h_minl, h_maxg):
 
     lines = cv2.HoughLinesP(img_canny, 1, np.pi / 180,  h_th,        None, h_minl,   h_maxg)
@@ -90,7 +52,7 @@ def draw_hough(basename, lines, img, img_canny, a, b, c, d, e):
     # hough_on_canny = cv2.addWeighted(cv2.bitwise_not(gray3ch_canny), 0.2, line_image, 0.8, 0)
     # cv2.imwrite("1{}3hough_on_canny.jpg".format(basename), hough_on_canny)
 
-def find_thetas(img, c_thl, c_thh):
+def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
 
     img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
@@ -98,7 +60,7 @@ def find_thetas(img, c_thl, c_thh):
     # cv2.imwrite("1{}1canny.jpg".format(img.basename), img_canny)
 
     lines = find_straight_lines(img.basename, img_canny, 30, 100, 15)
-    draw_hough(img.basename, lines, img, img_canny)
+    draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg)
 
     # index = lines[:,0,0].argmax()
     # lin = lines[index, 0, :]
@@ -143,17 +105,15 @@ def wang_filter(image):
 
 def find_board(img, c_thl = 30, c_thh = 150, h_th = 50, h_minl = 150, h_maxg = 15):
 
-    # img.thetas = find_thetas(img)
-    # print("theas: ", img.thetas)
-    # img_high = high_theta(img.small, img.thetas, img.basename)
-    # cv2.imwrite("test/0{}hightheta.jpg".format(img.basename), img_high)
+    img.thetas = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
+    print("thetas: ", img.thetas)
 
-    img_wang = wang_filter(img.small)
-    img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
-    cv2.imwrite("1{}1canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
+    # img_wang = wang_filter(img.small)
+    # img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
+    # cv2.imwrite("1{}1canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
-    lines = find_straight_lines(img.basename, img_canny, h_th, h_minl, h_maxg)
-    draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg)
+    # lines = find_straight_lines(img.basename, img_canny, h_th, h_minl, h_maxg)
+    # draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg)
 
     return (10, 300, 110, 310)
 
@@ -165,14 +125,3 @@ def reduce(img):
     dsize = (new_width, new_height)
     img.small = cv2.resize(img.gray, dsize)
     return img
-
-if __name__ == "__main__":
-    filename = sys.argv[1]
-    img = Image(filename)
-    img.basename = Path(filename).stem
-    img.color = cv2.imread(filename)
-    img.gray = cv2.cvtColor(img.color, cv2.COLOR_BGR2GRAY)
-    img = reduce(img)
-    img.thetas = [22, 45]
-    img_high = high_theta(img.small, img.thetas, img.basename)
-    cv2.imwrite("0{}hightheta.jpg".format(img.basename), img_high)
