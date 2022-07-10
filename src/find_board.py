@@ -75,21 +75,6 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
             lines[i, 0, 5] = theta(x1,y1,x2,y2)
             i += 1
 
-    print("LINES:")
-    print("")
-    print(lines)
-    print("")
-
-    fig1 = plt.figure() 
-    ax = fig1.add_subplot(111, xlabel='angle', ylabel='radius', xlim=(-90, 90)) 
-    ax.plot(lines[:,0,5], lines[:,0,4], linestyle='', marker='.', color='blue', label='line', alpha=0.8) 
-    ax.legend() 
-    fig1.savefig('1{}4_polar.png'.format(img.basename)) 
-
-    fig = plt.figure()
-    plt.hist(lines[:,0,5], 180, [-90, 90])
-    fig.savefig('1{}4_zzzzz.png'.format(img.basename))
-
     # Define criteria = ( type, max_iter = 10 , epsilon = 1.0 )
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
     # Set flags (Just to avoid line break in the code)
