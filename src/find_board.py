@@ -63,16 +63,28 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     # index = lines[:,0,0].argmax()
     # lin = lines[index, 0, :]
     # line_polar = np.empty((lines.shape[0], 1, 2))
-    new = np.zeros((lines.shape[0], lines.shape[1], 6))
-    new[:,0,0:3] = np.copy(lines[:,0,0:3])
+    new = np.zeros((lines.shape[0], 1, 6))
+    new[:,0,0:4] = np.copy(lines[:,0,0:4])
     lines = np.float32(new)
-
+    print("shape: ", lines.shape)
     i = 0
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
+            print(x1,y1,x2,y2,r,t)
             lines[i, 0, 4] = radius(x1,y1,x2,y2)
             lines[i, 0, 5] = theta(x1,y1,x2,y2)
             i += 1
+
+    print("LINES:")
+    print("")
+    print(lines)
+    print("")
+
+    fig1 = plt.figure() 
+    ax = fig1.add_subplot(111, xlabel='angle', ylabel='radius', xlim=(-90, 90)) 
+    ax.plot(lines[:,0,5], lines[:,0,4], linestyle='', marker='.', color='blue', label='line', alpha=0.8) 
+    ax.legend() 
+    fig1.savefig('1{}4_polar.png'.format(img.basename)) 
 
     fig = plt.figure()
     plt.hist(lines[:,0,5], 180, [-90, 90])
