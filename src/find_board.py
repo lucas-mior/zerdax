@@ -20,7 +20,7 @@ def theta(x1,y1,x2,y2):
 
 def find_straight_lines(basename, img_canny, h_th, h_minl, h_maxg):
 
-    lines = cv2.HoughLinesP(img_canny, 1, np.pi / 180,  h_th,        None, h_minl,   h_maxg)
+    lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,        None, h_minl,   h_maxg)
                    # HoughLinesP(image,    RHo,       theta, threshold, lines, minLength, maxGap)
     # dst: Output of the edge detector. It should be a grayscale image (although in fact it is a binary one)
     # Rho : The resolution of the parameter r in pixels. We use 1 pixel.
