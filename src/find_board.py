@@ -45,14 +45,14 @@ def draw_hough(basename, lines, img, img_canny, a, b, c, d, e):
 
     hough = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
 
-    cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e), hough)
+    # cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e), hough)
 
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
 
     img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
 
-    cv2.imwrite("1{}1canny.jpg".format(img.basename), img_canny)
+    # cv2.imwrite("1{}1canny.jpg".format(img.basename), img_canny)
 
     lines = find_straight_lines(img.basename, img_canny, h_th, h_minl, h_maxg)
     draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg)
@@ -79,15 +79,17 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     # Apply KMeans
     compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
 
-    A = lines[labels==0, 5]
-    B = lines[labels==1, 5]
-    print("A: ", A)
-    print("B: ", B)
+    print("compactnes: ", compactness)
+    print("centers: ", centers)
+    A = lines[labels==0]
+    B = lines[labels==1]
+    print("A: \n", A)
+    print("B: \n", B)
 
     # Now plot 'A' in red, 'B' in blue, 'centers' in yellow
     fig = plt.figure()
-    plt.hist(A, 180, [-90, 90], color = 'r')
-    plt.hist(B, 180, [-90, 90], color = 'b')
+    plt.hist(A[:,5], 180, [-90, 90], color = 'r')
+    plt.hist(B[:,5], 180, [-90, 90], color = 'b')
     plt.hist(centers, 45, [-90, 90], color = 'y')
     fig.savefig('1{}4_kmeans.png'.format(img.basename))
 
@@ -116,7 +118,7 @@ def wang_filter(image):
     G = np.array(g*255, dtype='uint8')
     return G
 
-def find_board(img, c_thl = 30, c_thh = 150, h_th = 50, h_minl = 150, h_maxg = 15):
+def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     img.thetas = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
     print("thetas: ", img.thetas)
