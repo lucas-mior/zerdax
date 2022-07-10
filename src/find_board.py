@@ -39,9 +39,6 @@ def draw_hough(basename, lines, img, img_canny, a, b, c, d, e):
 
     gray3ch_canny = cv2.cvtColor(img_canny, cv2.COLOR_GRAY2BGR)
 
-    # lines = lines / img.fact
-    # lines = lines.astype(int)
-
     for line in lines:
         for x1,y1,x2,y2 in line:
             cv2.line(line_image,(x1,y1),(x2,y2),(0,0,250), round(2/img.fact))
