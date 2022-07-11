@@ -27,5 +27,5 @@ def full(filename, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     print("board:", img.board)
 
-    predicted_fen = "FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+    predicted_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
     return predicted_fen

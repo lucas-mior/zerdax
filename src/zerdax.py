@@ -19,7 +19,7 @@ def Main():
     image = args.image
     print("======= Zerdax {} =======".format(image))
     fen = algo.full(image, args.c_thrl, args.c_thrh, args.h_thrv, args.h_minl, args.h_maxg)
-    print(fen)
+    print("FEN: ", fen)
 
 if __name__ == '__main__':
     Main()
