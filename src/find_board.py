@@ -90,18 +90,15 @@ def remove_outliers(A, mean):
 
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
-
     img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
-
     cv2.imwrite("1{}1canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
     lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl,    h_maxg)
-
     draw_hough(img, lines, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
 
-    new = np.zeros((lines.shape[0], 1, 6))
-    new[:,0,0:4] = np.copy(lines[:,0,0:4])
-    lines = np.float32(new)
+    aux = np.zeros((lines.shape[0], 1, 6))
+    aux[:,0,0:4] = np.copy(lines[:,0,0:4])
+    lines = np.float32(aux)
     i = 0
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
@@ -165,22 +162,22 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img.thetas, A, B = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
     print("thetas: ", img.thetas[:,0])
 
-    newA = np.empty((A.shape[0], 1, A.shape[1]))
-    newB = np.empty((B.shape[0], 1, B.shape[1]))
-    newA[:,0,:] = A
-    newB[:,0,:] = B
-    newA = np.array(newA, dtype='int32')
-    newB = np.array(newB, dtype='int32')
+    auxA = np.empty((A.shape[0], 1, A.shape[1]))
+    auxB = np.empty((B.shape[0], 1, B.shape[1]))
+    auxA[:,0,:] = A
+    auxB[:,0,:] = B
+    A = np.array(auxA, dtype='int32')
+    B = np.array(auxB, dtype='int32')
 
     if abs(img.thetas[0]) > abs(img.thetas[1]):
         # A is more vertical, B is more horizontal
-        A = newA[newA[:, 0, 0].argsort()]
-        B = newB[newB[:, 0, 1].argsort()]
+        A = A[A[:, 0, 0].argsort()]
+        B = B[B[:, 0, 1].argsort()]
         intersections, newlines = find_intersections(B, A)
     else:
         # B is more vertical, A is more horizontal
-        A = newA[newA[:, 0, 1].argsort()]
-        B = newB[newB[:, 0, 0].argsort()]
+        A = A[A[:, 0, 1].argsort()]
+        B = B[B[:, 0, 0].argsort()]
         intersections, newlines = find_intersections(A, B)
 
     # join = np.concatenate((A,B))
