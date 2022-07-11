@@ -59,23 +59,20 @@ def draw_hough(basename, lines, img, img_canny, a, b, c, d, e, clean):
     line_image = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
-    gray3ch_canny = cv2.cvtColor(img_canny, cv2.COLOR_GRAY2BGR)
-
     for line in lines:
         for x1,y1,x2,y2 in line:
             cv2.line(line_image,(x1,y1),(x2,y2),(0,0,250), round(2/img.fact))
 
     hough = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
 
-    if clean == 1:
-        cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e, clean), hough)
+    cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e, clean), hough)
 
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
 
     img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
 
-    # cv2.imwrite("1{}1canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
+    cv2.imwrite("1{}1canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
     lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl,    h_maxg)
 
@@ -109,7 +106,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     plt.hist(A[:,5], 180, [-90, 90], color = 'red')
     plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
     plt.hist(centers, 45, [-90, 90], color = 'yellow')
-    # fig.savefig('1{}4_kmeans0.png'.format(img.basename))
+    fig.savefig('1{}4_kmeans0.png'.format(img.basename))
 
     remA = np.empty(A.shape[0])
     remA = np.int32(remA)
@@ -149,7 +146,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     plt.hist(A[:,5], 180, [-90, 90], color = 'r')
     plt.hist(B[:,5], 180, [-90, 90], color = 'b')
     plt.hist(centers, 45, [-90, 90], color = 'y')
-    # fig.savefig('1{}4_kmeans1.png'.format(img.basename))
+    fig.savefig('1{}4_kmeans1.png'.format(img.basename))
 
     return np.array(centers), A, B
 
