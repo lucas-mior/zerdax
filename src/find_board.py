@@ -195,6 +195,6 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         cv2.circle(circles, p, radius=6, color=(255, 0, 0), thickness=-1)
 
     image = cv2.addWeighted(gray3ch, 0.5, circles, 0.8, 0)
-    cv2.imwrite("1{}5circle.jpg".format(img.basename), image)
+    cv2.imwrite("1{}5_circle.jpg".format(img.basename), image)
 
     return (10, 300, 110, 310)
