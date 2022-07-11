@@ -67,7 +67,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     i = 0
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
-            print(x1,y1,x2,y2,r,t)
+            # print(x1,y1,x2,y2,r,t)
             lines[i, 0, 4] = radius(x1,y1,x2,y2)
             lines[i, 0, 5] = theta(x1,y1,x2,y2)
             i += 1
@@ -79,19 +79,59 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     # Apply KMeans
     compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
 
-    print("compactnes: ", compactness)
-    print("centers: ", centers)
     A = lines[labels==0]
     B = lines[labels==1]
+
     print("A: \n", A)
     print("B: \n", B)
+    print("compactness: ", compactness)
+
+    print("OLD centers: ", centers)
 
     # Now plot 'A' in red, 'B' in blue, 'centers' in yellow
     fig = plt.figure()
     plt.hist(A[:,5], 180, [-90, 90], color = 'r')
     plt.hist(B[:,5], 180, [-90, 90], color = 'b')
     plt.hist(centers, 45, [-90, 90], color = 'y')
-    fig.savefig('1{}4_kmeans.png'.format(img.basename))
+    fig.savefig('1{}4_kmeans0.png'.format(img.basename))
+
+    remA = np.empty(A.shape[0])
+    remA = np.int32(remA)
+
+    i = 0
+    for a in A[:, 5]:
+        if abs(a - centers[0]) > 15:
+            remA[i] = 0
+        else:
+            remA[i] = 1
+        i += 1
+
+    A = A[remA==1]
+
+    remB = np.empty(B.shape[0])
+    remB = np.int32(remB)
+
+    i = 0
+    for b in B[:, 5]:
+        if abs(b - centers[1]) > 15:
+            remB[i] = 0
+        else:
+            remB[i] = 1
+        i += 1
+
+    B = B[remB==1]
+
+    print("A: \n", A)
+    print("B: \n", B)
+    centers[0] = np.mean(A[:,5])
+    centers[1] = np.mean(B[:,5])
+    print("NEW centers: ", centers)
+
+    fig = plt.figure()
+    plt.hist(A[:,5], 180, [-90, 90], color = 'r')
+    plt.hist(B[:,5], 180, [-90, 90], color = 'b')
+    plt.hist(centers, 45, [-90, 90], color = 'y')
+    fig.savefig('1{}4_kmeans1.png'.format(img.basename))
 
     return np.array(centers)
 
@@ -121,7 +161,7 @@ def wang_filter(image):
 def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     img.thetas = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
-    print("thetas: ", img.thetas)
+    print("thetas: ", img.thetas[:,0])
 
     # img_wang = wang_filter(img.small)
     # img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
