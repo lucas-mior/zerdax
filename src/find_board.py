@@ -65,7 +65,7 @@ def draw_hough(img, lines, img_canny, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, cl
 
     hough = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
 
-    cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, clean), hough)
+    cv2.imwrite("1{}2_hough_{}_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, clean), hough)
 
 def remove_outliers(A, mean):
     rem = np.empty(A.shape[0])
@@ -86,12 +86,12 @@ def remove_outliers(A, mean):
     else:
         A = A[rem==1]
         mean = np.mean(A[:,5])
-        return mean, A[rem==1]
+        return mean, A
 
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
     img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
-    cv2.imwrite("1{}1canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
+    cv2.imwrite("1{}1_canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
     lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl,    h_maxg)
     draw_hough(img, lines, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
