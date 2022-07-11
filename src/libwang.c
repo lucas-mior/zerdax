@@ -36,6 +36,7 @@ void norm_array(double *f, int xx, int yy, double *W, double *N) {
         }
     }
 }
+
 void convolute(double *f, int xx, int yy, double *W, double *N, double *g) {
     for (int x = 1; x < xx - 1; x++) {
         for (int y = 1; y < yy - 1; y++) {
