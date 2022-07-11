@@ -17,10 +17,13 @@ def det(a, b):
 
 def find_intersections(A, B):
     inter = []
+    newlines = []
     for r in A[:,0]:
+        j = 0
+        l1 = [(r[0],r[1]), (r[2],r[3])]
         for s in B[:,0]:
 
-            l1 = [(r[0],r[1]), (r[2],r[3])]
+            # if len(inter) < 10:
             l2 = [(s[0],s[1]), (s[2],s[3])]
 
             xdiff = (l1[0][0] - l1[1][0], l2[0][0] - l2[1][0])
@@ -37,8 +40,13 @@ def find_intersections(A, B):
                 continue
 
             inter.append((x,y))
+            j += 1
+        if j > 6:
+            newlines.append([l1[0][0], l1[0][1], x, y])
 
-    return np.array(inter, dtype='int32')
+    newlines = np.array(newlines, dtype='int32')
+    print("newlines: ", newlines)
+    return np.array(inter, dtype='int32'), newlines
 
 def radius(x1,y1,x2,y2):
     return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
@@ -195,15 +203,20 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     newA = np.array(newA, dtype='int32')
     newB = np.array(newB, dtype='int32')
 
-    A = newA[newA[:, 0, 0].argsort()]
-    B = newB[newB[:, 0, 0].argsort()]
+    if abs(img.thetas[0]) > abs(img.thetas[1]):
+        A = newA[newA[:, 0, 0].argsort()]
+        B = newB[newB[:, 0, 1].argsort()]
+        intersections, newlines = find_intersections(B, A)
+    else:
+        A = newA[newA[:, 0, 1].argsort()]
+        B = newB[newB[:, 0, 0].argsort()]
+        intersections, newlines = find_intersections(A, B)
 
-    join = np.concatenate((A,B))
+    # join = np.concatenate((A,B))
+    join = np.empty((newlines.shape[0], 1, 4), dtype='int32')
+    join[:,0,0:4] = newlines
     draw_hough(img.basename, join[:,:,0:4], img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 1)
 
-    print(A)
-    print(B)
-    intersections = find_intersections(A, B)
     print("INTERSECTIONS: ", intersections)
 
     circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0

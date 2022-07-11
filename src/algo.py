@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 
 from Image import Image
-from pathlib import Path
 
 from find_board import find_board
 
@@ -20,7 +19,6 @@ def full(filename, c_thl, c_thh, h_th, h_minl, h_maxg):
         returns a FEN notation
     """
     img = Image(filename)
-    img.basename = Path(filename).stem
     img.color = cv2.imread(filename)
     img.gray = cv2.cvtColor(img.color, cv2.COLOR_BGR2GRAY)
 
