@@ -33,7 +33,6 @@ def find_straight_lines(basename, img_canny, h_th, h_minl, h_maxg):
     return lines
 
 def draw_hough(basename, lines, img, img_canny, a, b, c, d, e):
-    print(a, b, c, d, e)
     line_image = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
@@ -63,11 +62,9 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     new = np.zeros((lines.shape[0], 1, 6))
     new[:,0,0:4] = np.copy(lines[:,0,0:4])
     lines = np.float32(new)
-    print("shape: ", lines.shape)
     i = 0
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
-            # print(x1,y1,x2,y2,r,t)
             lines[i, 0, 4] = radius(x1,y1,x2,y2)
             lines[i, 0, 5] = theta(x1,y1,x2,y2)
             i += 1
@@ -82,13 +79,8 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     A = lines[labels==0]
     B = lines[labels==1]
 
-    print("A: \n", A)
-    print("B: \n", B)
-    print("compactness: ", compactness)
-
     print("OLD centers: ", centers)
 
-    # Now plot 'A' in red, 'B' in blue, 'centers' in yellow
     fig = plt.figure()
     plt.hist(A[:,5], 180, [-90, 90], color = 'r')
     plt.hist(B[:,5], 180, [-90, 90], color = 'b')
@@ -121,8 +113,6 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     B = B[remB==1]
 
-    print("A: \n", A)
-    print("B: \n", B)
     centers[0] = np.mean(A[:,5])
     centers[1] = np.mean(B[:,5])
     print("NEW centers: ", centers)
@@ -133,7 +123,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     plt.hist(centers, 45, [-90, 90], color = 'y')
     fig.savefig('1{}4_kmeans1.png'.format(img.basename))
 
-    return np.array(centers)
+    return np.array(centers), A, B
 
 def wang_filter(image):
     f = np.copy(image/255)
@@ -160,7 +150,7 @@ def wang_filter(image):
 
 def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
-    img.thetas = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
+    img.thetas, A, B = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
     print("thetas: ", img.thetas[:,0])
 
     # img_wang = wang_filter(img.small)
