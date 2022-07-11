@@ -171,12 +171,3 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     # draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg)
 
     return (10, 300, 110, 310)
-
-def reduce(img):
-    new_width = 1000
-    img.fact = new_width / img.gray.shape[1]
-    new_height = round(img.fact * img.gray.shape[0])
-
-    dsize = (new_width, new_height)
-    img.small = cv2.resize(img.gray, dsize)
-    return img
