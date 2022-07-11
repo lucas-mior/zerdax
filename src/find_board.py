@@ -16,6 +16,8 @@ def det(a, b):
     return a[0]*b[1] - a[1]*b[0]
 
 def find_intersections(A, B):
+    """ finds intersections between more vertical (A)
+        and more horizontal (B) infinite lines """
     inter = []
     newlines = []
     for r in A[:,0]:
@@ -58,14 +60,6 @@ def find_straight_lines(basename, img_canny, h_th, h_minl, h_maxg):
 
     lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl,    h_maxg)
               # HoughLinesP(image,   RHo, theta,   threshold, lines, minLength, maxGap)
-    # dst: Output of the edge detector. It should be a grayscale image (although in fact it is a binary one)
-    # Rho : The resolution of the parameter r in pixels. We use 1 pixel.
-    # theta: The resolution of the parameter θ in radians. We use 1 degree (CV_PI/180)
-    # threshold: The minimum number of intersections to "*detect*" a line
-    # lines: A vector that will store the parameters (xstart,ystart,xend,yend) of the detected lines
-    # minLineLength: The minimum number of points that can form a line. Lines with less than this number of points are disregarded.
-    # maxLineGap: The maximum gap between two points to be considered in the same line.
-
     return lines
 
 def draw_hough(basename, lines, img, img_canny, a, b, c, d, e, clean):
