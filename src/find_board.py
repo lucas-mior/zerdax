@@ -88,11 +88,8 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
             lines[i, 0, 5] = theta(x1,y1,x2,y2)
             i += 1
 
-    # Define criteria = ( type, max_iter = 10 , epsilon = 1.0 )
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-    # Set flags (Just to avoid line break in the code)
     flags = cv2.KMEANS_RANDOM_CENTERS
-    # Apply KMeans
     compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
 
     if abs(centers[0] - centers[1]) < 30:
