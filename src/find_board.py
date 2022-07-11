@@ -183,10 +183,12 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     newB = np.array(newB, dtype='int32')
 
     if abs(img.thetas[0]) > abs(img.thetas[1]):
+        # A is more vertical, B is more horizontal
         A = newA[newA[:, 0, 0].argsort()]
         B = newB[newB[:, 0, 1].argsort()]
         intersections, newlines = find_intersections(B, A)
     else:
+        # B is more vertical, A is more horizontal
         A = newA[newA[:, 0, 1].argsort()]
         B = newB[newB[:, 0, 0].argsort()]
         intersections, newlines = find_intersections(A, B)
