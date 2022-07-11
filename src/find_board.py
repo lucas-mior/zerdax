@@ -191,20 +191,7 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     for p in intersections:
         cv2.circle(circles, p, radius=6, color=(255, 0, 0), thickness=-1)
 
-    aux = np.zeros((intersections.shape[0], 1, 2))
-    aux[:,0,0:2] = np.copy(intersections[:,0:2])
-    intersections = np.float32(aux)
-
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-    flags = cv2.KMEANS_RANDOM_CENTERS
-    compactness,labels,centers = cv2.kmeans(intersections, 1, None, criteria, 10, flags)
-
-    centers = centers.astype(int)
-
-    for p in centers:
-        cv2.circle(circles, p, radius=6, color=(0, 255, 0), thickness=-1)
-
     image = cv2.addWeighted(gray3ch, 0.5, circles, 0.8, 0)
-    cv2.imwrite("1{}5_center_k1means.jpg".format(img.basename), image)
+    cv2.imwrite("1{}5_circle.jpg".format(img.basename), image)
 
     return (10, 300, 110, 310)
