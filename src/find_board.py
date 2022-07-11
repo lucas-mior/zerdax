@@ -20,8 +20,8 @@ def theta(x1,y1,x2,y2):
 
 def find_straight_lines(basename, img_canny, h_th, h_minl, h_maxg):
 
-    lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,        None, h_minl,   h_maxg)
-                   # HoughLinesP(image,    RHo,       theta, threshold, lines, minLength, maxGap)
+    lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl,    h_maxg)
+              # HoughLinesP(image,   RHo, theta,   threshold, lines, minLength, maxGap)
     # dst: Output of the edge detector. It should be a grayscale image (although in fact it is a binary one)
     # Rho : The resolution of the parameter r in pixels. We use 1 pixel.
     # theta: The resolution of the parameter θ in radians. We use 1 degree (CV_PI/180)
@@ -44,21 +44,19 @@ def draw_hough(basename, lines, img, img_canny, a, b, c, d, e):
 
     hough = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
 
-    # cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e), hough)
+    cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e), hough)
 
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
 
     img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
 
-    # cv2.imwrite("1{}1canny.jpg".format(img.basename), img_canny)
+    cv2.imwrite("1{}1canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
     lines = find_straight_lines(img.basename, img_canny, h_th, h_minl, h_maxg)
+    print("lines: ", lines)
     draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg)
 
-    # index = lines[:,0,0].argmax()
-    # lin = lines[index, 0, :]
-    # line_polar = np.empty((lines.shape[0], 1, 2))
     new = np.zeros((lines.shape[0], 1, 6))
     new[:,0,0:4] = np.copy(lines[:,0,0:4])
     lines = np.float32(new)
@@ -75,6 +73,10 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     flags = cv2.KMEANS_RANDOM_CENTERS
     # Apply KMeans
     compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
+
+    if abs(centers[0] - centers[1]) < 30
+        print("K-means failed. Exiting")
+        exit()
 
     A = lines[labels==0]
     B = lines[labels==1]
@@ -152,12 +154,16 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     img.thetas, A, B = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
     print("thetas: ", img.thetas[:,0])
+    print("shape:", A.shape)
+    newA = np.empty((A.shape[0], 1, A.shape[1]))
+    newB = np.empty((B.shape[0], 1, B.shape[1]))
+    newA[:,0,:] = A
+    newB[:,0,:] = B
+    newA = np.array(newA, dtype='int32')
+    newB = np.array(newB, dtype='int32')
 
-    # img_wang = wang_filter(img.small)
-    # img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
-    # cv2.imwrite("1{}1canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
-
-    # lines = find_straight_lines(img.basename, img_canny, h_th, h_minl, h_maxg)
-    # draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg)
+    join = np.concatenate((newA,newB))
+    print("join: ", join)
+    draw_hough(img.basename, join[:,:,0:4], img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg)
 
     return (10, 300, 110, 310)
