@@ -67,6 +67,27 @@ def draw_hough(img, lines, img_canny, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, cl
 
     cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, clean), hough)
 
+def remove_outliers(A, mean):
+    rem = np.empty(A.shape[0])
+    rem = np.int32(rem)
+
+    corrected = False
+    i = 0
+    for a in A[:, 5]:
+        if abs(a - mean) > 15:
+            rem[i] = 0
+            corrected = True
+        else:
+            rem[i] = 1
+        i += 1
+
+    if not corrected:
+        return mean, A
+    else:
+        A = A[rem==1]
+        mean = np.mean(A[:,5])
+        return mean, A[rem==1]
+
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
 
@@ -105,47 +126,16 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     plt.hist(centers, 45, [-90, 90], color = 'yellow')
     fig.savefig('1{}4_kmeans0.png'.format(img.basename))
 
-    remA = np.empty(A.shape[0])
-    remA = np.int32(remA)
+    centers[0], A = remove_outliers(A, centers[0])
+    centers[1], B = remove_outliers(B, centers[1])
 
-    corrected = False
-    i = 0
-    for a in A[:, 5]:
-        if abs(a - centers[0]) > 15:
-            remA[i] = 0
-            corrected = True
-        else:
-            remA[i] = 1
-        i += 1
+    fig = plt.figure()
+    plt.hist(A[:,5], 180, [-90, 90], color = 'red')
+    plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
+    plt.hist(centers, 45, [-90, 90], color = 'yellow')
+    fig.savefig('1{}4_kmeans1.png'.format(img.basename))
 
-    remB = np.empty(B.shape[0])
-    remB = np.int32(remB)
-
-    i = 0
-    for b in B[:, 5]:
-        if abs(b - centers[1]) > 15:
-            remB[i] = 0
-            corrected = True
-        else:
-            remB[i] = 1
-        i += 1
-
-    if not corrected:
-        return np.array(centers), A, B
-    else:
-        A = A[remA==1]
-        B = B[remB==1]
-
-        centers[0] = np.mean(A[:,5])
-        centers[1] = np.mean(B[:,5])
-
-        fig = plt.figure()
-        plt.hist(A[:,5], 180, [-90, 90], color = 'r')
-        plt.hist(B[:,5], 180, [-90, 90], color = 'b')
-        plt.hist(centers, 45, [-90, 90], color = 'y')
-        fig.savefig('1{}4_kmeans1.png'.format(img.basename))
-
-        return np.array(centers), A, B
+    return np.array(centers), A, B
 
 def wang_filter(image):
     f = np.copy(image/255)
