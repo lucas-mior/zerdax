@@ -18,9 +18,7 @@ def det(a, b):
 def find_intersections(A, B):
     inter = []
     for r in A[:,0]:
-        print("a: ", r)
         for s in B[:,0]:
-            print("b: ", s)
 
             l1 = [(r[0],r[1]), (r[2],r[3])]
             l2 = [(s[0],s[1]), (s[2],s[3])]
@@ -35,7 +33,7 @@ def find_intersections(A, B):
             d = (det(*l1), det(*l2))
             x = det(d, xdiff) / div
             y = det(d, ydiff) / div
-            if x > 1000 or y > 562:
+            if x > 1000 or y > 562 or x <= 0 or y <= 0:
                 continue
 
             inter.append((x,y))
@@ -74,7 +72,8 @@ def draw_hough(basename, lines, img, img_canny, a, b, c, d, e, clean):
 
     hough = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
 
-    # cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e, clean), hough)
+    if clean == 1:
+        cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e, clean), hough)
 
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
@@ -84,7 +83,6 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     # cv2.imwrite("1{}1canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
     lines = find_straight_lines(img.basename, img_canny, h_th, h_minl, h_maxg)
-    print("lines: ", lines)
     draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
 
     new = np.zeros((lines.shape[0], 1, 6))
@@ -201,19 +199,18 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     B = newB[newB[:, 0, 0].argsort()]
 
     join = np.concatenate((A,B))
-    draw_hough(img.basename, join[0:6,:,0:4], img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 1)
+    draw_hough(img.basename, join[:,:,0:4], img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 1)
 
     print(A)
     print(B)
     intersections = find_intersections(A, B)
     print("INTERSECTIONS: ", intersections)
-    print("type:: ", type(intersections[0]))
 
     circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     for p in intersections:
-        cv2.circle(circles, p, radius=8, color=(0, 0, 255), thickness=-1)
+        cv2.circle(circles, p, radius=6, color=(255, 0, 0), thickness=-1)
 
     image = cv2.addWeighted(gray3ch, 0.5, circles, 0.8, 0)
     cv2.imwrite("1{}5circle.jpg".format(img.basename), image)
