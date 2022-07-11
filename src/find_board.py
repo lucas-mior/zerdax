@@ -56,12 +56,6 @@ def radius(x1,y1,x2,y2):
 def theta(x1,y1,x2,y2):
     return math.degrees(math.atan2((y2-y1),(x2-x1)))
 
-def find_straight_lines(basename, img_canny, h_th, h_minl, h_maxg):
-
-    lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl,    h_maxg)
-              # HoughLinesP(image,   RHo, theta,   threshold, lines, minLength, maxGap)
-    return lines
-
 def draw_hough(basename, lines, img, img_canny, a, b, c, d, e, clean):
     line_image = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
@@ -84,7 +78,8 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     # cv2.imwrite("1{}1canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
-    lines = find_straight_lines(img.basename, img_canny, h_th, h_minl, h_maxg)
+    lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl,    h_maxg)
+
     draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
 
     new = np.zeros((lines.shape[0], 1, 6))
