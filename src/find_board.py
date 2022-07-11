@@ -12,25 +12,35 @@ import matplotlib.pyplot as plt
 import ctypes as ct
 from numpy.ctypeslib import ndpointer as ndp
 
-import shapely
-from shapely.geometry import LineString, Point
+def det(a, b):
+    return a[0]*b[1] - a[1]*b[0]
 
 def find_intersections(A, B):
+    inter = []
     for r in A[:,0]:
-        print(r)
+        print("a: ", r)
         for s in B[:,0]:
-            print(s)
-            line1 = LineString([(r[0],r[1]), (r[2],r[3])])
-            print(line1)
-            line2 = LineString([(s[0],s[1]), (s[2],s[3])])
-            print(line2)
+            print("b: ", s)
 
-            int_pt = line1.intersection(line2)
-            print(int_pt)
-            exit()
-            P = int_pt.x, int_pt.y
-            print(P)
-            return P
+            l1 = [(r[0],r[1]), (r[2],r[3])]
+            l2 = [(s[0],s[1]), (s[2],s[3])]
+
+            xdiff = (l1[0][0] - l1[1][0], l2[0][0] - l2[1][0])
+            ydiff = (l1[0][1] - l1[1][1], l2[0][1] - l2[1][1])
+
+            div = det(xdiff, ydiff)
+            if div == 0:
+                continue
+
+            d = (det(*l1), det(*l2))
+            x = det(d, xdiff) / div
+            y = det(d, ydiff) / div
+            if x > 1000 or y > 562:
+                continue
+
+            inter.append((x,y))
+
+    return np.array(inter, dtype='int32')
 
 def radius(x1,y1,x2,y2):
     return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
@@ -64,14 +74,14 @@ def draw_hough(basename, lines, img, img_canny, a, b, c, d, e, clean):
 
     hough = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
 
-    cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e, clean), hough)
+    # cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e, clean), hough)
 
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
 
     img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
 
-    cv2.imwrite("1{}1canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
+    # cv2.imwrite("1{}1canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
     lines = find_straight_lines(img.basename, img_canny, h_th, h_minl, h_maxg)
     print("lines: ", lines)
@@ -107,7 +117,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     plt.hist(A[:,5], 180, [-90, 90], color = 'red')
     plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
     plt.hist(centers, 45, [-90, 90], color = 'yellow')
-    fig.savefig('1{}4_kmeans0.png'.format(img.basename))
+    # fig.savefig('1{}4_kmeans0.png'.format(img.basename))
 
     remA = np.empty(A.shape[0])
     remA = np.int32(remA)
@@ -148,7 +158,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     plt.hist(A[:,5], 180, [-90, 90], color = 'r')
     plt.hist(B[:,5], 180, [-90, 90], color = 'b')
     plt.hist(centers, 45, [-90, 90], color = 'y')
-    fig.savefig('1{}4_kmeans1.png'.format(img.basename))
+    # fig.savefig('1{}4_kmeans1.png'.format(img.basename))
 
     return np.array(centers), A, B
 
@@ -196,6 +206,16 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     print(A)
     print(B)
     intersections = find_intersections(A, B)
-    print(intersections)
+    print("INTERSECTIONS: ", intersections)
+    print("type:: ", type(intersections[0]))
+
+    circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
+    gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
+
+    for p in intersections:
+        cv2.circle(circles, p, radius=8, color=(0, 0, 255), thickness=-1)
+
+    image = cv2.addWeighted(gray3ch, 0.5, circles, 0.8, 0)
+    cv2.imwrite("1{}5circle.jpg".format(img.basename), image)
 
     return (10, 300, 110, 310)
