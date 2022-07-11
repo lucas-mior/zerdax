@@ -55,7 +55,7 @@ def radius(x1,y1,x2,y2):
 def theta(x1,y1,x2,y2):
     return math.degrees(math.atan2((y2-y1),(x2-x1)))
 
-def draw_hough(basename, lines, img, img_canny, a, b, c, d, e, clean):
+def draw_hough(img, lines, img_canny, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, clean):
     line_image = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
@@ -65,7 +65,7 @@ def draw_hough(basename, lines, img, img_canny, a, b, c, d, e, clean):
 
     hough = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
 
-    cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e, clean), hough)
+    cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, clean), hough)
 
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
@@ -76,7 +76,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl,    h_maxg)
 
-    draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
+    draw_hough(img, lines, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
 
     new = np.zeros((lines.shape[0], 1, 6))
     new[:,0,0:4] = np.copy(lines[:,0,0:4])
@@ -130,22 +130,22 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
             remB[i] = 1
         i += 1
 
-    if corrected:
+    if not corrected:
+        return np.array(centers), A, B
+    else:
         A = A[remA==1]
         B = B[remB==1]
-    else:
+
+        centers[0] = np.mean(A[:,5])
+        centers[1] = np.mean(B[:,5])
+
+        fig = plt.figure()
+        plt.hist(A[:,5], 180, [-90, 90], color = 'r')
+        plt.hist(B[:,5], 180, [-90, 90], color = 'b')
+        plt.hist(centers, 45, [-90, 90], color = 'y')
+        fig.savefig('1{}4_kmeans1.png'.format(img.basename))
+
         return np.array(centers), A, B
-
-    centers[0] = np.mean(A[:,5])
-    centers[1] = np.mean(B[:,5])
-
-    fig = plt.figure()
-    plt.hist(A[:,5], 180, [-90, 90], color = 'r')
-    plt.hist(B[:,5], 180, [-90, 90], color = 'b')
-    plt.hist(centers, 45, [-90, 90], color = 'y')
-    fig.savefig('1{}4_kmeans1.png'.format(img.basename))
-
-    return np.array(centers), A, B
 
 def wang_filter(image):
     f = np.copy(image/255)
@@ -196,7 +196,7 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     # join = np.concatenate((A,B))
     join = np.empty((newlines.shape[0], 1, 4), dtype='int32')
     join[:,0,0:4] = newlines
-    draw_hough(img.basename, join[:,:,0:4], img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 1)
+    draw_hough(img, join[:,:,0:4], img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 1)
 
     circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
