@@ -12,6 +12,26 @@ import matplotlib.pyplot as plt
 import ctypes as ct
 from numpy.ctypeslib import ndpointer as ndp
 
+import shapely
+from shapely.geometry import LineString, Point
+
+def find_intersections(A, B):
+    for r in A[:,0]:
+        print(r)
+        for s in B[:,0]:
+            print(s)
+            line1 = LineString([(r[0],r[1]), (r[2],r[3])])
+            print(line1)
+            line2 = LineString([(s[0],s[1]), (s[2],s[3])])
+            print(line2)
+
+            int_pt = line1.intersection(line2)
+            print(int_pt)
+            exit()
+            P = int_pt.x, int_pt.y
+            print(P)
+            return P
+
 def radius(x1,y1,x2,y2):
     return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
 
@@ -84,9 +104,9 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     print("OLD centers: ", centers)
 
     fig = plt.figure()
-    plt.hist(A[:,5], 180, [-90, 90], color = 'r')
-    plt.hist(B[:,5], 180, [-90, 90], color = 'b')
-    plt.hist(centers, 45, [-90, 90], color = 'y')
+    plt.hist(A[:,5], 180, [-90, 90], color = 'red')
+    plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
+    plt.hist(centers, 45, [-90, 90], color = 'yellow')
     fig.savefig('1{}4_kmeans0.png'.format(img.basename))
 
     remA = np.empty(A.shape[0])
@@ -167,8 +187,15 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     newA = np.array(newA, dtype='int32')
     newB = np.array(newB, dtype='int32')
 
-    join = np.concatenate((newA,newB))
-    print("join: ", join)
-    draw_hough(img.basename, join[:,:,0:4], img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 1)
+    A = newA[newA[:, 0, 0].argsort()]
+    B = newB[newB[:, 0, 0].argsort()]
+
+    join = np.concatenate((A,B))
+    draw_hough(img.basename, join[0:6,:,0:4], img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 1)
+
+    print(A)
+    print(B)
+    intersections = find_intersections(A, B)
+    print(intersections)
 
     return (10, 300, 110, 310)
