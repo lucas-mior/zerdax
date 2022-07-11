@@ -67,14 +67,30 @@ def draw_hough(img, lines, img_canny, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, cl
 
     cv2.imwrite("1{}2_hough_{}_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, clean), hough)
 
-def remove_outliers(A, mean):
+def remove_outliers(A, B, mean):
     rem = np.empty(A.shape[0])
     rem = np.int32(rem)
 
     corrected = False
     i = 0
+    C = np.empty((1,6))
+
+    var = np.var(A[:,5])
+    print("variance: ", var)
+    tol_wrap = np.clip(var/8 + 35, 40, 50)
+    tol_err  = np.clip(var/8,      15, 25)
+    print("tol_wrap: ", tol_wrap)
+    print("tol_err: ", tol_err)
+
     for a in A[:, 5]:
-        if abs(a - mean) > 15:
+        err = abs(a - mean)
+        if err > tol_wrap:
+            rem[i] = 0
+            C[0,:] = np.copy(A[i,:])
+            C[0,5] = -C[0,5]
+            B = np.append(B, C, axis=0)
+            corrected = True
+        elif err > tol_err:
             rem[i] = 0
             corrected = True
         else:
@@ -82,18 +98,18 @@ def remove_outliers(A, mean):
         i += 1
 
     if not corrected:
-        return mean, A
+        return mean, A, B
     else:
         A = A[rem==1]
         mean = np.mean(A[:,5])
-        return mean, A
+        return mean, A, B
 
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
     img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
     cv2.imwrite("1{}1_canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
-    lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl,    h_maxg)
+    lines = cv2.HoughLinesP(img_canny, 1, np.pi / 180,  h_th,  None, h_minl,    h_maxg)
     draw_hough(img, lines, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
 
     aux = np.zeros((lines.shape[0], 1, 6))
@@ -121,16 +137,20 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     plt.hist(A[:,5], 180, [-90, 90], color = 'red')
     plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
     plt.hist(centers, 45, [-90, 90], color = 'yellow')
-    fig.savefig('1{}4_kmeans0.png'.format(img.basename))
+    fig.savefig('1{}3_kmeans0.png'.format(img.basename))
 
-    centers[0], A = remove_outliers(A, centers[0])
-    centers[1], B = remove_outliers(B, centers[1])
+
+
+    centers[0], A, B = remove_outliers(A, B, centers[0])
+    centers[1], B, A = remove_outliers(B, A, centers[1])
+    centers[0], A, B = remove_outliers(A, B, centers[0])
+    centers[1], B, A = remove_outliers(B, A, centers[1])
 
     fig = plt.figure()
     plt.hist(A[:,5], 180, [-90, 90], color = 'red')
     plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
     plt.hist(centers, 45, [-90, 90], color = 'yellow')
-    fig.savefig('1{}4_kmeans1.png'.format(img.basename))
+    fig.savefig('1{}3_kmeans1.png'.format(img.basename))
 
     return np.array(centers), A, B
 
@@ -180,9 +200,9 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         B = B[B[:, 0, 0].argsort()]
         intersections, newlines = find_intersections(A, B)
 
-    # join = np.concatenate((A,B))
-    join = np.empty((newlines.shape[0], 1, 4), dtype='int32')
-    join[:,0,0:4] = newlines
+    join = np.concatenate((A,B))
+    # join = np.empty((newlines.shape[0], 1, 4), dtype='int32')
+    # join[:,0,0:4] = newlines
     draw_hough(img, join[:,:,0:4], img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 1)
 
     circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
@@ -192,6 +212,6 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         cv2.circle(circles, p, radius=6, color=(255, 0, 0), thickness=-1)
 
     image = cv2.addWeighted(gray3ch, 0.5, circles, 0.8, 0)
-    cv2.imwrite("1{}5_circle.jpg".format(img.basename), image)
+    cv2.imwrite("1{}4_circle.jpg".format(img.basename), image)
 
     return (10, 300, 110, 310)
