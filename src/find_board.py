@@ -47,7 +47,6 @@ def find_intersections(A, B):
             newlines.append([l1[0][0], l1[0][1], x, y])
 
     newlines = np.array(newlines, dtype='int32')
-    print("newlines: ", newlines)
     return np.array(inter, dtype='int32'), newlines
 
 def radius(x1,y1,x2,y2):
@@ -106,8 +105,6 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     A = lines[labels==0]
     B = lines[labels==1]
 
-    print("OLD centers: ", centers)
-
     fig = plt.figure()
     plt.hist(A[:,5], 180, [-90, 90], color = 'red')
     plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
@@ -147,7 +144,6 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     centers[0] = np.mean(A[:,5])
     centers[1] = np.mean(B[:,5])
-    print("NEW centers: ", centers)
 
     fig = plt.figure()
     plt.hist(A[:,5], 180, [-90, 90], color = 'r')
@@ -184,7 +180,7 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     img.thetas, A, B = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
     print("thetas: ", img.thetas[:,0])
-    print("shape:", A.shape)
+
     newA = np.empty((A.shape[0], 1, A.shape[1]))
     newB = np.empty((B.shape[0], 1, B.shape[1]))
     newA[:,0,:] = A
@@ -205,8 +201,6 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     join = np.empty((newlines.shape[0], 1, 4), dtype='int32')
     join[:,0,0:4] = newlines
     draw_hough(img.basename, join[:,:,0:4], img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 1)
-
-    print("INTERSECTIONS: ", intersections)
 
     circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
