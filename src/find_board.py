@@ -32,7 +32,7 @@ def find_straight_lines(basename, img_canny, h_th, h_minl, h_maxg):
 
     return lines
 
-def draw_hough(basename, lines, img, img_canny, a, b, c, d, e):
+def draw_hough(basename, lines, img, img_canny, a, b, c, d, e, clean):
     line_image = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
@@ -44,7 +44,7 @@ def draw_hough(basename, lines, img, img_canny, a, b, c, d, e):
 
     hough = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
 
-    cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e), hough)
+    cv2.imwrite("1{}2hough_{}_{}_{}_{}_{}_{}.jpg".format(basename, a, b, c, d, e, clean), hough)
 
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
@@ -55,7 +55,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     lines = find_straight_lines(img.basename, img_canny, h_th, h_minl, h_maxg)
     print("lines: ", lines)
-    draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg)
+    draw_hough(img.basename, lines, img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
 
     new = np.zeros((lines.shape[0], 1, 6))
     new[:,0,0:4] = np.copy(lines[:,0,0:4])
@@ -74,7 +74,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     # Apply KMeans
     compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
 
-    if abs(centers[0] - centers[1]) < 30
+    if abs(centers[0] - centers[1]) < 30:
         print("K-means failed. Exiting")
         exit()
 
@@ -92,15 +92,15 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     remA = np.empty(A.shape[0])
     remA = np.int32(remA)
 
+    corrected = False
     i = 0
     for a in A[:, 5]:
         if abs(a - centers[0]) > 15:
             remA[i] = 0
+            corrected = True
         else:
             remA[i] = 1
         i += 1
-
-    A = A[remA==1]
 
     remB = np.empty(B.shape[0])
     remB = np.int32(remB)
@@ -109,11 +109,16 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     for b in B[:, 5]:
         if abs(b - centers[1]) > 15:
             remB[i] = 0
+            corrected = True
         else:
             remB[i] = 1
         i += 1
 
-    B = B[remB==1]
+    if corrected:
+        A = A[remA==1]
+        B = B[remB==1]
+    else:
+        return np.array(centers), A, B
 
     centers[0] = np.mean(A[:,5])
     centers[1] = np.mean(B[:,5])
@@ -164,6 +169,6 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     join = np.concatenate((newA,newB))
     print("join: ", join)
-    draw_hough(img.basename, join[:,:,0:4], img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg)
+    draw_hough(img.basename, join[:,:,0:4], img, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 1)
 
     return (10, 300, 110, 310)
