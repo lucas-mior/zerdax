@@ -19,7 +19,8 @@ def find_intersections(A, B):
     """ finds intersections between more vertical (A)
         and more horizontal (B) infinite lines """
     inter = []
-    newlines = []
+    newA = []
+    newB = []
     blin = np.zeros((B.shape[0], 5))
     alin = np.zeros((A.shape[0], 5))
 
@@ -67,21 +68,17 @@ def find_intersections(A, B):
 
     for i in range(0, len(alin)):
         if alin[i,0] > 10:
-            newlines.append([alin[i,1],alin[i,2],alin[i,3],alin[i,4]])
-
-    sa = len(newlines)
+            newA.append([alin[i,1],alin[i,2],alin[i,3],alin[i,4]])
 
     for i in range(0, len(blin)):
         if blin[i,0] > 10:
-            newlines.append([blin[i,1],blin[i,2],blin[i,3],blin[i,4]])
+            newB.append([blin[i,1],blin[i,2],blin[i,3],blin[i,4]])
 
-    sb = len(newlines) - sa
+    newA = np.array(newA, dtype='int32')
+    newB = np.array(newB, dtype='int32')
+    inter = np.array(inter, dtype='int32') 
 
-    print("new A: ", sa)
-    print("new B: ", sb)
-        
-    newlines = np.array(newlines, dtype='int32')
-    return np.array(inter, dtype='int32'), newlines
+    return inter, newA, newB
 
 def radius(x1,y1,x2,y2):
     return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
@@ -225,51 +222,32 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         # A is more vertical, B is more horizontal
         A = A[A[:, 0, 0].argsort()]
         B = B[B[:, 0, 1].argsort()]
-        intersections, newlines = find_intersections(A, B)
+        intersections, A, B = find_intersections(A, B)
     else:
         # B is more vertical, A is more horizontal
         A = A[A[:, 0, 1].argsort()]
         B = B[B[:, 0, 0].argsort()]
-        intersections, newlines = find_intersections(B, A)
+        intersections, A, B = find_intersections(B, A)
 
-    # join = np.concatenate((A,B))
-    join = np.empty((newlines.shape[0], 1, 4), dtype='int32')
-    join[:,0,0:4] = newlines
-    # print("A: ", A[:,0,:])
-    # print("B: ", B[:,0,:])
+    newA = np.empty((A.shape[0], 1, 4), dtype='int32')
+    newB = np.empty((B.shape[0], 1, 4), dtype='int32')
+    newA[:,0,:] = A
+    newB[:,0,:] = B
+    A = newA
+    B = newB
+    join = np.concatenate((A,B))
 
-    draw_hough(img, A[:,:,0:4], img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "A")
-    draw_hough(img, B[:,:,0:4], img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "B")
-    draw_hough(img, join, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "C")
+    draw_hough(img, A,    img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "A")
+    draw_hough(img, B,    img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "B")
+    draw_hough(img, join, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "join")
 
     circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     for p in intersections:
         cv2.circle(circles, p, radius=6, color=(255, 0, 0), thickness=-1)
-    # for p in newlines:
-    #     cv2.circle(circles, (p[0],p[1]), radius=6, color=(255, 0, 0), thickness=-1)
-    # for p in newlines:
-    #     cv2.circle(circles, (p[2],p[3]), radius=6, color=(255, 0, 0), thickness=-1)
-
-    # xmed = round(np.median(intersections[:,0]))
-    # ymed = round(np.median(intersections[:,1]))
-
-    # print("xmed = ", xmed)
-    # print("ymed = ", ymed)
-    # cv2.circle(circles, (xmed, ymed), radius=6, color=(0, 255, 0), thickness=-1)
-
-    # rc = []
-    # for p in intersections:
-    #     if math.sqrt((xmed - p[0])**2 + (ymed - p[1])**2) > 200:
-    #         rc.append(p) 
-
-    # print("rc", rc)
-
-    # for p in rc:
-    #     cv2.circle(circles, p, radius=6, color=(0, 0, 255), thickness=-1)
 
     image = cv2.addWeighted(gray3ch, 0.5, circles, 0.8, 0)
-    cv2.imwrite("1{}4_circle.jpg".format(img.basename), image)
+    cv2.imwrite("1{}4_circl_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), image)
 
     return (10, 300, 110, 310)
