@@ -314,12 +314,13 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     np.set_printoptions(linewidth=160)
 
     for a in A[:,0,:]:
-        total = 0
+        sh = 1000
         for b in B[:,0,:]:
             cl = closestDistanceBetweenLines([a[0],a[1],0],[a[2],a[3],0],[b[0],b[1],0],[b[2],b[3],0])
-            total += cl[2]
-        print("total: ", total)
-        A[i,0,6] = total
+            if sh > cl[2]:
+                sh = cl[2]
+        print("small: ", sh)
+        A[i,0,6] = sh
         i += 1
     print("A: ", A)
     exit()
