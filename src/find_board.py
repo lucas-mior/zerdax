@@ -15,11 +15,12 @@ from numpy.ctypeslib import ndpointer as ndp
 def det(a, b):
     return a[0]*b[1] - a[1]*b[0]
 
-def find_intersections(A, B):
+def find_intersections(B, A):
     """ finds intersections between more vertical (A)
         and more horizontal (B) infinite lines """
     inter = []
     newlines = []
+    cb = np.zeros((B.shape[0], 5))
     for r in A[:,0]:
         j = 0
         l1 = [(r[0],r[1]), (r[2],r[3])]
@@ -38,14 +39,32 @@ def find_intersections(A, B):
             d = (det(*l1), det(*l2))
             x = det(d, xdiff) / div
             y = det(d, ydiff) / div
+
             if x > 1000 or y > 562 or x <= 0 or y <= 0:
                 continue
 
             inter.append((x,y))
-            j += 1
-        if j > 6:
-            newlines.append([l1[0][0], l1[0][1], x, y])
 
+            if cb[j,0] == 0:
+                cb[j,1] = x
+                cb[j,2] = y
+            cb[j,0] += 1
+            cb[j,3] = x
+            cb[j,4] = y
+
+            if j == 0:
+                x0 = x
+                y0 = y
+            j += 1
+
+        if j > 6:
+            newlines.append([x0, y0, x, y])
+
+    for i in range(0, len(cb)):
+        if cb[i,0] > 6:
+            print("x,y = ({},{})".format(cb[i,3],cb[i,4]))
+            newlines.append([cb[i,1],cb[i,2],cb[i,3],cb[i,4]])
+        
     newlines = np.array(newlines, dtype='int32')
     return np.array(inter, dtype='int32'), newlines
 
@@ -76,11 +95,11 @@ def remove_outliers(A, B, mean):
     C = np.empty((1,6))
 
     var = np.var(A[:,5])
-    print("variance: ", var)
+    # print("variance: ", var)
     tol_wrap = np.clip(var/8 + 35, 40, 50)
     tol_err  = np.clip(var/8,      15, 25)
-    print("tol_wrap: ", tol_wrap)
-    print("tol_err: ", tol_err)
+    # print("tol_wrap: ", tol_wrap)
+    # print("tol_err: ", tol_err)
 
     for a in A[:, 5]:
         err = abs(a - mean)
@@ -107,7 +126,7 @@ def remove_outliers(A, B, mean):
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
     img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
-    cv2.imwrite("1{}1_canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
+    # cv2.imwrite("1{}1_canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
     lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl,    h_maxg)
     draw_hough(img, lines, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
@@ -137,7 +156,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     plt.hist(A[:,5], 180, [-90, 90], color = 'red')
     plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
     plt.hist(centers, 45, [-90, 90], color = 'yellow')
-    fig.savefig('1{}3_kmeans0.png'.format(img.basename))
+    # fig.savefig('1{}3_kmeans0.png'.format(img.basename))
 
     centers[0], A, B = remove_outliers(A, B, centers[0])
     centers[1], B, A = remove_outliers(B, A, centers[1])
@@ -148,7 +167,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     plt.hist(A[:,5], 180, [-90, 90], color = 'red')
     plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
     plt.hist(centers, 45, [-90, 90], color = 'yellow')
-    fig.savefig('1{}3_kmeans1.png'.format(img.basename))
+    # fig.savefig('1{}3_kmeans1.png'.format(img.basename))
 
     return np.array(centers), A, B
 
@@ -198,9 +217,9 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         B = B[B[:, 0, 0].argsort()]
         intersections, newlines = find_intersections(A, B)
 
-    join = np.concatenate((A,B))
-    # join = np.empty((newlines.shape[0], 1, 4), dtype='int32')
-    # join[:,0,0:4] = newlines
+    # join = np.concatenate((A,B))
+    join = np.empty((newlines.shape[0], 1, 4), dtype='int32')
+    join[:,0,0:4] = newlines
     draw_hough(img, join[:,:,0:4], img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 1)
 
     circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
@@ -209,7 +228,22 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     for p in intersections:
         cv2.circle(circles, p, radius=6, color=(255, 0, 0), thickness=-1)
 
-    print("intersections:", intersections[0:3])
+    # xmed = round(np.median(intersections[:,0]))
+    # ymed = round(np.median(intersections[:,1]))
+
+    # print("xmed = ", xmed)
+    # print("ymed = ", ymed)
+    # cv2.circle(circles, (xmed, ymed), radius=6, color=(0, 255, 0), thickness=-1)
+
+    # rc = []
+    # for p in intersections:
+    #     if math.sqrt((xmed - p[0])**2 + (ymed - p[1])**2) > 200:
+    #         rc.append(p) 
+
+    # print("rc", rc)
+
+    # for p in rc:
+    #     cv2.circle(circles, p, radius=6, color=(0, 0, 255), thickness=-1)
 
     image = cv2.addWeighted(gray3ch, 0.5, circles, 0.8, 0)
     cv2.imwrite("1{}4_circle.jpg".format(img.basename), image)
