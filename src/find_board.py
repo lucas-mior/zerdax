@@ -24,6 +24,7 @@ def find_intersections(A, B):
     alin = np.zeros((A.shape[0], 5))
 
     i = 0
+    k = 0
     for r in A[:,0]:
         l1 = [(r[0],r[1]), (r[2],r[3])]
         k = 0
@@ -45,30 +46,39 @@ def find_intersections(A, B):
             if x > 1000 or y > 562 or x <= 0 or y <= 0:
                 k += 1
                 continue
+            else:
+                inter.append((x,y))
 
-            inter.append((x,y))
+                if blin[k,0] == 0:
+                    blin[k,1] = x
+                    blin[k,2] = y
+                blin[k,0] += 1
+                blin[k,3] = x
+                blin[k,4] = y
+                k += 1
 
-            if blin[k,0] == 0:
-                blin[k,1] = x
-                blin[k,2] = y
-            blin[k,0] += 1
-            blin[k,3] = x
-            blin[k,4] = y
-            k += 1
-
-            if alin[i,0] == 0:
-                alin[i,1] = x
-                alin[i,2] = y
-            alin[i,0] += 1
-            alin[i,3] = x
-            alin[i,4] = y
+                if alin[i,0] == 0:
+                    alin[i,1] = x
+                    alin[i,2] = y
+                alin[i,0] += 1
+                alin[i,3] = x
+                alin[i,4] = y
         i += 1
 
     for i in range(0, len(alin)):
-        newlines.append([alin[i,1],alin[i,2],alin[i,3],alin[i,4]])
+        if alin[i,0] > 10:
+            newlines.append([alin[i,1],alin[i,2],alin[i,3],alin[i,4]])
+
+    sa = len(newlines)
 
     for i in range(0, len(blin)):
-        newlines.append([blin[i,1],blin[i,2],blin[i,3],blin[i,4]])
+        if blin[i,0] > 10:
+            newlines.append([blin[i,1],blin[i,2],blin[i,3],blin[i,4]])
+
+    sb = len(newlines) - sa
+
+    print("new A: ", sa)
+    print("new B: ", sb)
         
     newlines = np.array(newlines, dtype='int32')
     return np.array(inter, dtype='int32'), newlines
