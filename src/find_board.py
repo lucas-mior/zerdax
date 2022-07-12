@@ -40,9 +40,8 @@ def shortest_connections(img, intersections):
         sort = secondxy[secondxy[:,0].argsort()]
         for con in range(0, len(sort)):
             neg = (sort[con,2], sort[con,3])
-            if sort[con,0] < 200:
-                if abs(sort[con,1] - img.thetas[0]) < 30 or abs(sort[con,1] - img.thetas[1]) < 30 or abs(sort[con,1]) < 30:
-                    cv2.line(line_image, (x1,y1), (round(neg[0]), round(neg[1])), (0,0,255), round(2/img.fact))
+            if sort[con,0] < 50:
+                cv2.line(line_image, (x1,y1), (round(neg[0]), round(neg[1])), (0,0,255), round(2/img.fact))
             else:
                 continue
 
@@ -55,11 +54,16 @@ def find_intersections(lines):
     inter = []
 
     i = 0
-    k = 0
     for r in lines:
         l1 = [(r[0],r[1]), (r[2],r[3])]
-        k = 0
+        j = 0
         for s in lines:
+            if i == j:
+                continue
+
+            if abs(r[5] - s[5]) < 30:
+                continue
+
             l2 = [(s[0],s[1]), (s[2],s[3])]
 
             xdiff = (l1[0][0] - l1[1][0], l2[0][0] - l2[1][0])
@@ -67,26 +71,26 @@ def find_intersections(lines):
 
             div = det(xdiff, ydiff)
             if div == 0:
-                k += 1
+                j += 1
                 continue
 
             d = (det(*l1), det(*l2))
             x = det(d, xdiff) / div
             y = det(d, ydiff) / div
 
-            if x > 1000 or y > 562 or x <= 0 or y <= 0:
-                k += 1
+            if x > 1000 or y > 667 or x <= 0 or y <= 0:
+                j += 1
                 continue
             else:
+                j += 1
                 inter.append((x,y))
+        i += 1
 
+    inter = np.array(inter, dtype='int32')
     return inter
 
 def radius(x1,y1,x2,y2):
-    if x2 == 0 or y2 == 0 or x1 == 0 or y1 == 0:
-        return 0
-    else:
-        return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
+    return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
 
 def theta(x1,y1,x2,y2):
     return math.degrees(math.atan2((y2-y1),(x2-x1)))
@@ -148,7 +152,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
     cv2.imwrite("1{}1_canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
-    lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl,    h_maxg)
+    lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl, h_maxg)
     draw_hough(img, lines, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
 
     aux = np.zeros((lines.shape[0], 1, 6))
@@ -190,14 +194,19 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     lines = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
 
-    intersections = find_intersections(lines)
-    print("INTERS: ", intersections)
+    intersections = find_intersections(lines[:,0,:])
 
     circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     for p in intersections:
         cv2.circle(circles, p, radius=6, color=(255, 0, 0), thickness=-1)
+
+    points = circles[:,:,0]
+    cv2.imwrite("1{}4_points_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), points)
+
+    newlines = cv2.HoughLinesP(points, 1, np.pi / 180,  h_th, None, h_minl, 50)
+    draw_hough(img, newlines, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "af")
 
     image = cv2.addWeighted(gray3ch, 0.5, circles, 0.8, 0)
     cv2.imwrite("1{}4_circl_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), image)
