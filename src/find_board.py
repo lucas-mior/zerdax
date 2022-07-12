@@ -198,14 +198,6 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         B = B[B[:, 0, 0].argsort()]
         intersections, newlines = find_intersections(A, B)
 
-    i = 0
-    rem = np.empty(A.shape[0])
-    rem = np.int32(rem)
-    aux = np.zeros((A.shape[0], 1, 7))
-    aux[:,0, 0:6] = np.copy(A[:,0, 0:6])
-    A = np.copy(aux)
-    np.set_printoptions(linewidth=160)
-
     join = np.concatenate((A,B))
     # join = np.empty((newlines.shape[0], 1, 4), dtype='int32')
     # join[:,0,0:4] = newlines
@@ -216,6 +208,8 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     for p in intersections:
         cv2.circle(circles, p, radius=6, color=(255, 0, 0), thickness=-1)
+
+    print("intersections:", intersections[0:3])
 
     image = cv2.addWeighted(gray3ch, 0.5, circles, 0.8, 0)
     cv2.imwrite("1{}4_circle.jpg".format(img.basename), image)
