@@ -13,6 +13,10 @@ import ctypes as ct
 from numpy.ctypeslib import ndpointer as ndp
 
 def closestDistanceBetweenLines(a0,a1,b0,b1,clampAll=False,clampA0=False,clampA1=False,clampB0=False,clampB1=False):
+    a0 = np.array(a0)
+    a1 = np.array(a1)
+    b0 = np.array(b0)
+    b1 = np.array(b1)
 
     ''' Given two lines defined by numpy.array pairs (a0,a1,b0,b1)
         Return the closest points on each segment and their distance
@@ -312,10 +316,10 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     for a in A[:,0,:]:
         total = 0
         for b in B[:,0,:]:
-            total += radius((a[0]+a[2])/2, (a[1]+a[3])/2,(b[0]+b[2])/2, (b[1]+b[3])/2)
-        mean = total/len(B)
-        print("mean: ", mean)
-        A[i,0,6] = mean
+            cl = closestDistanceBetweenLines([a[0],a[1],0],[a[2],a[3],0],[b[0],b[1],0],[b[2],b[3],0])
+            total += cl[2]
+        print("total: ", total)
+        A[i,0,6] = total
         i += 1
     print("A: ", A)
     exit()
