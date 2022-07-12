@@ -21,9 +21,11 @@ def find_intersections(A, B):
     inter = []
     newlines = []
     blin = np.zeros((B.shape[0], 5))
+    alin = np.zeros((A.shape[0], 5))
+
+    i = 0
     for r in A[:,0]:
         l1 = [(r[0],r[1]), (r[2],r[3])]
-        j = 0
         k = 0
         for s in B[:,0]:
             l2 = [(s[0],s[1]), (s[2],s[3])]
@@ -54,17 +56,19 @@ def find_intersections(A, B):
             blin[k,4] = y
             k += 1
 
-            if j == 0:
-                x0 = x
-                y0 = y
-            j += 1
+            if alin[i,0] == 0:
+                alin[i,1] = x
+                alin[i,2] = y
+            alin[i,0] += 1
+            alin[i,3] = x
+            alin[i,4] = y
+        i += 1
 
-        if j > 6:
-            newlines.append([x0, y0, x, y])
+    for i in range(0, len(alin)):
+        newlines.append([alin[i,1],alin[i,2],alin[i,3],alin[i,4]])
 
     for i in range(0, len(blin)):
-        if blin[i,0] > 6:
-            newlines.append([blin[i,1],blin[i,2],blin[i,3],blin[i,4]])
+        newlines.append([blin[i,1],blin[i,2],blin[i,3],blin[i,4]])
         
     newlines = np.array(newlines, dtype='int32')
     return np.array(inter, dtype='int32'), newlines
