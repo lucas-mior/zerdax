@@ -12,6 +12,42 @@ import matplotlib.pyplot as plt
 import ctypes as ct
 from numpy.ctypeslib import ndpointer as ndp
 
+def shortest_connections(img, intersections):
+    line_image = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
+
+    for x1, y1 in intersections:    
+        distance = 0
+        secondx = []
+        secondy = []
+        dist_list = []
+        angle_list = []
+        sort = []   
+        a1 = False
+        a2 = False
+        for x2, y2 in intersections:      
+            if (x1, y1) == (x2, y2):
+                continue
+            else:
+                distance = radius(x1,y1,x2,y2)
+                angle = theta(x1,y1,x2,y2)
+                secondx.append(x2)
+                secondy.append(y2)
+                dist_list.append(distance)               
+                angle_list.append(angle)               
+
+        secondxy = list(zip(dist_list, angle_list, secondx, secondy))
+        secondxy = np.array(secondxy)
+        sort = secondxy[secondxy[:,0].argsort()]
+        for con in range(0, len(sort)):
+            neg = (sort[con,2], sort[con,3])
+            if sort[con,0] < 200:
+                if abs(sort[con,1] - img.thetas[0]) < 30 or abs(sort[con,1] - img.thetas[1]) < 30 or abs(sort[con,1]) < 30:
+                    cv2.line(line_image, (x1,y1), (round(neg[0]), round(neg[1])), (0,0,255), round(2/img.fact))
+            else:
+                continue
+
+    return line_image
+
 def det(a, b):
     return a[0]*b[1] - a[1]*b[0]
 
@@ -116,8 +152,10 @@ def remove_outliers(A, B, mean):
     C = np.empty((1,6))
 
     var = np.var(A[:,5])
-    tol_wrap = np.clip(var/8 + 35, 40, 50)
-    tol_err  = np.clip(var/8,      15, 25)
+    # tol_wrap = np.clip(var/8 + 35, 40, 50)
+    # tol_err  = np.clip(var/8,      15, 25)
+    tol_wrap = 100000
+    tol_err  = 100000
 
     for a in A[:, 5]:
         err = abs(a - mean)
@@ -174,22 +212,25 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     A = lines[labels==0]
     B = lines[labels==1]
 
+    print("A after Kmeans: ", A)
+    print("B after Kmeans: ", B)
+
     fig = plt.figure()
     plt.hist(A[:,5], 180, [-90, 90], color = 'red')
     plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
     plt.hist(centers, 45, [-90, 90], color = 'yellow')
     fig.savefig('1{}3_kmeans0.png'.format(img.basename))
 
-    centers[0], A, B = remove_outliers(A, B, centers[0])
-    centers[1], B, A = remove_outliers(B, A, centers[1])
-    centers[0], A, B = remove_outliers(A, B, centers[0])
-    centers[1], B, A = remove_outliers(B, A, centers[1])
+    # centers[0], A, B = remove_outliers(A, B, centers[0])
+    # centers[1], B, A = remove_outliers(B, A, centers[1])
+    # centers[0], A, B = remove_outliers(A, B, centers[0])
+    # centers[1], B, A = remove_outliers(B, A, centers[1])
 
-    fig = plt.figure()
-    plt.hist(A[:,5], 180, [-90, 90], color = 'red')
-    plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
-    plt.hist(centers, 45, [-90, 90], color = 'yellow')
-    fig.savefig('1{}3_kmeans1.png'.format(img.basename))
+    # fig = plt.figure()
+    # plt.hist(A[:,5], 180, [-90, 90], color = 'red')
+    # plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
+    # plt.hist(centers, 45, [-90, 90], color = 'yellow')
+    # fig.savefig('1{}3_kmeans1.png'.format(img.basename))
 
     return np.array(centers), A, B
 
@@ -228,16 +269,27 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     A = np.array(auxA, dtype='int32')
     B = np.array(auxB, dtype='int32')
 
-    if abs(img.thetas[0]) > abs(img.thetas[1]):
-        # A is more vertical, B is more horizontal
-        A = A[A[:, 0, 0].argsort()]
-        B = B[B[:, 0, 1].argsort()]
-        intersections, A, B = find_intersections(A, B)
-    else:
-        # B is more vertical, A is more horizontal
-        A = A[A[:, 0, 1].argsort()]
-        B = B[B[:, 0, 0].argsort()]
-        intersections, A, B = find_intersections(B, A)
+    print("A after aux: ", A)
+    print("B after aux: ", B)
+
+    # if abs(img.thetas[0]) > abs(img.thetas[1]):
+    #     # A is more vertical, B is more horizontal
+    A = A[A[:, 0, 0].argsort()]
+    B = B[B[:, 0, 1].argsort()]
+
+    print("A after sort: ", A)
+    print("B after sort: ", B)
+
+    intersections, A, B = find_intersections(A, B)
+
+    print("A after inters: ", A)
+    print("B after inters: ", B)
+    print("INTERS: ", intersections)
+    # else:
+    #     # B is more vertical, A is more horizontal
+    #     A = A[A[:, 0, 1].argsort()]
+    #     B = B[B[:, 0, 0].argsort()]
+    #     intersections, A, B = find_intersections(B, A)
 
     # newA = np.empty((A.shape[0], 1, 4), dtype='int32')
     # newB = np.empty((B.shape[0], 1, 4), dtype='int32')
@@ -260,42 +312,8 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     image = cv2.addWeighted(gray3ch, 0.5, circles, 0.8, 0)
     cv2.imwrite("1{}4_circl_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), image)
 
-    line_image = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
-
-    for x1, y1 in intersections:    
-        distance = 0
-        secondx = []
-        secondy = []
-        dist_list = []
-        angle_list = []
-        sort = []   
-        a1 = False
-        a2 = False
-        for x2, y2 in intersections:      
-            if (x1, y1) == (x2, y2):
-                continue
-            else:
-                distance = radius(x1,y1,x2,y2)
-                angle = theta(x1,y1,x2,y2)
-                secondx.append(x2)
-                secondy.append(y2)
-                dist_list.append(distance)               
-                angle_list.append(angle)               
-
-        secondxy = list(zip(dist_list, angle_list, secondx, secondy))
-        secondxy = np.array(secondxy)
-        sort = secondxy[secondxy[:,0].argsort()]
-        for con in range(0, len(sort)):
-            neg = (sort[con,2], sort[con,3])
-            if sort[con,0] < 70:
-                if abs(sort[con,1] - img.thetas[0]) < 12 or abs(sort[con,1] - img.thetas[1]) < 12:
-                    cv2.line(line_image, (x1,y1), (round(neg[0]), round(neg[1])), (0,0,255), round(2/img.fact))
-            else:
-                continue
-
+    line_image = shortest_connections(img, intersections)
     conn = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
-    conn = cv2.addWeighted(conn, 0.5, circles, 0.8, 0)
-
-    cv2.imwrite('1{}5_conne.png'.format(img.basename), conn)
+    cv2.imwrite('1{}5_conne_{}_{}_{}_{}_{}.jpg'.format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), conn)
 
     return (10, 300, 110, 310)
