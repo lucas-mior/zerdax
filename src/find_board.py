@@ -267,6 +267,7 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         secondx = []
         secondy = []
         dist_list = []
+        angle_list = []
         sort = []   
         a1 = False
         a2 = False
@@ -276,27 +277,25 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
             else:
                 distance = radius(x1,y1,x2,y2)
                 angle = theta(x1,y1,x2,y2)
-                # if distance > 5 and distance < 300:
-                #     # print("distance: {}".format(distance))
-                #     if abs(angle - img.thetas[0]) < 15 or abs(angle - img.thetas[1]) < 15:
-                #         # print("angle: {}, img: {}, {}".format(angle, img.thetas[0], img.thetas[1]))
                 secondx.append(x2)
                 secondy.append(y2)
                 dist_list.append(distance)               
+                angle_list.append(angle)               
 
-        secondxy = list(zip(dist_list,secondx,secondy))
+        secondxy = list(zip(dist_list, angle_list, secondx, secondy))
         secondxy = np.array(secondxy)
         sort = secondxy[secondxy[:,0].argsort()]
-        m = np.median(sort[:,0])
         for con in range(0, len(sort)):
-            neg = (sort[con,1], sort[con,2])
-            if sort[con,0] > 20:
+            neg = (sort[con,2], sort[con,3])
+            if sort[con,0] < 70:
+                if abs(sort[con,1] - img.thetas[0]) < 12 or abs(sort[con,1] - img.thetas[1]) < 12:
+                    cv2.line(line_image, (x1,y1), (round(neg[0]), round(neg[1])), (0,0,255), round(2/img.fact))
+            else:
                 continue
-            cv2.line(line_image, (x1,y1), (int(neg[0]), int(neg[1])), (0,0,255), round(2/img.fact))
 
     conn = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
     conn = cv2.addWeighted(conn, 0.5, circles, 0.8, 0)
 
-    cv2.imwrite('connected.png', conn)
+    cv2.imwrite('1{}5_conne.png'.format(img.basename), conn)
 
     return (10, 300, 110, 310)
