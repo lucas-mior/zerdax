@@ -21,8 +21,9 @@ def find_intersections(A, B):
     inter = []
     newA = []
     newB = []
-    blin = np.zeros((B.shape[0], 5))
+    outC = []
     alin = np.zeros((A.shape[0], 5))
+    blin = np.zeros((B.shape[0], 5))
 
     i = 0
     k = 0
@@ -37,6 +38,7 @@ def find_intersections(A, B):
 
             div = det(xdiff, ydiff)
             if div == 0:
+                outC.append((x,y))
                 k += 1
                 continue
 
@@ -46,6 +48,7 @@ def find_intersections(A, B):
 
             if x > 1000 or y > 562 or x <= 0 or y <= 0:
                 k += 1
+                outC.append((x,y))
                 continue
             else:
                 inter.append((x,y))
@@ -54,16 +57,22 @@ def find_intersections(A, B):
                     blin[k,1] = x
                     blin[k,2] = y
                 blin[k,0] += 1
-                blin[k,3] = x
-                blin[k,4] = y
+                ran = radius(blin[k,1],blin[k,2],blin[k,3],blin[k,4])
+                rno = radius(blin[k,1],blin[k,2],x,y)
+                if rno - ran > -1:
+                    blin[k,3] = x
+                    blin[k,4] = y
                 k += 1
 
                 if alin[i,0] == 0:
                     alin[i,1] = x
                     alin[i,2] = y
                 alin[i,0] += 1
-                alin[i,3] = x
-                alin[i,4] = y
+                ran = radius(alin[i,1],alin[i,2],alin[i,3],alin[i,4])
+                rno = radius(alin[i,1],alin[i,2],x,y)
+                if rno - ran > -0.5:
+                    alin[i,3] = x
+                    alin[i,4] = y
         i += 1
 
     for i in range(0, len(alin)):
@@ -77,11 +86,15 @@ def find_intersections(A, B):
     newA = np.array(newA, dtype='int32')
     newB = np.array(newB, dtype='int32')
     inter = np.array(inter, dtype='int32') 
+    outC = np.array(outC, dtype='int32') 
 
-    return inter, newA, newB
+    return inter, newA, newB, outC
 
 def radius(x1,y1,x2,y2):
-    return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
+    if x2 == 0 or y2 == 0 or x1 == 0 or y1 == 0:
+        return 0
+    else:
+        return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
 
 def theta(x1,y1,x2,y2):
     return math.degrees(math.atan2((y2-y1),(x2-x1)))
@@ -107,11 +120,8 @@ def remove_outliers(A, B, mean):
     C = np.empty((1,6))
 
     var = np.var(A[:,5])
-    # print("variance: ", var)
     tol_wrap = np.clip(var/8 + 35, 40, 50)
     tol_err  = np.clip(var/8,      15, 25)
-    # print("tol_wrap: ", tol_wrap)
-    # print("tol_err: ", tol_err)
 
     for a in A[:, 5]:
         err = abs(a - mean)
@@ -121,6 +131,10 @@ def remove_outliers(A, B, mean):
             C[0,5] = -C[0,5]
             B = np.append(B, C, axis=0)
             corrected = True
+        elif err > tol_err - 5:
+            if abs(a) < 1 or abs(a) > 89:
+                rem[i] = 0
+                corrected = True
         elif err > tol_err:
             rem[i] = 0
             corrected = True
@@ -222,12 +236,12 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         # A is more vertical, B is more horizontal
         A = A[A[:, 0, 0].argsort()]
         B = B[B[:, 0, 1].argsort()]
-        intersections, A, B = find_intersections(A, B)
+        intersections, A, B, C = find_intersections(A, B)
     else:
         # B is more vertical, A is more horizontal
         A = A[A[:, 0, 1].argsort()]
         B = B[B[:, 0, 0].argsort()]
-        intersections, A, B = find_intersections(B, A)
+        intersections, A, B, C = find_intersections(B, A)
 
     newA = np.empty((A.shape[0], 1, 4), dtype='int32')
     newB = np.empty((B.shape[0], 1, 4), dtype='int32')
@@ -246,6 +260,9 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     for p in intersections:
         cv2.circle(circles, p, radius=6, color=(255, 0, 0), thickness=-1)
+
+    for c in C:
+        cv2.circle(circles, c, radius=6, color=(0, 240, 0), thickness=-1)
 
     image = cv2.addWeighted(gray3ch, 0.5, circles, 0.8, 0)
     cv2.imwrite("1{}4_circl_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), image)
