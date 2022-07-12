@@ -44,6 +44,8 @@ def find_intersections(B, A):
                 continue
 
             inter.append((x,y))
+            if x > 1000:
+                print("xy = ", x, y)
 
             if cb[j,0] == 0:
                 cb[j,1] = x
