@@ -51,21 +51,15 @@ def shortest_connections(img, intersections):
 def det(a, b):
     return a[0]*b[1] - a[1]*b[0]
 
-def find_intersections(A, B):
-    """ finds intersections between more vertical (A)
-        and more horizontal (B) infinite lines """
+def find_intersections(lines):
     inter = []
-    newA = []
-    newB = []
-    alin = np.zeros((A.shape[0], 5))
-    blin = np.zeros((B.shape[0], 5))
 
     i = 0
     k = 0
-    for r in A[:,0]:
+    for r in lines:
         l1 = [(r[0],r[1]), (r[2],r[3])]
         k = 0
-        for s in B[:,0]:
+        for s in lines:
             l2 = [(s[0],s[1]), (s[2],s[3])]
 
             xdiff = (l1[0][0] - l1[1][0], l2[0][0] - l2[1][0])
@@ -86,41 +80,7 @@ def find_intersections(A, B):
             else:
                 inter.append((x,y))
 
-                if blin[k,0] == 0:
-                    blin[k,1] = x
-                    blin[k,2] = y
-                blin[k,0] += 1
-                ran = radius(blin[k,1],blin[k,2],blin[k,3],blin[k,4])
-                rno = radius(blin[k,1],blin[k,2],x,y)
-                if rno - ran > -1:
-                    blin[k,3] = x
-                    blin[k,4] = y
-                k += 1
-
-                if alin[i,0] == 0:
-                    alin[i,1] = x
-                    alin[i,2] = y
-                alin[i,0] += 1
-                ran = radius(alin[i,1],alin[i,2],alin[i,3],alin[i,4])
-                rno = radius(alin[i,1],alin[i,2],x,y)
-                if rno - ran > -0.5:
-                    alin[i,3] = x
-                    alin[i,4] = y
-        i += 1
-
-    for i in range(0, len(alin)):
-        if alin[i,0] > 10:
-            newA.append([alin[i,1],alin[i,2],alin[i,3],alin[i,4]])
-
-    for i in range(0, len(blin)):
-        if blin[i,0] > 10:
-            newB.append([blin[i,1],blin[i,2],blin[i,3],blin[i,4]])
-
-    newA = np.array(newA, dtype='int32')
-    newB = np.array(newB, dtype='int32')
-    inter = np.array(inter, dtype='int32') 
-
-    return inter, newA, newB
+    return inter
 
 def radius(x1,y1,x2,y2):
     if x2 == 0 or y2 == 0 or x1 == 0 or y1 == 0:
@@ -201,38 +161,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
             lines[i, 0, 5] = theta(x1,y1,x2,y2)
             i += 1
 
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-    flags = cv2.KMEANS_RANDOM_CENTERS
-    compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
-
-    if abs(centers[0] - centers[1]) < 30:
-        print("K-means failed. Exiting")
-        exit()
-
-    A = lines[labels==0]
-    B = lines[labels==1]
-
-    print("A after Kmeans: ", A)
-    print("B after Kmeans: ", B)
-
-    fig = plt.figure()
-    plt.hist(A[:,5], 180, [-90, 90], color = 'red')
-    plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
-    plt.hist(centers, 45, [-90, 90], color = 'yellow')
-    fig.savefig('1{}3_kmeans0.png'.format(img.basename))
-
-    # centers[0], A, B = remove_outliers(A, B, centers[0])
-    # centers[1], B, A = remove_outliers(B, A, centers[1])
-    # centers[0], A, B = remove_outliers(A, B, centers[0])
-    # centers[1], B, A = remove_outliers(B, A, centers[1])
-
-    # fig = plt.figure()
-    # plt.hist(A[:,5], 180, [-90, 90], color = 'red')
-    # plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
-    # plt.hist(centers, 45, [-90, 90], color = 'yellow')
-    # fig.savefig('1{}3_kmeans1.png'.format(img.basename))
-
-    return np.array(centers), A, B
+    return lines
 
 def wang_filter(image):
     f = np.copy(image/255)
@@ -259,49 +188,10 @@ def wang_filter(image):
 
 def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
-    img.thetas, A, B = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
-    print("thetas: ", img.thetas[:,0])
+    lines = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
 
-    auxA = np.empty((A.shape[0], 1, A.shape[1]))
-    auxB = np.empty((B.shape[0], 1, B.shape[1]))
-    auxA[:,0,:] = A
-    auxB[:,0,:] = B
-    A = np.array(auxA, dtype='int32')
-    B = np.array(auxB, dtype='int32')
-
-    print("A after aux: ", A)
-    print("B after aux: ", B)
-
-    # if abs(img.thetas[0]) > abs(img.thetas[1]):
-    #     # A is more vertical, B is more horizontal
-    A = A[A[:, 0, 0].argsort()]
-    B = B[B[:, 0, 1].argsort()]
-
-    print("A after sort: ", A)
-    print("B after sort: ", B)
-
-    intersections, A, B = find_intersections(A, B)
-
-    print("A after inters: ", A)
-    print("B after inters: ", B)
+    intersections = find_intersections(lines)
     print("INTERS: ", intersections)
-    # else:
-    #     # B is more vertical, A is more horizontal
-    #     A = A[A[:, 0, 1].argsort()]
-    #     B = B[B[:, 0, 0].argsort()]
-    #     intersections, A, B = find_intersections(B, A)
-
-    # newA = np.empty((A.shape[0], 1, 4), dtype='int32')
-    # newB = np.empty((B.shape[0], 1, 4), dtype='int32')
-    # newA[:,0,:] = A
-    # newB[:,0,:] = B
-    # A = newA
-    # B = newB
-    # join = np.concatenate((A,B))
-
-    # draw_hough(img, A,    img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "A")
-    # draw_hough(img, B,    img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "B")
-    # draw_hough(img, join, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "join")
 
     circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
