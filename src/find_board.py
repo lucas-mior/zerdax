@@ -269,16 +269,33 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         secondy = []
         dist_listappend = []
         sort = []   
+        a1 = False
+        a2 = False
         for x2, y2 in intersections:      
             if (x1, y1) == (x2, y2):
                 pass     
             else:
+                aux = abs(abs(x1 - x2) - abs(y1-y2))
                 distance = radius(x1,y1,x2,y2)
-                if distance < 10 or abs(abs(x1 - x2) - abs(y1-y2)) > 40:
+                angle = theta(x1,y1,x2,y2)
+                if distance > 10 and aux < 50:
+                    if abs(t - img.thetas[0]) > 10
+                        a1 = True 
+                        secondx.append(x2)
+                        secondy.append(y2)
+                        dist_listappend.append(distance)               
+                    elif abs(t - img.thetas[1]) > 10: 
+                        a2 = True
+                        secondx.append(x2)
+                        secondy.append(y2)
+                        dist_listappend.append(distance)               
+                elif aux < 100 and aux > 50:
+                    if a1 and a2:
+                        secondx.append(x2)
+                        secondy.append(y2)
+                        dist_listappend.append(distance)               
+                else:
                     continue
-                secondx.append(x2)
-                secondy.append(y2)
-                dist_listappend.append(distance)               
         secondxy = list(zip(dist_listappend,secondx,secondy))
         secondxy = np.array(secondxy)
         sort = secondxy[secondxy[:,0].argsort()]
@@ -287,11 +304,7 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
             neg = (sort[con,1], sort[con,2])
             if sort[con,0] - medd > 20:
                 continue
-            t = theta(x1,y1,round(neg[0]),round(neg[1]))
-            if abs(t - img.thetas[0]) > 10 and abs(t - img.thetas[1]) > 10: 
-                continue
-            else:
-                cv2.line(line_image, (x1,y1), (int(neg[0]), int(neg[1])), (0,0,255), round(2/img.fact))
+            cv2.line(line_image, (x1,y1), (int(neg[0]), int(neg[1])), (0,0,255), round(2/img.fact))
 
     conn = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
     conn = cv2.addWeighted(conn, 0.5, circles, 0.8, 0)
