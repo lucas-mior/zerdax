@@ -21,7 +21,6 @@ def find_intersections(A, B):
     inter = []
     newA = []
     newB = []
-    outC = []
     alin = np.zeros((A.shape[0], 5))
     blin = np.zeros((B.shape[0], 5))
 
@@ -86,9 +85,8 @@ def find_intersections(A, B):
     newA = np.array(newA, dtype='int32')
     newB = np.array(newB, dtype='int32')
     inter = np.array(inter, dtype='int32') 
-    outC = np.array(outC, dtype='int32') 
 
-    return inter, newA, newB, outC
+    return inter, newA, newB
 
 def radius(x1,y1,x2,y2):
     if x2 == 0 or y2 == 0 or x1 == 0 or y1 == 0:
@@ -152,10 +150,10 @@ def remove_outliers(A, B, mean):
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
     img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
-    # cv2.imwrite("1{}1_canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
+    cv2.imwrite("1{}1_canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
     lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl,    h_maxg)
-    # draw_hough(img, lines, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
+    draw_hough(img, lines, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
 
     aux = np.zeros((lines.shape[0], 1, 6))
     aux[:,0,0:4] = np.copy(lines[:,0,0:4])
@@ -182,7 +180,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     plt.hist(A[:,5], 180, [-90, 90], color = 'red')
     plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
     plt.hist(centers, 45, [-90, 90], color = 'yellow')
-    # fig.savefig('1{}3_kmeans0.png'.format(img.basename))
+    fig.savefig('1{}3_kmeans0.png'.format(img.basename))
 
     centers[0], A, B = remove_outliers(A, B, centers[0])
     centers[1], B, A = remove_outliers(B, A, centers[1])
@@ -193,7 +191,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     plt.hist(A[:,5], 180, [-90, 90], color = 'red')
     plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
     plt.hist(centers, 45, [-90, 90], color = 'yellow')
-    # fig.savefig('1{}3_kmeans1.png'.format(img.basename))
+    fig.savefig('1{}3_kmeans1.png'.format(img.basename))
 
     return np.array(centers), A, B
 
@@ -236,12 +234,12 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         # A is more vertical, B is more horizontal
         A = A[A[:, 0, 0].argsort()]
         B = B[B[:, 0, 1].argsort()]
-        intersections, A, B, C = find_intersections(A, B)
+        intersections, A, B, find_intersections(A, B)
     else:
         # B is more vertical, A is more horizontal
         A = A[A[:, 0, 1].argsort()]
         B = B[B[:, 0, 0].argsort()]
-        intersections, A, B, C = find_intersections(B, A)
+        intersections, A, B, find_intersections(B, A)
 
     newA = np.empty((A.shape[0], 1, 4), dtype='int32')
     newB = np.empty((B.shape[0], 1, 4), dtype='int32')
@@ -260,9 +258,6 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     for p in intersections:
         cv2.circle(circles, p, radius=6, color=(255, 0, 0), thickness=-1)
-
-    for c in C:
-        cv2.circle(circles, c, radius=6, color=(0, 240, 0), thickness=-1)
 
     image = cv2.addWeighted(gray3ch, 0.5, circles, 0.8, 0)
     cv2.imwrite("1{}4_circl_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), image)
