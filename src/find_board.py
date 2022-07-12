@@ -15,7 +15,7 @@ from numpy.ctypeslib import ndpointer as ndp
 def det(a, b):
     return a[0]*b[1] - a[1]*b[0]
 
-def find_intersections(B, A):
+def find_intersections(A, B):
     """ finds intersections between more vertical (A)
         and more horizontal (B) infinite lines """
     inter = []
@@ -44,8 +44,6 @@ def find_intersections(B, A):
                 continue
 
             inter.append((x,y))
-            if x > 1000:
-                print("xy = ", x, y)
 
             if cb[j,0] == 0:
                 cb[j,1] = x
@@ -64,7 +62,6 @@ def find_intersections(B, A):
 
     for i in range(0, len(cb)):
         if cb[i,0] > 6:
-            print("x,y = ({},{})".format(cb[i,3],cb[i,4]))
             newlines.append([cb[i,1],cb[i,2],cb[i,3],cb[i,4]])
         
     newlines = np.array(newlines, dtype='int32')
@@ -229,6 +226,10 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     for p in intersections:
         cv2.circle(circles, p, radius=6, color=(255, 0, 0), thickness=-1)
+    # for p in newlines:
+    #     cv2.circle(circles, (p[0],p[1]), radius=6, color=(255, 0, 0), thickness=-1)
+    # for p in newlines:
+    #     cv2.circle(circles, (p[2],p[3]), radius=6, color=(255, 0, 0), thickness=-1)
 
     # xmed = round(np.median(intersections[:,0]))
     # ymed = round(np.median(intersections[:,1]))
