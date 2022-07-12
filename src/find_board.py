@@ -20,13 +20,12 @@ def find_intersections(A, B):
         and more horizontal (B) infinite lines """
     inter = []
     newlines = []
-    cb = np.zeros((B.shape[0], 5))
+    blin = np.zeros((B.shape[0], 5))
     for r in A[:,0]:
-        j = 0
         l1 = [(r[0],r[1]), (r[2],r[3])]
+        j = 0
+        k = 0
         for s in B[:,0]:
-
-            # if len(inter) < 10:
             l2 = [(s[0],s[1]), (s[2],s[3])]
 
             xdiff = (l1[0][0] - l1[1][0], l2[0][0] - l2[1][0])
@@ -34,6 +33,7 @@ def find_intersections(A, B):
 
             div = det(xdiff, ydiff)
             if div == 0:
+                k += 1
                 continue
 
             d = (det(*l1), det(*l2))
@@ -41,16 +41,18 @@ def find_intersections(A, B):
             y = det(d, ydiff) / div
 
             if x > 1000 or y > 562 or x <= 0 or y <= 0:
+                k += 1
                 continue
 
             inter.append((x,y))
 
-            if cb[j,0] == 0:
-                cb[j,1] = x
-                cb[j,2] = y
-            cb[j,0] += 1
-            cb[j,3] = x
-            cb[j,4] = y
+            if blin[k,0] == 0:
+                blin[k,1] = x
+                blin[k,2] = y
+            blin[k,0] += 1
+            blin[k,3] = x
+            blin[k,4] = y
+            k += 1
 
             if j == 0:
                 x0 = x
@@ -60,9 +62,9 @@ def find_intersections(A, B):
         if j > 6:
             newlines.append([x0, y0, x, y])
 
-    for i in range(0, len(cb)):
-        if cb[i,0] > 6:
-            newlines.append([cb[i,1],cb[i,2],cb[i,3],cb[i,4]])
+    for i in range(0, len(blin)):
+        if blin[i,0] > 6:
+            newlines.append([blin[i,1],blin[i,2],blin[i,3],blin[i,4]])
         
     newlines = np.array(newlines, dtype='int32')
     return np.array(inter, dtype='int32'), newlines
@@ -128,7 +130,7 @@ def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     # cv2.imwrite("1{}1_canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
     lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl,    h_maxg)
-    draw_hough(img, lines, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
+    # draw_hough(img, lines, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
 
     aux = np.zeros((lines.shape[0], 1, 6))
     aux[:,0,0:4] = np.copy(lines[:,0,0:4])
@@ -209,17 +211,22 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         # A is more vertical, B is more horizontal
         A = A[A[:, 0, 0].argsort()]
         B = B[B[:, 0, 1].argsort()]
-        intersections, newlines = find_intersections(B, A)
+        intersections, newlines = find_intersections(A, B)
     else:
         # B is more vertical, A is more horizontal
         A = A[A[:, 0, 1].argsort()]
         B = B[B[:, 0, 0].argsort()]
-        intersections, newlines = find_intersections(A, B)
+        intersections, newlines = find_intersections(B, A)
 
     # join = np.concatenate((A,B))
     join = np.empty((newlines.shape[0], 1, 4), dtype='int32')
     join[:,0,0:4] = newlines
-    draw_hough(img, join[:,:,0:4], img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 1)
+    # print("A: ", A[:,0,:])
+    # print("B: ", B[:,0,:])
+
+    draw_hough(img, A[:,:,0:4], img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "A")
+    draw_hough(img, B[:,:,0:4], img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "B")
+    draw_hough(img, join, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "C")
 
     circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
