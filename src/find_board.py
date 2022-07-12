@@ -37,7 +37,6 @@ def find_intersections(A, B):
 
             div = det(xdiff, ydiff)
             if div == 0:
-                outC.append((x,y))
                 k += 1
                 continue
 
@@ -47,7 +46,6 @@ def find_intersections(A, B):
 
             if x > 1000 or y > 562 or x <= 0 or y <= 0:
                 k += 1
-                outC.append((x,y))
                 continue
             else:
                 inter.append((x,y))
@@ -95,6 +93,7 @@ def radius(x1,y1,x2,y2):
         return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
 
 def theta(x1,y1,x2,y2):
+    print("calculating:", x1, y1, x2, y2)
     return math.degrees(math.atan2((y2-y1),(x2-x1)))
 
 def draw_hough(img, lines, img_canny, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, clean):
@@ -234,24 +233,24 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         # A is more vertical, B is more horizontal
         A = A[A[:, 0, 0].argsort()]
         B = B[B[:, 0, 1].argsort()]
-        intersections, A, B, find_intersections(A, B)
+        intersections, A, B = find_intersections(A, B)
     else:
         # B is more vertical, A is more horizontal
         A = A[A[:, 0, 1].argsort()]
         B = B[B[:, 0, 0].argsort()]
-        intersections, A, B, find_intersections(B, A)
+        intersections, A, B = find_intersections(B, A)
 
-    newA = np.empty((A.shape[0], 1, 4), dtype='int32')
-    newB = np.empty((B.shape[0], 1, 4), dtype='int32')
-    newA[:,0,:] = A
-    newB[:,0,:] = B
-    A = newA
-    B = newB
-    join = np.concatenate((A,B))
+    # newA = np.empty((A.shape[0], 1, 4), dtype='int32')
+    # newB = np.empty((B.shape[0], 1, 4), dtype='int32')
+    # newA[:,0,:] = A
+    # newB[:,0,:] = B
+    # A = newA
+    # B = newB
+    # join = np.concatenate((A,B))
 
-    draw_hough(img, A,    img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "A")
-    draw_hough(img, B,    img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "B")
-    draw_hough(img, join, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "join")
+    # draw_hough(img, A,    img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "A")
+    # draw_hough(img, B,    img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "B")
+    # draw_hough(img, join, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, "join")
 
     circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
@@ -261,5 +260,42 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     image = cv2.addWeighted(gray3ch, 0.5, circles, 0.8, 0)
     cv2.imwrite("1{}4_circl_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), image)
+
+    line_image = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
+
+    for x1, y1 in intersections:    
+        distance = 0
+        secondx = []
+        secondy = []
+        dist_listappend = []
+        sort = []   
+        for x2, y2 in intersections:      
+            if (x1, y1) == (x2, y2):
+                pass     
+            else:
+                distance = radius(x1,y1,x2,y2)
+                if distance < 10 or abs(abs(x1 - x2) - abs(y1-y2)) > 40:
+                    continue
+                secondx.append(x2)
+                secondy.append(y2)
+                dist_listappend.append(distance)               
+        secondxy = list(zip(dist_listappend,secondx,secondy))
+        secondxy = np.array(secondxy)
+        sort = secondxy[secondxy[:,0].argsort()]
+        medd = np.median(sort[0:3, 0])
+        for con in range(0, 6):
+            neg = (sort[con,1], sort[con,2])
+            if sort[con,0] - medd > 20:
+                continue
+            t = theta(x1,y1,round(neg[0]),round(neg[1]))
+            if abs(t - img.thetas[0]) > 10 and abs(t - img.thetas[1]) > 10: 
+                continue
+            else:
+                cv2.line(line_image, (x1,y1), (int(neg[0]), int(neg[1])), (0,0,255), round(2/img.fact))
+
+    conn = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
+    conn = cv2.addWeighted(conn, 0.5, circles, 0.8, 0)
+
+    cv2.imwrite('connected.png', conn)
 
     return (10, 300, 110, 310)
