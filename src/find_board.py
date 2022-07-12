@@ -266,30 +266,31 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         distance = 0
         secondx = []
         secondy = []
-        dist_listappend = []
+        dist_list = []
         sort = []   
         a1 = False
         a2 = False
         for x2, y2 in intersections:      
             if (x1, y1) == (x2, y2):
-                pass     
+                continue
             else:
                 distance = radius(x1,y1,x2,y2)
                 angle = theta(x1,y1,x2,y2)
-                if 5 < distance and distance < 200:
-                    if abs(angle - img.thetas[0]) < 20 or abs(angle - img.thetas[1] < 20):
-                        secondx.append(x2)
-                        secondy.append(y2)
-                        dist_listappend.append(distance)               
-                else:
-                    continue
-        secondxy = list(zip(dist_listappend,secondx,secondy))
+                # if distance > 5 and distance < 300:
+                #     # print("distance: {}".format(distance))
+                #     if abs(angle - img.thetas[0]) < 15 or abs(angle - img.thetas[1]) < 15:
+                #         # print("angle: {}, img: {}, {}".format(angle, img.thetas[0], img.thetas[1]))
+                secondx.append(x2)
+                secondy.append(y2)
+                dist_list.append(distance)               
+
+        secondxy = list(zip(dist_list,secondx,secondy))
         secondxy = np.array(secondxy)
         sort = secondxy[secondxy[:,0].argsort()]
-        medd = np.median(sort[0:2, 0])
-        for con in range(0, min(len(sort), 6)):
+        m = np.median(sort[:,0])
+        for con in range(0, len(sort)):
             neg = (sort[con,1], sort[con,2])
-            if sort[con,0] - medd > 50:
+            if sort[con,0] > 20:
                 continue
             cv2.line(line_image, (x1,y1), (int(neg[0]), int(neg[1])), (0,0,255), round(2/img.fact))
 
