@@ -40,7 +40,7 @@ def shortest_connections(img, intersections):
         sort = secondxy[secondxy[:,0].argsort()]
         for con in range(0, len(sort)):
             neg = (sort[con,2], sort[con,3])
-            if sort[con,0] < 50:
+            if sort[con,0] < 150:
                 cv2.line(line_image, (x1,y1), (round(neg[0]), round(neg[1])), (0,0,255), round(2/img.fact))
             else:
                 continue
