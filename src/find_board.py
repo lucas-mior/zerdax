@@ -93,7 +93,6 @@ def radius(x1,y1,x2,y2):
         return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
 
 def theta(x1,y1,x2,y2):
-    print("calculating:", x1, y1, x2, y2)
     return math.degrees(math.atan2((y2-y1),(x2-x1)))
 
 def draw_hough(img, lines, img_canny, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, clean):
@@ -275,22 +274,10 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
             if (x1, y1) == (x2, y2):
                 pass     
             else:
-                aux = abs(abs(x1 - x2) - abs(y1-y2))
                 distance = radius(x1,y1,x2,y2)
                 angle = theta(x1,y1,x2,y2)
-                if distance > 10 and aux < 50:
-                    if abs(t - img.thetas[0]) > 10
-                        a1 = True 
-                        secondx.append(x2)
-                        secondy.append(y2)
-                        dist_listappend.append(distance)               
-                    elif abs(t - img.thetas[1]) > 10: 
-                        a2 = True
-                        secondx.append(x2)
-                        secondy.append(y2)
-                        dist_listappend.append(distance)               
-                elif aux < 100 and aux > 50:
-                    if a1 and a2:
+                if 5 < distance and distance < 200:
+                    if abs(angle - img.thetas[0]) < 20 or abs(angle - img.thetas[1] < 20):
                         secondx.append(x2)
                         secondy.append(y2)
                         dist_listappend.append(distance)               
@@ -299,10 +286,10 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         secondxy = list(zip(dist_listappend,secondx,secondy))
         secondxy = np.array(secondxy)
         sort = secondxy[secondxy[:,0].argsort()]
-        medd = np.median(sort[0:3, 0])
-        for con in range(0, 6):
+        medd = np.median(sort[0:2, 0])
+        for con in range(0, min(len(sort), 6)):
             neg = (sort[con,1], sort[con,2])
-            if sort[con,0] - medd > 20:
+            if sort[con,0] - medd > 50:
                 continue
             cv2.line(line_image, (x1,y1), (int(neg[0]), int(neg[1])), (0,0,255), round(2/img.fact))
 
