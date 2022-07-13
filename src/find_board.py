@@ -36,19 +36,19 @@ def shortest_connections(img, intersections):
                 else:
                     continue
 
-        secondxy = list(zip(dist_list, angle_list, secondx, secondy))
-        secondxy = np.array(secondxy)
-        secondxy = secondxy[secondxy[:,0].argsort()]
+        connections = list(zip(dist_list, angle_list, secondx, secondy))
+        connections = np.array(connections)
+        connections = connections[connections[:,0].argsort()]
  
-        angle_r.append(secondxy[0,1])
+        angle_r.append(connections[0,1])
         m = 0
-        for a in secondxy[:,1]:
+        for a in connections[:,1]:
             n = abs(a - angle_r[0])
             if n > m:
                 angle_r[1] = a
                 m = n
 
-        for c in secondxy:
+        for c in connections:
             neg = (round(c[2]), round(c[3]))
             if c[0] < 300:
                 r0 = abs(theta(x1,y1,neg[0],neg[1]) - angle_r[0])
