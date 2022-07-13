@@ -153,8 +153,7 @@ def remove_outliers(A, B, mean):
 
 def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     # cv2.imwrite("0{}_0gray.png".format(img.basename, c_thrl, c_thrh), img.small)
-    img_gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
-    img_contour = np.empty(img_gray3ch.shape, dtype='uint8')
+    img_contour = np.empty(img.gray3ch.shape, dtype='uint8')
 
     img_wang = wang.wang_filter(img.small)
     # cv2.imwrite("0{}_1wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_wang)
@@ -178,14 +177,14 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     areas = [cv2.contourArea(c) for c in contours]
     max_index = np.argmax(areas)
     cv2.drawContours(img_contour, contours[max_index], -1, (255,0,0), thickness=3)
-    img_contour_drawn = cv2.addWeighted(img_gray3ch, 0.5, img_contour, 0.8, 0)
+    img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
     cv2.imwrite("0{}_7countours{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_contour_drawn)
     
     img_contour_bin = img_contour[:,:,0]
     
     lines = cv2.HoughLinesP(img_contour_bin, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
     drawn_lines = draw_hough(img, lines)
-    img_hough = cv2.addWeighted(img_gray3ch, 0.5, drawn_lines, 0.8, 0)
+    img_hough = cv2.addWeighted(img.gray3ch, 0.5, drawn_lines, 0.8, 0)
     cv2.imwrite("0{}_8edges{}_{}_hough{}_{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_hough)
 
     aux = np.zeros((lines.shape[0], 1, 6))
@@ -210,17 +209,17 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     intersections = intersections[intersections[:,0].argsort()]
 
     drawn_circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
-    img_gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
+    img.gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     for p in intersections:
         cv2.circle(drawn_circles, p, radius=3, color=(255, 0, 0), thickness=-1)
 
     points = drawn_circles[:,:,0]
-    image = cv2.addWeighted(img_gray3ch, 0.5, drawn_circles, 0.8, 0)
+    image = cv2.addWeighted(img.gray3ch, 0.5, drawn_circles, 0.8, 0)
 
     cv2.imwrite("0{}_9intersections.png".format(img.basename), image)
 
     # drawn_lines = shortest_connections(img, intersections)
-    # conn = cv2.addWeighted(img_gray3ch, 0.5, drawn_lines, 0.8, 0)
+    # conn = cv2.addWeighted(img.gray3ch, 0.5, drawn_lines, 0.8, 0)
 
     return (10, 300, 110, 310)

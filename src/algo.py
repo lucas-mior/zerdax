@@ -20,8 +20,9 @@ def full(filename, c_thl, c_thh, h_th, h_minl, h_maxg):
     img = Image(filename)
     img.color = cv2.imread(filename)
     img.gray = cv2.cvtColor(img.color, cv2.COLOR_BGR2GRAY)
-
     img = reduce(img)
+    img.gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
+
     img.board = find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg)
 
     print("board:", img.board)
