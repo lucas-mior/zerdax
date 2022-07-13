@@ -17,52 +17,33 @@ def shortest_connections(img, intersections):
 
     for x1, y1 in intersections:    
         distance = 0
-        secondx = []
-        secondy = []
-        dist_list = []
-        angle_list = []
-        angle_r = [0, 0, 0]
+        seconx = []
+        secony = []
+        distxy = []
+        anglxy = []
+
         for x2, y2 in intersections:      
             if (x1, y1) == (x2, y2):
                 continue
             else:
-                distance = radius(x1,y1,x2,y2)
-                if distance > 10:
-                    angle = theta(x1,y1,x2,y2)
-                    secondx.append(x2)
-                    secondy.append(y2)
-                    dist_list.append(distance)               
-                    angle_list.append(angle)               
+                dista = radius(x1,y1,x2,y2)
+                angle = theta(x1,y1,x2,y2)
+                if dista > 10:
+                    seconx.append(x2)
+                    secony.append(y2)
+                    distxy.append(dista)               
+                    anglxy.append(angle)               
                 else:
                     continue
 
-        connections = list(zip(dist_list, angle_list, secondx, secondy))
+        connections = list(zip(distxy, anglxy, seconx, secony))
         connections = np.array(connections)
         connections = connections[connections[:,0].argsort()]
- 
-        angle_r.append(connections[0,1])
-        m = 0
-        for a in connections[:,1]:
-            n = abs(a - angle_r[0])
-            if n > m:
-                angle_r[1] = a
-                m = n
-
-        m = 0
-        for a in connections[:,1]:
-            n = max(abs(a - angle_r[1]), abs(a - angle_r[0]))
-            if n > m:
-                angle_r[2] = a
-                m = n
 
         for c in connections:
             neg = (round(c[2]), round(c[3]))
             if c[0] < 150:
-                r0 = abs(theta(x1,y1,neg[0],neg[1]) - angle_r[0])
-                r1 = abs(theta(x1,y1,neg[0],neg[1]) - angle_r[1])
-                r2 = abs(theta(x1,y1,neg[0],neg[1]) - angle_r[2])
-                if r0 < 5 or r1 < 5 or r2 < 5:
-                    cv2.line(line_image, (x1,y1), (neg[0], neg[1]), (0,0,255), round(2/img.fact))
+                cv2.line(line_image, (x1,y1), (neg[0], neg[1]), (0,0,255), round(2/img.fact))
             else:
                 continue
 
@@ -109,7 +90,8 @@ def find_intersections(img, lines):
                     inter.append((x,y))
                     last = (x,y)
                 else:
-                    print("Close point ignored")
+                    # print("Close point ignored: ({},{}) ~ ({},{})".format(last[0],last[1],x,y))
+                    continue
         i += 1
 
     inter = np.array(inter, dtype='int32')
