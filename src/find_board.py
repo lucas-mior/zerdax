@@ -52,6 +52,7 @@ def det(a, b):
 
 def find_intersections(img, lines):
     inter = []
+    last = []
 
     i = 0
     for r in lines:
