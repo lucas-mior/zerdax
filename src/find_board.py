@@ -52,7 +52,7 @@ def det(a, b):
 
 def find_intersections(img, lines):
     inter = []
-    last = []
+    last = (0,0)
 
     i = 0
     for r in lines:
@@ -84,7 +84,11 @@ def find_intersections(img, lines):
                 continue
             else:
                 j += 1
-                inter.append((x,y))
+                if radius(last[0], last[1], x, y) > 3:
+                    inter.append((x,y))
+                    last = (x,y)
+                else:
+                    print("Close point ignored")
         i += 1
 
     inter = np.array(inter, dtype='int32')
@@ -106,7 +110,7 @@ def draw_hough(img, lines, img_canny, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, cl
 
     hough = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
 
-    cv2.imwrite("1{}2_hough_{}_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, clean), hough)
+    # cv2.imwrite("1{}2_hough_{}_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, clean), hough)
 
 def remove_outliers(A, B, mean):
     rem = np.empty(A.shape[0])
@@ -151,7 +155,7 @@ def remove_outliers(A, B, mean):
 def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_wang = wang_filter(img.small)
     img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
-    cv2.imwrite("1{}1_canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
+    # cv2.imwrite("1{}1_canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
 
     lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl, h_maxg)
     draw_hough(img, lines, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
@@ -196,11 +200,24 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     lines = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
 
     intersections = find_intersections(img, lines[:,0,:])
+    print("len OLD inter:", len(intersections))
+
+    intersections = intersections[intersections[:,0].argsort()]
+    print("intersection[5] : ", intersections[0:5])
+
+    intersections = np.unique(intersections, axis=1)
+    print("len NOW inter:", len(intersections))
+
+    intersections = intersections[intersections[:,0].argsort()]
+    print("intersection[5] : ", intersections[0:5])
+
+    exit()
 
     circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     for p in intersections:
+        print("p: ", p)
         cv2.circle(circles, p, radius=3, color=(255, 0, 0), thickness=-1)
 
     points = circles[:,:,0]
