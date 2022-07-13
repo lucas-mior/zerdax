@@ -107,49 +107,9 @@ def draw_hough(img, lines):
 
     for line in lines:
         for x1,y1,x2,y2 in line:
-            cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250), round(2/img.fact))
+            cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.fact))
 
     return drawn_lines
-
-def remove_outliers(A, B, mean):
-    rem = np.empty(A.shape[0])
-    rem = np.int32(rem)
-
-    corrected = False
-    i = 0
-    C = np.empty((1,6))
-
-    var = np.var(A[:,5])
-    # tol_wrap = np.clip(var/8 + 35, 40, 50)
-    # tol_err  = np.clip(var/8,      15, 25)
-    tol_wrap = 100000
-    tol_err  = 100000
-
-    for a in A[:, 5]:
-        err = abs(a - mean)
-        if err > tol_wrap:
-            rem[i] = 0
-            C[0,:] = np.copy(A[i,:])
-            C[0,5] = -C[0,5]
-            B = np.append(B, C, axis=0)
-            corrected = True
-        elif err > tol_err - 5:
-            if abs(a) < 1 or abs(a) > 89:
-                rem[i] = 0
-                corrected = True
-        elif err > tol_err:
-            rem[i] = 0
-            corrected = True
-        else:
-            rem[i] = 1
-        i += 1
-
-    if not corrected:
-        return mean, A, B
-    else:
-        A = A[rem==1]
-        mean = np.mean(A[:,5])
-        return mean, A, B
 
 def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     # cv2.imwrite("0{}_0gray.png".format(img.basename, c_thrl, c_thrh), img.small)
