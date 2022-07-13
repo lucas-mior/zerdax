@@ -205,7 +205,7 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     intersections = intersections[intersections[:,0].argsort()]
     print("intersection[5] : ", intersections[0:5])
 
-    intersections = np.unique(intersections, axis=1)
+    intersections = np.unique(intersections, axis=0)
     print("len NOW inter:", len(intersections))
 
     intersections = intersections[intersections[:,0].argsort()]
