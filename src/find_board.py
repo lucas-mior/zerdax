@@ -172,12 +172,18 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
 
     opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, k_rect2, iterations = 2)
     cv2.imwrite("0{}_6opened{}_{}.png".format(img.basename, 8, 8), opened)
-    exit()
+
+    contours, _ = cv2.findContours(opened, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    areas = [cv2.contourArea(c) for c in contours]
+    max_index = np.argmax(areas)
+    cv2.drawContours(img_gray3ch, contours[max_index], -1, (0,255,0))
+    cv2.imwrite("0{}_7countours{}_{}_hough{}_{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_gray3ch)
     
-    lines = cv2.HoughLinesP(edges_bin, 2, np.pi / 180,  100,  None, 200, 20)
-    drawn_lines = draw_hough(img, lines)
-    img_hough = cv2.addWeighted(img_gray3ch, 0.5, drawn_lines, 0.8, 0)
-    cv2.imwrite("0{}_6edges{}_{}_hough{}_{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_hough)
+    # lines = cv2.HoughLinesP(opened, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
+    # drawn_lines = draw_hough(img, lines)
+    # img_hough = cv2.addWeighted(img_gray3ch, 0.5, drawn_lines, 0.8, 0)
+    # cv2.imwrite("0{}_6edges{}_{}_hough{}_{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_hough)
+    exit()
 
     aux = np.zeros((lines.shape[0], 1, 6))
     aux[:,0,0:4] = np.copy(lines[:,0,0:4])
