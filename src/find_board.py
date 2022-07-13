@@ -80,7 +80,7 @@ def find_intersections(img, lines):
             x = det(d, xdiff) / div
             y = det(d, ydiff) / div
 
-            if x > img.small.shape[1] or y > img.small.shape[0] or x <= 0 or y <= 0:
+            if x > img.swidth or y > img.sheigth or x < 0 or y < 0:
                 j += 1
                 continue
             else:
