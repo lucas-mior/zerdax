@@ -103,17 +103,14 @@ def radius(x1,y1,x2,y2):
 def theta(x1,y1,x2,y2):
     return math.degrees(math.atan2((y2-y1),(x2-x1)))
 
-def draw_hough(img, lines, img_canny, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, clean):
+def draw_hough(img, lines):
     drawn_lines = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
-    gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     for line in lines:
         for x1,y1,x2,y2 in line:
             cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250), round(2/img.fact))
 
-    hough = cv2.addWeighted(gray3ch, 0.5, drawn_lines, 0.8, 0)
-
-    cv2.imwrite("1{}2_hough_{}_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, clean), hough)
+    return drawn_lines
 
 def remove_outliers(A, B, mean):
     rem = np.empty(A.shape[0])
@@ -155,13 +152,22 @@ def remove_outliers(A, B, mean):
         mean = np.mean(A[:,5])
         return mean, A, B
 
-def find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg):
-    img_wang = wang_filter(img.small)
-    img_canny = cv2.Canny(img_wang, c_thl, c_thh, None, 3, True)
-    cv2.imwrite("1{}1_canny_{}_{}.jpg".format(img.basename, c_thl, c_thh), img_canny)
+def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
+    gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
-    lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_th,  None, h_minl, h_maxg)
-    draw_hough(img, lines, img.small, c_thl, c_thh, h_th, h_minl, h_maxg, 0)
+    img_wang = wang_filter(img.small)
+
+    se = cv2.getStructuringElement(cv2.MORPH_RECT, (8,8))
+    bg = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, se)
+    edges_gray = cv2.divide(img_wang, bg, scale = 255)
+    edges_bin = cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1]
+
+    img_canny = cv2.Canny(edges_gray, c_thrl, c_thrh, None, 3, True)
+
+    lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
+
+    drawn_lines = draw_hough(img, lines)
+    img_hough = cv2.addWeighted(gray3ch, 0.5, drawn_lines, 0.8, 0)
 
     aux = np.zeros((lines.shape[0], 1, 6))
     aux[:,0,0:4] = np.copy(lines[:,0,0:4])
@@ -200,7 +206,7 @@ def wang_filter(image):
 
 def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
-    lines = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
+    lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
 
     intersections = find_intersections(img, lines[:,0,:])
     intersections = intersections[intersections[:,0].argsort()]
@@ -214,13 +220,9 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
         cv2.circle(drawn_circles, p, radius=3, color=(255, 0, 0), thickness=-1)
 
     points = drawn_circles[:,:,0]
-    cv2.imwrite("1{}4_points_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), points)
-
     image = cv2.addWeighted(gray3ch, 0.5, drawn_circles, 0.8, 0)
-    cv2.imwrite("1{}4_circl_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), image)
 
     # drawn_lines = shortest_connections(img, intersections)
     # conn = cv2.addWeighted(gray3ch, 0.5, drawn_lines, 0.8, 0)
-    # cv2.imwrite('1{}5_conne_{}_{}_{}_{}_{}.jpg'.format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), conn)
 
     return (10, 300, 110, 310)
