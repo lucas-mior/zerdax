@@ -21,7 +21,7 @@ def shortest_connections(img, intersections):
         secondy = []
         dist_list = []
         angle_list = []
-        angle_r = []
+        angle_r = [0, 0]
         for x2, y2 in intersections:      
             if (x1, y1) == (x2, y2):
                 continue
@@ -41,16 +41,20 @@ def shortest_connections(img, intersections):
         secondxy = secondxy[secondxy[:,0].argsort()]
  
         angle_r.append(secondxy[0,1])
-        angle_r.append(secondxy[1,1])
-        angle_r.append(secondxy[2,1])
+        m = 0
+        for a in secondxy[:,1]:
+            n = abs(a - angle_r[0])
+            if n > m:
+                angle_r[1] = a
+                m = n
 
-        for con in range(3, len(secondxy)):
-            neg = (round(secondxy[con,2]), round(secondxy[con,3]))
-            if secondxy[con,0] < 150:
+        for c in secondxy:
+            neg = (round(c[2]), round(c[3]))
+            if c[0] < 300:
                 r0 = abs(theta(x1,y1,neg[0],neg[1]) - angle_r[0])
                 r1 = abs(theta(x1,y1,neg[0],neg[1]) - angle_r[1])
                 r2 = abs(theta(x1,y1,neg[0],neg[1]) - angle_r[2])
-                if r0 < 5 or r1 < 5 or r2 < 5:
+                if r0 < 30 or r1 < 30 or r2 < 30:
                     cv2.line(line_image, (x1,y1), (neg[0], neg[1]), (0,0,255), round(2/img.fact))
             else:
                 continue
@@ -94,7 +98,7 @@ def find_intersections(img, lines):
                 continue
             else:
                 j += 1
-                if radius(last[0], last[1], x, y) > 3:
+                if radius(last[0], last[1], x, y) > 5:
                     inter.append((x,y))
                     last = (x,y)
                 else:
