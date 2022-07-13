@@ -113,14 +113,13 @@ def draw_hough(img, lines):
 def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     if img.save:
         cv2.imwrite("0{}_0gray.png".format(img.basename, c_thrl, c_thrh), img.small)
-    img_contour = np.empty(img.gray3ch.shape, dtype='uint8')
 
     img_wang = wang.wang_filter(img.small)
-    if img.save:
-        cv2.imwrite("0{}_1wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_wang)
-    img_canny = cv2.Canny(img_wang, c_thrl, c_thrh, None, 3, True)
-    if img.save:
-        cv2.imwrite("0{}_2canny_on_wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
+    # if img.save:
+    #     cv2.imwrite("0{}_1wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_wang)
+    # img_canny = cv2.Canny(img_wang, c_thrl, c_thrh, None, 3, True)
+    # if img.save:
+    #     cv2.imwrite("0{}_2canny_on_wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
 
     k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
     k_dil_s = 8
@@ -133,13 +132,15 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
         contours, _ = cv2.findContours(opened, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         max_index = np.argmax(areas)
-        if areas[max_index] > 20000:
-            print("area : ", areas[max_index])
+        a = areas[max_index]
+        if a > (0.25 * img.sarea):
+            print("found area big enough : ", areas[max_index])
             break
         else:
-            print("area : ", areas[max_index])
-        k_dil_s += 2
+            print("area too small : ", areas[max_index])
+        k_dil_s += 1
 
+    img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(img_contour, contours[max_index], -1, (255,0,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
 

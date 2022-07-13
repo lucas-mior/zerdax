@@ -11,6 +11,7 @@ def reduce(img):
     img.sheigth = round(img.fact * img.gray.shape[0])
 
     img.small = cv2.resize(img.gray, (img.swidth, img.sheigth))
+    img.sarea = img.sheigth * img.swidth
     return img
 
 def full(filename, c_thl, c_thh, h_th, h_minl, h_maxg, save):
