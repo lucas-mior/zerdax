@@ -14,14 +14,14 @@ import wang
 def shortest_connections(img, intersections):
     drawn_lines = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
 
-    for x1, y1 in intersections:    
+    for x1, y1 in intersections:
         distance = 0
         seconx = []
         secony = []
         distxy = []
         anglxy = []
 
-        for x2, y2 in intersections:      
+        for x2, y2 in intersections:
             if (x1, y1) == (x2, y2):
                 continue
             else:
@@ -30,8 +30,8 @@ def shortest_connections(img, intersections):
                 if dista > 10:
                     seconx.append(x2)
                     secony.append(y2)
-                    distxy.append(dista)               
-                    anglxy.append(angle)               
+                    distxy.append(dista)
+                    anglxy.append(angle)
                 else:
                     continue
 
@@ -66,7 +66,6 @@ def find_intersections(img, lines):
 
             if abs(t - tt) < 30:
                 continue
-
 
             xdiff = (l1[0][0] - l1[1][0], l2[0][0] - l2[1][0])
             ydiff = (l1[0][1] - l1[1][1], l2[0][1] - l2[1][1])
@@ -148,9 +147,9 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     print("save: ",img.save)
     if img.save:
         cv2.imwrite("0{}_7countours{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_contour_drawn)
-    
+
     img_contour_bin = img_contour[:,:,0]
-    
+
     lines = cv2.HoughLinesP(img_contour_bin, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
     drawn_lines = draw_hough(img, lines)
     img_hough = cv2.addWeighted(img.gray3ch, 0.5, drawn_lines, 0.8, 0)
