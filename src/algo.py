@@ -6,12 +6,11 @@ from Image import Image
 from find_board import find_board
 
 def reduce(img):
-    new_width = 1000
-    img.fact = new_width / img.gray.shape[1]
-    new_height = round(img.fact * img.gray.shape[0])
+    img.swidth = 1000
+    img.fact = img.swidth / img.gray.shape[1]
+    img.sheigth = round(img.fact * img.gray.shape[0])
 
-    dsize = (new_width, new_height)
-    img.small = cv2.resize(img.gray, dsize)
+    img.small = cv2.resize(img.gray, (img.swidth, img.sheigth))
     return img
 
 def full(filename, c_thl, c_thh, h_th, h_minl, h_maxg):
