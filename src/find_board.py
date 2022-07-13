@@ -200,18 +200,9 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     lines = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
 
     intersections = find_intersections(img, lines[:,0,:])
-    print("len OLD inter:", len(intersections))
-
     intersections = intersections[intersections[:,0].argsort()]
-    print("intersection[5] : ", intersections[0:5])
-
     intersections = np.unique(intersections, axis=0)
-    print("len NOW inter:", len(intersections))
-
     intersections = intersections[intersections[:,0].argsort()]
-    print("intersection[5] : ", intersections[0:5])
-
-    exit()
 
     circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
