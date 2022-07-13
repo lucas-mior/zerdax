@@ -13,7 +13,7 @@ def reduce(img):
     img.small = cv2.resize(img.gray, (img.swidth, img.sheigth))
     return img
 
-def full(filename, c_thl, c_thh, h_th, h_minl, h_maxg):
+def full(filename, c_thl, c_thh, h_th, h_minl, h_maxg, save):
     """ given a file path to a chessboard image,
         returns a FEN notation
     """
@@ -23,6 +23,7 @@ def full(filename, c_thl, c_thh, h_th, h_minl, h_maxg):
     img = reduce(img)
     img.gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
+    img.save = save
     img.board = find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg)
 
     print("board:", img.board)
