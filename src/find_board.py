@@ -13,7 +13,7 @@ import ctypes as ct
 from numpy.ctypeslib import ndpointer as ndp
 
 def shortest_connections(img, intersections):
-    line_image = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
+    drawn_lines = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
 
     for x1, y1 in intersections:    
         distance = 0
@@ -43,11 +43,11 @@ def shortest_connections(img, intersections):
         for c in connections[:2]:
             neg = (round(c[2]), round(c[3]))
             if c[0] < 50:
-                cv2.line(line_image, (x1,y1), (neg[0], neg[1]), (0,0,255), round(2/img.fact))
+                cv2.line(drawn_lines, (x1,y1), (neg[0], neg[1]), (0,0,255), round(2/img.fact))
             else:
                 continue
 
-    return line_image
+    return drawn_lines
 
 def det(a, b):
     return a[0]*b[1] - a[1]*b[0]
@@ -104,14 +104,14 @@ def theta(x1,y1,x2,y2):
     return math.degrees(math.atan2((y2-y1),(x2-x1)))
 
 def draw_hough(img, lines, img_canny, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, clean):
-    line_image = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
+    drawn_lines = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     for line in lines:
         for x1,y1,x2,y2 in line:
-            cv2.line(line_image,(x1,y1),(x2,y2),(0,0,250), round(2/img.fact))
+            cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250), round(2/img.fact))
 
-    hough = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
+    hough = cv2.addWeighted(gray3ch, 0.5, drawn_lines, 0.8, 0)
 
     cv2.imwrite("1{}2_hough_{}_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thrl, c_thrh, h_thrv, h_minl, h_maxg, clean), hough)
 
@@ -207,20 +207,20 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     intersections = np.unique(intersections, axis=0)
     intersections = intersections[intersections[:,0].argsort()]
 
-    circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
+    drawn_circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     for p in intersections:
-        cv2.circle(circles, p, radius=3, color=(255, 0, 0), thickness=-1)
+        cv2.circle(drawn_circles, p, radius=3, color=(255, 0, 0), thickness=-1)
 
-    points = circles[:,:,0]
+    points = drawn_circles[:,:,0]
     cv2.imwrite("1{}4_points_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), points)
 
-    image = cv2.addWeighted(gray3ch, 0.5, circles, 0.8, 0)
+    image = cv2.addWeighted(gray3ch, 0.5, drawn_circles, 0.8, 0)
     cv2.imwrite("1{}4_circl_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), image)
 
-    # line_image = shortest_connections(img, intersections)
-    # conn = cv2.addWeighted(gray3ch, 0.5, line_image, 0.8, 0)
+    # drawn_lines = shortest_connections(img, intersections)
+    # conn = cv2.addWeighted(gray3ch, 0.5, drawn_lines, 0.8, 0)
     # cv2.imwrite('1{}5_conne_{}_{}_{}_{}_{}.jpg'.format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), conn)
 
     return (10, 300, 110, 310)
