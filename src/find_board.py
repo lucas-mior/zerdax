@@ -152,23 +152,32 @@ def remove_outliers(A, B, mean):
         return mean, A, B
 
 def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
+    # cv2.imwrite("0{}_0gray.png".format(img.basename, c_thrl, c_thrh), img.small)
     img_gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     img_wang = wang.wang_filter(img.small)
+    # cv2.imwrite("0{}_1wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_wang)
     img_canny = cv2.Canny(img_wang, c_thrl, c_thrh, None, 3, True)
-    cv2.imwrite("0{}0canny_wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
+    # cv2.imwrite("0{}_2canny_on_wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
 
-    struct = cv2.getStructuringElement(cv2.MORPH_RECT, (8,8))
-    dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, se)
+    k_rect8 = cv2.getStructuringElement(cv2.MORPH_RECT, (6,6))
+    k_rect2 = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
+    dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k_rect8)
+    # cv2.imwrite("0{}_3dilate{}_{}.png".format(img.basename, 8, 8), dilate)
     edges_gray = cv2.divide(img_wang, dilate, scale = 255)
-    edges_bin = cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1]
+    # cv2.imwrite("0{}_4edges_gray{}_{}.png".format(img.basename, 8, 8), edges_gray)
 
-    img_canny = cv2.Canny(edges_gray, c_thrl, c_thrh, None, 3, True)
+    edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
+    cv2.imwrite("0{}_5edges_bin{}_{}.png".format(img.basename, 8, 8), edges_bin)
 
-    lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
-
+    opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, k_rect2, iterations = 2)
+    cv2.imwrite("0{}_6opened{}_{}.png".format(img.basename, 8, 8), opened)
+    exit()
+    
+    lines = cv2.HoughLinesP(edges_bin, 2, np.pi / 180,  100,  None, 200, 20)
     drawn_lines = draw_hough(img, lines)
     img_hough = cv2.addWeighted(img_gray3ch, 0.5, drawn_lines, 0.8, 0)
+    cv2.imwrite("0{}_6edges{}_{}_hough{}_{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_hough)
 
     aux = np.zeros((lines.shape[0], 1, 6))
     aux[:,0,0:4] = np.copy(lines[:,0,0:4])
