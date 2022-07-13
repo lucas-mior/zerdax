@@ -21,7 +21,7 @@ def shortest_connections(img, intersections):
         secondy = []
         dist_list = []
         angle_list = []
-        angle_r = [0, 0]
+        angle_r = [0, 0, 0]
         for x2, y2 in intersections:      
             if (x1, y1) == (x2, y2):
                 continue
@@ -48,13 +48,20 @@ def shortest_connections(img, intersections):
                 angle_r[1] = a
                 m = n
 
+        m = 0
+        for a in connections[:,1]:
+            n = max(abs(a - angle_r[1]), abs(a - angle_r[0]))
+            if n > m:
+                angle_r[2] = a
+                m = n
+
         for c in connections:
             neg = (round(c[2]), round(c[3]))
-            if c[0] < 300:
+            if c[0] < 150:
                 r0 = abs(theta(x1,y1,neg[0],neg[1]) - angle_r[0])
                 r1 = abs(theta(x1,y1,neg[0],neg[1]) - angle_r[1])
                 r2 = abs(theta(x1,y1,neg[0],neg[1]) - angle_r[2])
-                if r0 < 30 or r1 < 30 or r2 < 30:
+                if r0 < 5 or r1 < 5 or r2 < 5:
                     cv2.line(line_image, (x1,y1), (neg[0], neg[1]), (0,0,255), round(2/img.fact))
             else:
                 continue
