@@ -56,17 +56,17 @@ def find_intersections(img, lines):
     last = (0,0)
 
     i = 0
-    for r in lines:
-        l1 = [(r[0],r[1]), (r[2],r[3])]
+    for x1, y1, x2, y2, r, t in lines:
+        l1 = [(x1,y1), (x2,y2)]
         j = 0
-        for s in lines:
-            if i == j:
+        for xx1, yy1, xx2, yy2, rr, tt in lines:
+            l2 =  [(xx1,yy1), (xx2,yy2)]
+            if (x1,y1) == (xx1,yy1) and (x2,y2) == (xx2,yy2):
                 continue
 
-            if abs(r[5] - s[5]) < 30:
+            if abs(t - tt) < 30:
                 continue
 
-            l2 = [(s[0],s[1]), (s[2],s[3])]
 
             xdiff = (l1[0][0] - l1[1][0], l2[0][0] - l2[1][0])
             ydiff = (l1[0][1] - l1[1][1], l2[0][1] - l2[1][1])
@@ -187,7 +187,6 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     drawn_lines = draw_hough(img, lines)
     img_hough = cv2.addWeighted(img_gray3ch, 0.5, drawn_lines, 0.8, 0)
     cv2.imwrite("0{}_8edges{}_{}_hough{}_{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_hough)
-    exit()
 
     aux = np.zeros((lines.shape[0], 1, 6))
     aux[:,0,0:4] = np.copy(lines[:,0,0:4])
@@ -218,6 +217,8 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     points = drawn_circles[:,:,0]
     image = cv2.addWeighted(img_gray3ch, 0.5, drawn_circles, 0.8, 0)
+
+    cv2.imwrite("0{}_9intersections.png".format(img.basename), image)
 
     # drawn_lines = shortest_connections(img, intersections)
     # conn = cv2.addWeighted(img_gray3ch, 0.5, drawn_lines, 0.8, 0)
