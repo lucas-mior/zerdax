@@ -152,9 +152,11 @@ def remove_outliers(A, B, mean):
         return mean, A, B
 
 def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
-    gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
+    img_gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     img_wang = wang.wang_filter(img.small)
+    img_canny = cv2.Canny(img_wang, c_thrl, c_thrh, None, 3, True)
+    cv2.imwrite("0{}0canny_wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
 
     struct = cv2.getStructuringElement(cv2.MORPH_RECT, (8,8))
     dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, se)
@@ -166,7 +168,7 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
 
     drawn_lines = draw_hough(img, lines)
-    img_hough = cv2.addWeighted(gray3ch, 0.5, drawn_lines, 0.8, 0)
+    img_hough = cv2.addWeighted(img_gray3ch, 0.5, drawn_lines, 0.8, 0)
 
     aux = np.zeros((lines.shape[0], 1, 6))
     aux[:,0,0:4] = np.copy(lines[:,0,0:4])
@@ -190,15 +192,15 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     intersections = intersections[intersections[:,0].argsort()]
 
     drawn_circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
-    gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
+    img_gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     for p in intersections:
         cv2.circle(drawn_circles, p, radius=3, color=(255, 0, 0), thickness=-1)
 
     points = drawn_circles[:,:,0]
-    image = cv2.addWeighted(gray3ch, 0.5, drawn_circles, 0.8, 0)
+    image = cv2.addWeighted(img_gray3ch, 0.5, drawn_circles, 0.8, 0)
 
     # drawn_lines = shortest_connections(img, intersections)
-    # conn = cv2.addWeighted(gray3ch, 0.5, drawn_lines, 0.8, 0)
+    # conn = cv2.addWeighted(img_gray3ch, 0.5, drawn_lines, 0.8, 0)
 
     return (10, 300, 110, 310)
