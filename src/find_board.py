@@ -105,7 +105,7 @@ def find_intersections(img, lines):
                 continue
             else:
                 j += 1
-                if radius(last[0], last[1], x, y) > 5:
+                if radius(last[0], last[1], x, y) > 10:
                     inter.append((x,y))
                     last = (x,y)
                 else:
