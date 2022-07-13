@@ -50,7 +50,7 @@ def shortest_connections(img, intersections):
 def det(a, b):
     return a[0]*b[1] - a[1]*b[0]
 
-def find_intersections(lines):
+def find_intersections(img, lines):
     inter = []
 
     i = 0
@@ -78,7 +78,7 @@ def find_intersections(lines):
             x = det(d, xdiff) / div
             y = det(d, ydiff) / div
 
-            if x > 1000 or y > 667 or x <= 0 or y <= 0:
+            if x > img.small.shape[1] or y > img.small.shape[0] or x <= 0 or y <= 0:
                 j += 1
                 continue
             else:
@@ -194,13 +194,13 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
 
     lines = find_thetas(img, c_thl, c_thh, h_th, h_minl, h_maxg)
 
-    intersections = find_intersections(lines[:,0,:])
+    intersections = find_intersections(img, lines[:,0,:])
 
     circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     for p in intersections:
-        cv2.circle(circles, p, radius=6, color=(255, 0, 0), thickness=-1)
+        cv2.circle(circles, p, radius=3, color=(255, 0, 0), thickness=-1)
 
     points = circles[:,:,0]
     cv2.imwrite("1{}4_points_{}_{}_{}_{}_{}.jpg".format(img.basename, c_thl, c_thh, h_th, h_minl, h_maxg), points)
