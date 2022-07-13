@@ -122,34 +122,40 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     if img.save:
         cv2.imwrite("0{}_2canny_on_wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
 
-    k_rect8 = cv2.getStructuringElement(cv2.MORPH_RECT, (10,10))
-    k_rect2 = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
-    dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k_rect8)
-    if img.save:
-        cv2.imwrite("0{}_3dilate{}_{}.png".format(img.basename, 8, 8), dilate)
-    edges_gray = cv2.divide(img_wang, dilate, scale = 255)
-    if img.save:
-        cv2.imwrite("0{}_4edges_gray{}_{}.png".format(img.basename, 8, 8), edges_gray)
+    k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
+    k_dil_s = 8
+    while k_dil_s <= 20:
+        k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (k_dil_s,k_dil_s))
+        dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k_dil)
+        edges_gray = cv2.divide(img_wang, dilate, scale = 255)
+        edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
+        opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, k_open, iterations = 2)
+        contours, _ = cv2.findContours(opened, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+        areas = [cv2.contourArea(c) for c in contours]
+        max_index = np.argmax(areas)
+        if areas[max_index] > 20000:
+            print("area : ", areas[max_index])
+            break
+        else:
+            print("area : ", areas[max_index])
+        k_dil_s += 2
 
-    edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
-    if img.save:
-        cv2.imwrite("0{}_5edges_bin{}_{}.png".format(img.basename, 8, 8), edges_bin)
-
-    opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, k_rect2, iterations = 2)
-    if img.save:
-        cv2.imwrite("0{}_6opened{}_{}.png".format(img.basename, 8, 8), opened)
-
-    contours, _ = cv2.findContours(opened, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    areas = [cv2.contourArea(c) for c in contours]
-    max_index = np.argmax(areas)
     cv2.drawContours(img_contour, contours[max_index], -1, (255,0,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
-    print("save: ",img.save)
+
+    if img.save:
+        cv2.imwrite("0{}_3dilate{}_{}.png".format(img.basename, 8, 8), dilate)
+    if img.save:
+        cv2.imwrite("0{}_4edges_gray{}_{}.png".format(img.basename, 8, 8), edges_gray)
+    if img.save:
+        cv2.imwrite("0{}_5edges_bin{}_{}.png".format(img.basename, 8, 8), edges_bin)
+    if img.save:
+        cv2.imwrite("0{}_6opened{}_{}.png".format(img.basename, 8, 8), opened)
     if img.save:
         cv2.imwrite("0{}_7countours{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_contour_drawn)
 
+    exit()
     img_contour_bin = img_contour[:,:,0]
-
     lines = cv2.HoughLinesP(img_contour_bin, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
     drawn_lines = draw_hough(img, lines)
     img_hough = cv2.addWeighted(img.gray3ch, 0.5, drawn_lines, 0.8, 0)
@@ -178,7 +184,6 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     intersections = intersections[intersections[:,0].argsort()]
 
     drawn_circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
-    img.gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     for p in intersections:
         cv2.circle(drawn_circles, p, radius=3, color=(255, 0, 0), thickness=-1)
