@@ -21,27 +21,37 @@ def shortest_connections(img, intersections):
         secondy = []
         dist_list = []
         angle_list = []
-        sort = []   
-        a1 = False
-        a2 = False
+        angle_r = []
         for x2, y2 in intersections:      
             if (x1, y1) == (x2, y2):
                 continue
             else:
                 distance = radius(x1,y1,x2,y2)
-                angle = theta(x1,y1,x2,y2)
-                secondx.append(x2)
-                secondy.append(y2)
-                dist_list.append(distance)               
-                angle_list.append(angle)               
+                if distance > 10:
+                    angle = theta(x1,y1,x2,y2)
+                    secondx.append(x2)
+                    secondy.append(y2)
+                    dist_list.append(distance)               
+                    angle_list.append(angle)               
+                else:
+                    continue
 
         secondxy = list(zip(dist_list, angle_list, secondx, secondy))
         secondxy = np.array(secondxy)
-        sort = secondxy[secondxy[:,0].argsort()]
-        for con in range(0, len(sort)):
-            neg = (sort[con,2], sort[con,3])
-            if sort[con,0] < 150:
-                cv2.line(line_image, (x1,y1), (round(neg[0]), round(neg[1])), (0,0,255), round(2/img.fact))
+        secondxy = secondxy[secondxy[:,0].argsort()]
+ 
+        angle_r.append(secondxy[0,1])
+        angle_r.append(secondxy[1,1])
+        angle_r.append(secondxy[2,1])
+
+        for con in range(3, len(secondxy)):
+            neg = (round(secondxy[con,2]), round(secondxy[con,3]))
+            if secondxy[con,0] < 150:
+                r0 = abs(theta(x1,y1,neg[0],neg[1]) - angle_r[0])
+                r1 = abs(theta(x1,y1,neg[0],neg[1]) - angle_r[1])
+                r2 = abs(theta(x1,y1,neg[0],neg[1]) - angle_r[2])
+                if r0 < 5 or r1 < 5 or r2 < 5:
+                    cv2.line(line_image, (x1,y1), (neg[0], neg[1]), (0,0,255), round(2/img.fact))
             else:
                 continue
 
@@ -208,7 +218,6 @@ def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     gray3ch = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR)
 
     for p in intersections:
-        print("p: ", p)
         cv2.circle(circles, p, radius=3, color=(255, 0, 0), thickness=-1)
 
     points = circles[:,:,0]
