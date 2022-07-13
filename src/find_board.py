@@ -40,9 +40,9 @@ def shortest_connections(img, intersections):
         connections = np.array(connections)
         connections = connections[connections[:,0].argsort()]
 
-        for c in connections:
+        for c in connections[:2]:
             neg = (round(c[2]), round(c[3]))
-            if c[0] < 150:
+            if c[0] < 50:
                 cv2.line(line_image, (x1,y1), (neg[0], neg[1]), (0,0,255), round(2/img.fact))
             else:
                 continue
