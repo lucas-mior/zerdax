@@ -204,7 +204,7 @@ def broad_hull(img, hull):
     else:
         Pymax[0] -= 10
         Pymin[0] += 10
-    
+
     return [Pymin[1],Pymax[1]], [Pxmin[0],Pxmax[0]]
 
 def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
@@ -229,7 +229,7 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     h_inil = round(0.3 * (img.hull.shape[1]+img.hull.shape[0]))
     c_thrl = 110
     c_thrh = 210
-    while c_thrl > 5:
+    while c_thrl > 5 and c_thrh > 50:
         img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
         gotlines = False
         h_thrv = 60
@@ -239,50 +239,50 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
                 h_maxg = 10
                 while h_maxg < 99:
                     lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
+                    print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
                     if lines is not None and lines.shape[0] >= 4:
                         gotlines = True
                         break
-                    h_maxg = min(100, h_maxg + 2)
+                    h_maxg += 2
                 if gotlines:
                     break
-                h_minl = max(200, h_minl - 10)
+                h_minl -= 20
+            h_thrv -= 3
             if gotlines:
                 break
-            h_thrv = max(29, h_thrv - 2)
-            print("HOUGH failed @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
 
         if not gotlines:
-            c_thrl = max(5, c_thrl - 10)
-            c_thrh = max(10, c_thrh - 15)
-            continue
+            c_thrl -= 10
+            c_thrh -= 15
+            pass
+        else:
+            drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+            for line in lines:
+                for x1,y1,x2,y2 in line:
+                    cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.fact))
 
-        drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-        for line in lines:
-            for x1,y1,x2,y2 in line:
-                cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.fact))
-
-        img_contour_bin = drawn_lines[:,:,2]
-        contours, _ = cv2.findContours(img_contour_bin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        areas = [cv2.contourArea(c) for c in contours]
-        perim = [cv2.arcLength(c, True) for c in contours]
-        max_index = np.argmax(areas)
-        a = areas[max_index]
-        p = perim[max_index]
-        amin = round(0.4 * img.harea)
-        if a > amin:
-            print("{} > {}, p = {}, @ {}, {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-            break
-
-        print("{} < {}, p = {}, @ {}, {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-        c_thrl = max(5, c_thrl - 10)
-        c_thrh = max(10, c_thrh - 15)
+            img_contour_bin = drawn_lines[:,:,2]
+            contours, _ = cv2.findContours(img_contour_bin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+            areas = [cv2.contourArea(c) for c in contours]
+            perim = [cv2.arcLength(c, True) for c in contours]
+            max_index = np.argmax(areas)
+            a = areas[max_index]
+            p = perim[max_index]
+            amin = round(0.4 * img.harea)
+            if a > amin:
+                print("{} > {}, p = {}, @ {}, {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
+                break
+            else:
+                print("{} < {}, p = {}, @ {}, {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
+                c_thrl -= 10
+                c_thrh -= 15
 
     img_contour = np.empty(img.hull3ch.shape, dtype='uint8') * 0
     cont = contours[max_index]
     hull = cv2.convexHull(cont)
     cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
 
-    shape = cv2.approxPolyDP(cont, 300, True) 
+    shape = cv2.approxPolyDP(cont, 300, True)
     cv2.drawContours(img_contour, cont,    -1, (255,0,0), thickness=3)
     cv2.drawContours(img_contour, [shape], -1, (0,255,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.hull3ch, 0.5, img_contour, 0.8, 0)
