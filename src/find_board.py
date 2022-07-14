@@ -144,11 +144,13 @@ def find_hull(img):
 
     img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cont = contours[max_index]
-    convexHull = cv2.convexHull(cont)
-    cv2.drawContours(img_contour, [convexHull], -1, (0, 240, 0), thickness=3)
+    hull = cv2.convexHull(cont)
+    cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
     cv2.drawContours(img_contour, cont, -1, (255,0,0), thickness=3)
-    shape = cv2.approxPolyDP(cont, 120, True)
-    cv2.drawContours(img_contour, [shape], -1, (0, 0, 250), thickness=3)
+
+    # shape = cv2.approxPolyDP(cont, 120, True)
+    # cv2.drawContours(img_contour, [shape], -1, (0, 0, 250), thickness=3)
+
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
 
     if img.save:
@@ -157,6 +159,8 @@ def find_hull(img):
         cv2.imwrite("0{}_5edges_bin.png".format(img.basename),  edges_bin)
         cv2.imwrite("0{}_6edges_opened.png".format(img.basename),     edges_opened)
         cv2.imwrite("0{}_7countours.png".format(img.basename),  img_contour_drawn)
+
+    return hull
 
 
 def find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg):
@@ -183,9 +187,46 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
         cv2.imwrite("0{}_0gray.png".format(img.basename, c_thrl, c_thrh), img.small)
 
     hull = find_hull(img)
-    # lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
+    Pxmin = hull[np.argmin(hull[:,0,0]),0]
+    Pxmax = hull[np.argmax(hull[:,0,0]),0]
+    Pymin = hull[np.argmin(hull[:,0,1]),0]
+    Pymax = hull[np.argmax(hull[:,0,1]),0]
+
+    Pxmin[0] = max(0, Pxmin[0]-10)
+    Pymin[1] = max(0, Pymin[1]-10)
+    Pxmax[0] = min(img.swidth, Pxmax[0]+10)
+    Pymax[1] = min(img.sheigth, Pymax[1]+10)
+
+    if Pxmin[1] < Pxmax[1]:
+        Pxmin[1] -= 10
+        Pxmax[1] += 10
+    else:
+        Pxmax[1] -= 10
+        Pxmin[1] += 10
+
+    if Pymin[0] < Pymax[0]:
+        Pymin[0] -= 10
+        Pymax[0] += 10
+    else:
+        Pymax[0] -= 10
+        Pymin[0] += 10
+
+    print("with margin:", Pxmin, Pxmax, Pymin, Pymax)
+
+    # drawn_circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
+    # for p in Pxmin, Pxmax, Pymin, Pymax:
+    #     print(p)
+    #     cv2.circle(drawn_circles, p, radius=3, color=(255, 0, 0), thickness=-1)
+    # image = cv2.addWeighted(img.gray3ch, 0.5, drawn_circles, 0.8, 0)
+
+#     if img.save:
+#         cv2.imwrite("0{}_9hull.png".format(img.basename), image)
+
+    img.hull = img.small[Pymin[1]:Pymax[1], Pxmin[0]:Pxmax[0]]
+    cv2.imwrite("0{}_9cuthull.png".format(img.basename), img.hull)
 
     exit()
+    # lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
 
     intersections = find_intersections(img, lines[:,0,:])
     intersections = intersections[intersections[:,0].argsort()]
