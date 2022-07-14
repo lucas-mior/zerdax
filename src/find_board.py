@@ -150,11 +150,7 @@ def find_hull(img):
     cont = contours[max_index]
     hull = cv2.convexHull(cont)
     cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
-    cv2.drawContours(img_contour, cont, -1, (255,0,0), thickness=3)
-
-    # shape = cv2.approxPolyDP(cont, 120, True)
-    # cv2.drawContours(img_contour, [shape], -1, (0, 0, 250), thickness=3)
-
+    cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
 
     save(img, "0{}_3dilate.png".format(img.basename),     dilate)
@@ -164,7 +160,6 @@ def find_hull(img):
     save(img, "0{}_7countours.png".format(img.basename),  img_contour_drawn)
 
     return hull
-
 
 def find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_contour_bin = img_contour[:,:,0]
