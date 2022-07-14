@@ -110,16 +110,10 @@ def draw_hough(img, lines):
 
     return drawn_lines
 
-def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
-    # if img.save:
-    #     cv2.imwrite("0{}_0gray.png".format(img.basename, c_thrl, c_thrh), img.small)
-
+def find_hull(img):
     img_wang = lwang.wang_filter(img.small)
-    # if img.save:
-    #     cv2.imwrite("0{}_1wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_wang)
-    # img_canny = cv2.Canny(img_wang, c_thrl, c_thrh, None, 3, True)
-    # if img.save:
-    #     cv2.imwrite("0{}_2canny_on_wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
+    if img.save:
+        cv2.imwrite("0{}_1wang.png".format(img.basename), img_wang)
 
     got = False
     k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
@@ -145,28 +139,27 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
             k_dil_s += 1
             lasta = a
         else:
-            print("{}: giving up: , p = {}".format(a, perim[max_index]))
+            print("{} < {}: failed. p = {}".format(a, img.sarea, perim[max_index]))
             break
 
     img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cont = contours[max_index]
     convexHull = cv2.convexHull(cont)
     cv2.drawContours(img_contour, [convexHull], -1, (0, 240, 0), thickness=3)
-
     cv2.drawContours(img_contour, cont, -1, (255,0,0), thickness=3)
-
     shape = cv2.approxPolyDP(cont, 120, True)
     cv2.drawContours(img_contour, [shape], -1, (0, 0, 250), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
 
     if img.save:
-        # cv2.imwrite("0{}_3dilate.png".format(img.basename),     dilate)
-        # cv2.imwrite("0{}_4edges_gray.png".format(img.basename), edges_gray)
-        # cv2.imwrite("0{}_5edges_bin.png".format(img.basename),  edges_bin)
-        # cv2.imwrite("0{}_6edges_opened.png".format(img.basename),     edges_opened)
+        cv2.imwrite("0{}_3dilate.png".format(img.basename),     dilate)
+        cv2.imwrite("0{}_4edges_gray.png".format(img.basename), edges_gray)
+        cv2.imwrite("0{}_5edges_bin.png".format(img.basename),  edges_bin)
+        cv2.imwrite("0{}_6edges_opened.png".format(img.basename),     edges_opened)
         cv2.imwrite("0{}_7countours.png".format(img.basename),  img_contour_drawn)
 
-    exit()
+
+def find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     img_contour_bin = img_contour[:,:,0]
     lines = cv2.HoughLinesP(img_contour_bin, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
     drawn_lines = draw_hough(img, lines)
@@ -183,12 +176,16 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
             lines[i, 0, 4] = radius(x1,y1,x2,y2)
             lines[i, 0, 5] = theta(x1,y1,x2,y2)
             i += 1
-
     return lines
 
-def find_board(img, c_thl, c_thh, h_th, h_minl, h_maxg):
+def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
+    if img.save:
+        cv2.imwrite("0{}_0gray.png".format(img.basename, c_thrl, c_thrh), img.small)
 
-    lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
+    hull = find_hull(img)
+    # lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
+
+    exit()
 
     intersections = find_intersections(img, lines[:,0,:])
     intersections = intersections[intersections[:,0].argsort()]
