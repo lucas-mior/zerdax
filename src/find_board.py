@@ -78,7 +78,7 @@ def draw_hough(img, lines):
 
     return drawn_lines
 
-def find_best_cont(img, img_wang):
+def find_best_cont(img, img_wang, amin):
     got = False
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 5
@@ -94,7 +94,6 @@ def find_best_cont(img, img_wang):
         perim = [cv2.arcLength(c, True) for c in contours]
         max_index = np.argmax(areas)
         a = areas[max_index]
-        amin = 0.25 * img.sarea
         if a > amin:
             print("{} > {}, p = {}".format(a, amin, perim[max_index]))
             got = True
@@ -118,7 +117,7 @@ def find_hull(img):
     img_wang = lwang.wang_filter(img.small)
     save(img, "0{}_01wang.png".format(img.basename), img_wang)
 
-    contours,max_index = find_best_cont(img, img_wang)
+    contours,max_index = find_best_cont(img, img_wang, 0.25*img.sarea)
 
     img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cont = contours[max_index]
@@ -200,8 +199,17 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     img.hyoff = limy[0]
     img = reduce_hull(img)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
-    save(img, "0{}_09cuthull.png".format(img.basename), img.hull)
+    save(img, "0{}_08cuthull.png".format(img.basename), img.hull)
     img_wang = lwang.wang_filter(img.hull)
+    
+    contours, max_index = find_best_cont(img, img_wang, 0.5*img.harea)
+    img_contour = np.empty(img.hull3ch.shape, dtype='uint8') * 0
+    cont = contours[max_index]
+    hull = cv2.convexHull(cont)
+    cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
+    cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
+    img_contour_drawn = cv2.addWeighted(img.hull3ch, 0.5, img_contour, 0.8, 0)
+    save(img, "0{}_09countours.png".format(img.basename),  img_contour_drawn)
 
     exit()
     # lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
