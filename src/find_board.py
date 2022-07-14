@@ -93,7 +93,7 @@ def find_intersections(img, lines):
                     inter.append((x,y))
                     last = (x,y)
                 else:
-                    # print("Close point ignored: ({},{}) ~ ({},{})".format(last[0],last[1],x,y))
+                    print("Close point ignored: ({},{}) ~ ({},{})".format(last[0],last[1],x,y))
                     continue
         i += 1
 
@@ -117,7 +117,7 @@ def draw_hough(img, lines):
 
 def find_hull(img):
     img_wang = lwang.wang_filter(img.small)
-    save("0{}_1wang.png".format(img.basename), img_wang)
+    save(img, "0{}_1wang.png".format(img.basename), img_wang)
 
     got = False
     k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
@@ -157,11 +157,11 @@ def find_hull(img):
 
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
 
-    save("0{}_3dilate.png".format(img.basename),     dilate)
-    save("0{}_4edges_gray.png".format(img.basename), edges_gray)
-    save("0{}_5edges_bin.png".format(img.basename),  edges_bin)
-    save("0{}_6edges_opened.png".format(img.basename),     edges_opened)
-    save("0{}_7countours.png".format(img.basename),  img_contour_drawn)
+    save(img, "0{}_3dilate.png".format(img.basename),     dilate)
+    save(img, "0{}_4edges_gray.png".format(img.basename), edges_gray)
+    save(img, "0{}_5edges_bin.png".format(img.basename),  edges_bin)
+    save(img, "0{}_6edges_opened.png".format(img.basename),     edges_opened)
+    save(img, "0{}_7countours.png".format(img.basename),  img_contour_drawn)
 
     return hull
 
@@ -185,11 +185,7 @@ def find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg):
             i += 1
     return lines
 
-def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
-    if img.save:
-        cv2.imwrite("0{}_0gray.png".format(img.basename, c_thrl, c_thrh), img.small)
-
-    hull = find_hull(img)
+def broad_hull(img, hull):
     Pxmin = hull[np.argmin(hull[:,0,0]),0]
     Pxmax = hull[np.argmax(hull[:,0,0]),0]
     Pymin = hull[np.argmin(hull[:,0,1]),0]
@@ -213,19 +209,17 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     else:
         Pymax[0] -= 10
         Pymin[0] += 10
+    return (Pymin[1],Pymax[1]), (Pxmin[0],Pxmax[0])
 
-    print("with margin:", Pxmin, Pxmax, Pymin, Pymax)
+def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
+    if img.save:
+        cv2.imwrite("0{}_0gray.png".format(img.basename, c_thrl, c_thrh), img.small)
 
-    # drawn_circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
-    # for p in Pxmin, Pxmax, Pymin, Pymax:
-    #     print(p)
-    #     cv2.circle(drawn_circles, p, radius=3, color=(255, 0, 0), thickness=-1)
-    # image = cv2.addWeighted(img.gray3ch, 0.5, drawn_circles, 0.8, 0)
+    hull = find_hull(img)
+    limx, limy = broad_hull(img, hull)
+    img.hull = img.small[limx[0]:limx[1], limy[0]:limy[1]]
 
-    #     save("0{}_9hull.png".format(img.basename), image)
-
-    img.hull = img.small[Pymin[1]:Pymax[1], Pxmin[0]:Pxmax[0]]
-    save("0{}_9cuthull.png".format(img.basename), img.hull)
+    save(img, "0{}_9cuthull.png".format(img.basename), img.hull)
 
     exit()
     # lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
@@ -243,7 +237,7 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     points = drawn_circles[:,:,0]
     image = cv2.addWeighted(img.gray3ch, 0.5, drawn_circles, 0.8, 0)
 
-    save("0{}_9intersections.png".format(img.basename), image)
+    save(img, "0{}_9intersections.png".format(img.basename), image)
 
     # drawn_lines = shortest_connections(img, intersections)
     # conn = cv2.addWeighted(img.gray3ch, 0.5, drawn_lines, 0.8, 0)
