@@ -74,7 +74,7 @@ def draw_hough(img, lines):
 
     for line in lines:
         for x1,y1,x2,y2 in line:
-            cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.fact))
+            cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
 
     return drawn_lines
 
@@ -178,7 +178,7 @@ def broad_hull(img, hull):
 def reduce_hull(img):
     img.hwidth = 900
     img.hfact = img.hwidth / img.hull.shape[1]
-    img.hheigth = round(img.fact * img.gray.shape[0])
+    img.hheigth = round(img.sfact * img.gray.shape[0])
 
     img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
     img.harea = img.hwidth * img.hheigth
@@ -190,10 +190,10 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     hull = find_hull(img)
     limx, limy = broad_hull(img, hull)
 
-    limx[0] = round(limx[0] / img.fact)
-    limx[1] = round(limx[1] / img.fact)
-    limy[0] = round(limy[0] / img.fact)
-    limy[1] = round(limy[1] / img.fact)
+    limx[0] = round(limx[0] / img.sfact)
+    limx[1] = round(limx[1] / img.sfact)
+    limy[0] = round(limy[0] / img.sfact)
+    limy[1] = round(limy[1] / img.sfact)
 
     img.hull = img.gray[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.hxoff = limx[0]

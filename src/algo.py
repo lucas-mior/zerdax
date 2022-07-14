@@ -7,8 +7,8 @@ from find_board import find_board
 
 def reduce(img):
     img.swidth = 1000
-    img.fact = img.swidth / img.gray.shape[1]
-    img.sheigth = round(img.fact * img.gray.shape[0])
+    img.sfact = img.swidth / img.gray.shape[1]
+    img.sheigth = round(img.sfact * img.gray.shape[0])
 
     img.small = cv2.resize(img.gray, (img.swidth, img.sheigth))
     img.sarea = img.sheigth * img.swidth
