@@ -228,35 +228,45 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     img_wang = lwang.wang_filter(img.hull)
 
     c_thrl = 110
-    c_thrh = 190
+    c_thrh = 240
+    h_thrv = 50
+    h_minl = 100
+    h_maxg = 10
     kcs = 5
 
-    while kcs < 20:
+    while c_thrl > 5:
         img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
-        k_close = cv2.getStructuringElement(cv2.MORPH_RECT, (kcs,kcs))
-        edges_closed = cv2.morphologyEx(img_canny, cv2.MORPH_CLOSE, k_close, iterations = 1)
-        contours, _ = cv2.findContours(edges_closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        areas = [cv2.contourArea(c) for c in contours]
-        perim = [cv2.arcLength(c, True) for c in contours]
-        max_index = np.argmax(areas)
-        a = areas[max_index]
-        p = perim[max_index]
-        amin = round(0.4 * img.harea)
-        if a > amin:
-            print("{} > {}, p = {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, kcs))
-            break
-        else:
-            print("{} < {}, p = {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, kcs))
-            if c_thrl <= 5:
-                kcs += 1
+        lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
+        if lines is not None and lines.shape[0] >= 4:
+            print("lines:", lines)
+            drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+
+            for line in lines:
+                for x1,y1,x2,y2 in line:
+                    cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.fact))
+
+            img_contour_bin = drawn_lines[:,:,2]
+            # save(img, "0{}_08hough{}_{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_hough)
+            save(img, "0{}_09hough{}_{}_{}.png".format(img.basename, h_thrv, h_minl, h_maxg), img_contour_bin)
+            contours, _ = cv2.findContours(img_contour_bin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+            areas = [cv2.contourArea(c) for c in contours]
+            perim = [cv2.arcLength(c, True) for c in contours]
+            max_index = np.argmax(areas)
+            a = areas[max_index]
+            p = perim[max_index]
+            amin = round(0.4 * img.harea)
+            if a > amin:
+                print("{} > {}, p = {}, {}, {}, {}".format(a, amin, p, h_thrv, h_minl, h_maxg))
+                break
             else:
-                c_thrl = max(5, c_thrl - 10)
-                c_thrh = max(10, c_thrh - 10)
+                print("{} < {}, p = {}, {}, {}, {}".format(a, amin, p, h_thrv, h_minl, h_maxg))
+        c_thrl = max(5, c_thrl - 10)
+        c_thrh = max(10, c_thrh - 15)
 
     img_contour = np.empty(img.hull3ch.shape, dtype='uint8') * 0
     cont = contours[max_index]
-    # hull = cv2.convexHull(cont)
-    # cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
+    hull = cv2.convexHull(cont)
+    cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
 
     shape = cv2.approxPolyDP(cont, 300, True) 
     cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
@@ -264,7 +274,6 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     img_contour_drawn = cv2.addWeighted(img.hull3ch, 0.5, img_contour, 0.8, 0)
 
     save(img, "0{}_10canny{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
-    save(img, "0{}_12edges_closed{}_{}.png".format(img.basename, c_thrl, c_thrh), edges_closed)
     save(img, "0{}_14countours.png".format(img.basename),  img_contour_drawn)
 
     exit()
