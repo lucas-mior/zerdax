@@ -207,6 +207,50 @@ def broad_hull(img, hull):
 
     return [Pymin[1],Pymax[1]], [Pxmin[0],Pxmax[0]]
 
+def reduce_hull(img):
+    img.hwidth = 900
+    img.hfact = img.hwidth / img.hull.shape[1]
+    img.hheigth = round(img.fact * img.gray.shape[0])
+
+    img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
+    img.harea = img.hwidth * img.hheigth
+    return img
+
+def impossible2(img, lines):
+    drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+    for line in lines:
+        for x1,y1,x2,y2 in line:
+            cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.fact))
+    img_contour_bin = drawn_lines[:,:,2]
+    save(img, "0{}_09hough{}_{}_{}.png".format(img.basename, h_thrv, h_minl, h_maxg), img_contour_bin)
+
+    contours, _ = cv2.findContours(img_contour_bin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    areas = [cv2.contourArea(c) for c in contours]
+    perim = [cv2.arcLength(c, True) for c in contours]
+    max_index = np.argmax(areas)
+    a = areas[max_index]
+    p = perim[max_index]
+    amin = round(0.4 * img.harea)
+    if a > amin:
+        print("{} > {}, p = {}, @ {}, {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
+    else:
+        print("{} < {}, p = {}, @ {}, {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
+        c_thrl -= 5
+        c_thrh -= 8
+
+    img_contour = np.empty(img.hull3ch.shape, dtype='uint8') * 0
+    cont = contours[max_index]
+    hull = cv2.convexHull(cont)
+    cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
+
+    shape = cv2.approxPolyDP(cont, 300, True)
+    cv2.drawContours(img_contour, cont,    -1, (255,0,0), thickness=3)
+    cv2.drawContours(img_contour, [shape], -1, (0,255,0), thickness=3)
+    img_contour_drawn = cv2.addWeighted(img.hull3ch, 0.5, img_contour, 0.8, 0)
+
+    save(img, "0{}_10canny{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
+    save(img, "0{}_14countours.png".format(img.basename),  img_contour_drawn)
+
 def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     save(img, "0{}_00gray.png".format(img.basename, c_thrl, c_thrh), img.small)
 
@@ -219,14 +263,41 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     limy[1] = round(limy[1] / img.fact)
 
     img.hull = img.gray[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    img.xoff = limx[0]
-    img.yoff = limy[0]
+    img.hxoff = limx[0]
+    img.hyoff = limy[0]
+    img = reduce_hull(img)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
-    img.harea = img.hull.shape[0] * img.hull.shape[1]
     save(img, "0{}_09cuthull.png".format(img.basename), img.hull)
     img_wang = lwang.wang_filter(img.hull)
 
-    h_inil = round(0.4 * (img.hull.shape[1]+img.hull.shape[0]))
+    lines = impossible(img)
+    points = impossivle2(img, lines)
+
+    exit()
+    # lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
+
+    intersections = find_intersections(img, lines[:,0,:])
+    intersections = intersections[intersections[:,0].argsort()]
+    intersections = np.unique(intersections, axis=0)
+    intersections = intersections[intersections[:,0].argsort()]
+
+    drawn_circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
+
+    for p in intersections:
+        cv2.circle(drawn_circles, p, radius=3, color=(255, 0, 0), thickness=-1)
+
+    points = drawn_circles[:,:,0]
+    image = cv2.addWeighted(img.gray3ch, 0.5, drawn_circles, 0.8, 0)
+
+    save(img, "0{}_9intersections.png".format(img.basename), image)
+
+    # drawn_lines = shortest_connections(img, intersections)
+    # conn = cv2.addWeighted(img.gray3ch, 0.5, drawn_lines, 0.8, 0)
+
+    return (10, 300, 110, 310)
+
+def impossible(img):
+    h_inil = round(0.4 * (img.hwidth + img.hheigth))
     c_thrl = 110
     c_thrh = 210
     while c_thrl > 5 and c_thrh > 50:
@@ -258,60 +329,4 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
             c_thrh -= 8
             pass
         else:
-            drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-            for line in lines:
-                for x1,y1,x2,y2 in line:
-                    cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.fact))
-            img_contour_bin = drawn_lines[:,:,2]
-            save(img, "0{}_09hough{}_{}_{}.png".format(img.basename, h_thrv, h_minl, h_maxg), img_contour_bin)
-
-            contours, _ = cv2.findContours(img_contour_bin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-            areas = [cv2.contourArea(c) for c in contours]
-            perim = [cv2.arcLength(c, True) for c in contours]
-            max_index = np.argmax(areas)
-            a = areas[max_index]
-            p = perim[max_index]
-            amin = round(0.4 * img.harea)
-            if a > amin:
-                print("{} > {}, p = {}, @ {}, {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-                break
-            else:
-                print("{} < {}, p = {}, @ {}, {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-                c_thrl -= 5
-                c_thrh -= 8
-
-    img_contour = np.empty(img.hull3ch.shape, dtype='uint8') * 0
-    cont = contours[max_index]
-    hull = cv2.convexHull(cont)
-    cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
-
-    shape = cv2.approxPolyDP(cont, 300, True)
-    cv2.drawContours(img_contour, cont,    -1, (255,0,0), thickness=3)
-    cv2.drawContours(img_contour, [shape], -1, (0,255,0), thickness=3)
-    img_contour_drawn = cv2.addWeighted(img.hull3ch, 0.5, img_contour, 0.8, 0)
-
-    save(img, "0{}_10canny{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
-    save(img, "0{}_14countours.png".format(img.basename),  img_contour_drawn)
-
-    exit()
-    # lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
-
-    intersections = find_intersections(img, lines[:,0,:])
-    intersections = intersections[intersections[:,0].argsort()]
-    intersections = np.unique(intersections, axis=0)
-    intersections = intersections[intersections[:,0].argsort()]
-
-    drawn_circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
-
-    for p in intersections:
-        cv2.circle(drawn_circles, p, radius=3, color=(255, 0, 0), thickness=-1)
-
-    points = drawn_circles[:,:,0]
-    image = cv2.addWeighted(img.gray3ch, 0.5, drawn_circles, 0.8, 0)
-
-    save(img, "0{}_9intersections.png".format(img.basename), image)
-
-    # drawn_lines = shortest_connections(img, intersections)
-    # conn = cv2.addWeighted(img.gray3ch, 0.5, drawn_lines, 0.8, 0)
-
-    return (10, 300, 110, 310)
+            return lines
