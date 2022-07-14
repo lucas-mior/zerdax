@@ -16,43 +16,6 @@ def save(img, filename, image):
     if img.save and not exists(filename):
         cv2.imwrite(filename, image)
 
-def shortest_connections(img, intersections):
-    drawn_lines = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
-
-    for x1, y1 in intersections:
-        distance = 0
-        seconx = []
-        secony = []
-        distxy = []
-        anglxy = []
-
-        for x2, y2 in intersections:
-            if (x1, y1) == (x2, y2):
-                continue
-            else:
-                dista = radius(x1,y1,x2,y2)
-                angle = theta(x1,y1,x2,y2)
-                if dista > 10:
-                    seconx.append(x2)
-                    secony.append(y2)
-                    distxy.append(dista)
-                    anglxy.append(angle)
-                else:
-                    continue
-
-        connections = list(zip(distxy, anglxy, seconx, secony))
-        connections = np.array(connections)
-        connections = connections[connections[:,0].argsort()]
-
-        for c in connections[:2]:
-            neg = (round(c[2]), round(c[3]))
-            if c[0] < 50:
-                cv2.line(drawn_lines, (x1,y1), (neg[0], neg[1]), (0,0,255), round(2/img.fact))
-            else:
-                continue
-
-    return drawn_lines
-
 def det(a, b):
     return a[0]*b[1] - a[1]*b[0]
 
@@ -252,8 +215,4 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     image = cv2.addWeighted(img.gray3ch, 0.5, drawn_circles, 0.8, 0)
 
     save(img, "0{}_9intersections.png".format(img.basename), image)
-
-    # drawn_lines = shortest_connections(img, intersections)
-    # conn = cv2.addWeighted(img.gray3ch, 0.5, drawn_lines, 0.8, 0)
-
     return (10, 300, 110, 310)
