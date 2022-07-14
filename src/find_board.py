@@ -187,9 +187,9 @@ def broad_hull(img, hull):
     Pymax = hull[np.argmax(hull[:,0,1]),0]
 
     Pxmin[0] = max(0, Pxmin[0]-10)
-    Pymin[1] = max(0, Pymin[1]-10)
+    Pymin[1] = max(0, Pymin[1]-60) # peças de trás vao além
     Pxmax[0] = min(img.swidth, Pxmax[0]+10)
-    Pymax[1] = min(img.sheigth, Pymax[1]+100)
+    Pymax[1] = min(img.sheigth, Pymax[1]+10)
 
     if Pxmin[1] < Pxmax[1]:
         Pxmin[1] -= 10
@@ -234,9 +234,7 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     while kcs < 20:
         img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
         k_close = cv2.getStructuringElement(cv2.MORPH_RECT, (kcs,kcs))
-        # k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
         edges_closed = cv2.morphologyEx(img_canny, cv2.MORPH_CLOSE, k_close, iterations = 1)
-        # edges_opened = cv2.morphologyEx(edges_closed, cv2.MORPH_OPEN, k_open, iterations = 1)
         contours, _ = cv2.findContours(edges_closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         perim = [cv2.arcLength(c, True) for c in contours]
@@ -256,17 +254,16 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
                 c_thrh = max(10, c_thrh - 10)
 
     img_contour = np.empty(img.hull3ch.shape, dtype='uint8') * 0
-    print("imgcontout: ", img_contour.shape)
     cont = contours[max_index]
     # hull = cv2.convexHull(cont)
     # cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
-    cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
 
-    print("img.hull: ", img.hull.shape)
+    shape = cv2.approxPolyDP(cont, 300, True) 
+    cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
+    cv2.drawContours(img_contour, [shape],   -1, (0,255,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.hull3ch, 0.5, img_contour, 0.8, 0)
 
     save(img, "0{}_10canny{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
-    # save(img, "0{}_11edges_opened{}_{}.png".format(img.basename, c_thrl, c_thrh), edges_opened)
     save(img, "0{}_12edges_closed{}_{}.png".format(img.basename, c_thrl, c_thrh), edges_closed)
     save(img, "0{}_14countours.png".format(img.basename),  img_contour_drawn)
 
