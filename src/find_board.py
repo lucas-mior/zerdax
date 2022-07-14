@@ -216,42 +216,6 @@ def reduce_hull(img):
     img.harea = img.hwidth * img.hheigth
     return img
 
-def impossible2(img, lines):
-    drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-    for line in lines:
-        for x1,y1,x2,y2 in line:
-            cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.fact))
-    img_contour_bin = drawn_lines[:,:,2]
-    save(img, "0{}_09hough{}_{}_{}.png".format(img.basename, h_thrv, h_minl, h_maxg), img_contour_bin)
-
-    contours, _ = cv2.findContours(img_contour_bin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    areas = [cv2.contourArea(c) for c in contours]
-    perim = [cv2.arcLength(c, True) for c in contours]
-    max_index = np.argmax(areas)
-    a = areas[max_index]
-    p = perim[max_index]
-    amin = round(0.4 * img.harea)
-    if a > amin:
-        print("{} > {}, p = {}, @ {}, {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-    else:
-        print("{} < {}, p = {}, @ {}, {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-        c_thrl -= 5
-        c_thrh -= 8
-
-    img_contour = np.empty(img.hull3ch.shape, dtype='uint8') * 0
-    cont = contours[max_index]
-    hull = cv2.convexHull(cont)
-    cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
-
-    shape = cv2.approxPolyDP(cont, 300, True)
-    cv2.drawContours(img_contour, cont,    -1, (255,0,0), thickness=3)
-    cv2.drawContours(img_contour, [shape], -1, (0,255,0), thickness=3)
-    img_contour_drawn = cv2.addWeighted(img.hull3ch, 0.5, img_contour, 0.8, 0)
-
-    save(img, "0{}_10canny{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
-    save(img, "0{}_14countours.png".format(img.basename),  img_contour_drawn)
-    return [0, 0, 0, 0]
-
 def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     save(img, "0{}_00gray.png".format(img.basename, c_thrl, c_thrh), img.small)
 
@@ -270,9 +234,6 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
     save(img, "0{}_09cuthull.png".format(img.basename), img.hull)
     img_wang = lwang.wang_filter(img.hull)
-
-    lines = impossible(img)
-    points = impossivle2(img, lines)
 
     exit()
     # lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
@@ -296,38 +257,3 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     # conn = cv2.addWeighted(img.gray3ch, 0.5, drawn_lines, 0.8, 0)
 
     return (10, 300, 110, 310)
-
-def impossible(img):
-    h_inil = round(0.4 * (img.hwidth + img.hheigth))
-    c_thrl = 110
-    c_thrh = 210
-    while c_thrl > 5 and c_thrh > 50:
-        img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
-        gotlines = False
-        h_thrv = 40
-        while h_thrv > 30:
-            print("HOUGH @ {}, {}, {}".format(c_thrl, c_thrh, h_thrv), end='')
-            h_maxg = 12
-            while h_maxg < 60:
-                print(", {}".format(h_maxg), end='')
-                h_minl = h_inil
-                while h_minl > round(0.8 * h_inil):
-                    lines = cv2.HoughLinesP(img_canny, 4, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
-                    if lines is not None and lines.shape[0] >= 4:
-                        gotlines = True
-                        break
-                    h_minl -= 20
-                print(", {}".format(h_minl))
-                if gotlines:
-                    break
-                h_maxg += 3
-            if gotlines:
-                break
-            h_thrv -= 5
-
-        if not gotlines:
-            c_thrl -= 5
-            c_thrh -= 8
-            pass
-        else:
-            return lines
