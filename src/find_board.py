@@ -9,7 +9,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-import wang
+import lwang
 
 def shortest_connections(img, intersections):
     drawn_lines = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
@@ -114,7 +114,7 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     # if img.save:
     #     cv2.imwrite("0{}_0gray.png".format(img.basename, c_thrl, c_thrh), img.small)
 
-    img_wang = wang.wang_filter(img.small)
+    img_wang = lwang.wang_filter(img.small)
     # if img.save:
     #     cv2.imwrite("0{}_1wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_wang)
     # img_canny = cv2.Canny(img_wang, c_thrl, c_thrh, None, 3, True)

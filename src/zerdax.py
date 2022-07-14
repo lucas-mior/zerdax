@@ -19,7 +19,6 @@ def Main():
     args = parseargs()
     image = args.image
     print("\033[01;38;1m======= Zerdax {} =======\033[0;m".format(image))
-    print("savein = ", args.savein)
     fen = algo.full(image, args.c_thrl, args.c_thrh, args.h_thrv, args.h_minl, args.h_maxg, args.savein)
     print("FEN: ", fen)
 
