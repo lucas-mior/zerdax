@@ -122,7 +122,7 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     #     cv2.imwrite("0{}_2canny_on_wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
 
     got = False
-    k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+    k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3,5))
     k_dil_s = 5
     lasta = 0
     while k_dil_s <= 20:
@@ -153,13 +153,9 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
 
     if img.save:
         cv2.imwrite("0{}_3dilate{}_{}.png".format(img.basename, 8, 8), dilate)
-    if img.save:
         cv2.imwrite("0{}_4edges_gray{}_{}.png".format(img.basename, 8, 8), edges_gray)
-    if img.save:
         cv2.imwrite("0{}_5edges_bin{}_{}.png".format(img.basename, 8, 8), edges_bin)
-    if img.save:
         cv2.imwrite("0{}_6opened{}_{}.png".format(img.basename, 8, 8), opened)
-    if img.save:
         cv2.imwrite("0{}_7countours{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_contour_drawn)
 
     exit()
