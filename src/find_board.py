@@ -106,16 +106,16 @@ def find_best_cont(img, img_wang, amin):
             print("{} < {}: failed. p = {}".format(a, amin, perim[max_index]))
             break
 
-    save(img, "0{}_03dilate.png".format(img.basename),     dilate)
-    save(img, "0{}_04edges_gray.png".format(img.basename), edges_gray)
-    save(img, "0{}_05edges_bin.png".format(img.basename),  edges_bin)
-    save(img, "0{}_06edges_opened.png".format(img.basename),     edges_opened)
+    # save(img, "0{}_03dilate.png".format(img.basename),     dilate)
+    # save(img, "0{}_04edges_gray.png".format(img.basename), edges_gray)
+    # save(img, "0{}_05edges_bin.png".format(img.basename),  edges_bin)
+    # save(img, "0{}_06edges_opened.png".format(img.basename),     edges_opened)
 
     return contours, max_index
 
 def find_hull(img):
     img_wang = lwang.wang_filter(img.small)
-    save(img, "0{}_01wang.png".format(img.basename), img_wang)
+    # save(img, "0{}_01wang.png".format(img.basename), img_wang)
 
     contours,max_index = find_best_cont(img, img_wang, 0.25*img.sarea)
 
@@ -126,7 +126,7 @@ def find_hull(img):
     cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
     cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
-    save(img, "0{}_07countours.png".format(img.basename),  img_contour_drawn)
+    # save(img, "0{}_07countours.png".format(img.basename),  img_contour_drawn)
 
     return hull
 
@@ -135,7 +135,7 @@ def find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     lines = cv2.HoughLinesP(img_contour_bin, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
     drawn_lines = draw_hough(img, lines)
     img_hough = cv2.addWeighted(img.gray3ch, 0.5, drawn_lines, 0.8, 0)
-    save("0{}_08edges{}_{}_hough{}_{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_hough)
+    # save("0{}_08edges{}_{}_hough{}_{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_hough)
 
     aux = np.zeros((lines.shape[0], 1, 6))
     aux[:,0,0:4] = np.copy(lines[:,0,0:4])
@@ -185,7 +185,7 @@ def reduce_hull(img):
     return img
 
 def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
-    save(img, "0{}_00gray.png".format(img.basename, c_thrl, c_thrh), img.small)
+    # save(img, "0{}_00gray.png".format(img.basename, c_thrl, c_thrh), img.small)
 
     hull = find_hull(img)
     limx, limy = broad_hull(img, hull)
@@ -250,18 +250,18 @@ def try_impossible(img, img_wang):
     
     save(img, "0{}_13canny.png".format(img.basename), img_canny)
 
-    h_maxg0 = 10
-    h_minl0 = round((img.hwidth + img.hheigth)*0.3)
+    h_maxg0 = 2
+    h_minl0 = round((img.hwidth + img.hheigth)*0.1)
     h_thrv0 = round(h_minl0 / 6)
 
     if got_canny:
         h_maxg = h_maxg0
         h_minl = h_minl0
         h_thrv = h_thrv0
-        while h_maxg < 50 and h_minl > (h_minl0 / 2.5):
-            lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
+        while h_maxg < 10 and h_minl > (h_minl0 / 3):
+            lines = cv2.HoughLinesP(img_canny, 1, np.pi / 360,  h_thrv,  None, h_minl, h_maxg)
             print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-            if lines is not None and lines.shape[0] >= 50:
+            if lines is not None and lines.shape[0] >= 20:
                 if True:
                     got_hough = True
                     drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
@@ -269,9 +269,9 @@ def try_impossible(img, img_wang):
                         for x1,y1,x2,y2 in line:
                             cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
                     break
-            h_maxg += 2
-            h_minl -= 10
-            h_thrv = round(h_minl / 10)
+            h_maxg += 1
+            h_minl -= 5
+            h_thrv = round(h_minl / 5)
     else:
         print("canny failed")
 
