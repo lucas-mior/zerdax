@@ -223,43 +223,54 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     img.yoff = limy[0]
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
     img.harea = img.hull.shape[0] * img.hull.shape[1]
-    print("img.hull", img.hull.shape[0], img.hull.shape[1], img.harea)
     save(img, "0{}_09cuthull.png".format(img.basename), img.hull)
     img_wang = lwang.wang_filter(img.hull)
 
     c_thrl = 110
     c_thrh = 240
-    h_thrv = 50
-    h_minl = 100
-    h_maxg = 10
-    kcs = 5
-
     while c_thrl > 5:
+        h_thrv = 80
+        h_minl = round(0.5 * img.hull.shape[1])
+        h_maxg = 10
         img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
         lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
-        if lines is not None and lines.shape[0] >= 4:
-            print("lines:", lines)
-            drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-
-            for line in lines:
-                for x1,y1,x2,y2 in line:
-                    cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.fact))
-
-            img_contour_bin = drawn_lines[:,:,2]
-            # save(img, "0{}_08hough{}_{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_hough)
-            save(img, "0{}_09hough{}_{}_{}.png".format(img.basename, h_thrv, h_minl, h_maxg), img_contour_bin)
-            contours, _ = cv2.findContours(img_contour_bin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-            areas = [cv2.contourArea(c) for c in contours]
-            perim = [cv2.arcLength(c, True) for c in contours]
-            max_index = np.argmax(areas)
-            a = areas[max_index]
-            p = perim[max_index]
-            amin = round(0.4 * img.harea)
-            if a > amin:
-                print("{} > {}, p = {}, {}, {}, {}".format(a, amin, p, h_thrv, h_minl, h_maxg))
+        got = True
+        while lines is None or lines.shape[0] < 4:
+            print("@ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
+            h_thrv = max(50, h_thrv - 2)
+            h_minl = max(200, h_minl - 10)
+            h_maxg = min(100, h_maxg + 2)
+            lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
+            if h_thrv < 51 or h_minl < 201 or h_maxg > 99:
+                print("failed @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
+                got = False
                 break
-            else:
-                print("{} < {}, p = {}, {}, {}, {}".format(a, amin, p, h_thrv, h_minl, h_maxg))
+        if not got:
+            print("not got")
+            c_thrl = max(5, c_thrl - 10)
+            c_thrh = max(10, c_thrh - 15)
+            continue
+
+        drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+        for line in lines:
+            for x1,y1,x2,y2 in line:
+                cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.fact))
+
+        img_contour_bin = drawn_lines[:,:,2]
+        save(img, "0{}_09hough{}_{}_{}.png".format(img.basename, h_thrv, h_minl, h_maxg), img_contour_bin)
+        contours, _ = cv2.findContours(img_contour_bin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        print("countours:", contours)
+        areas = [cv2.contourArea(c) for c in contours]
+        perim = [cv2.arcLength(c, True) for c in contours]
+        max_index = np.argmax(areas)
+        a = areas[max_index]
+        p = perim[max_index]
+        amin = round(0.4 * img.harea)
+        if a > amin:
+            print("{} > {}, p = {}, @ {}, {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
+            break
+
+        print("{} < {}, p = {}, @ {}, {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
         c_thrl = max(5, c_thrl - 10)
         c_thrh = max(10, c_thrh - 15)
 
