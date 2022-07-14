@@ -21,6 +21,8 @@ def wang_filter(image):
     libwang_wang_filter(f, f.shape[0], f.shape[1], W, N, g)
     libwang_wang_filter(g, f.shape[0], f.shape[1], W, N, f)
     libwang_wang_filter(f, f.shape[0], f.shape[1], W, N, g)
+    libwang_wang_filter(g, f.shape[0], f.shape[1], W, N, f)
+    libwang_wang_filter(f, f.shape[0], f.shape[1], W, N, g)
 
     G = np.array(g*255, dtype='uint8')
     return G

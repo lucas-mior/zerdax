@@ -125,7 +125,7 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     k_dil_s = 5
     lasta = 0
-    while k_dil_s <= 20:
+    while k_dil_s <= 30:
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (k_dil_s,k_dil_s+3))
         dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img_wang, dilate, scale = 255)
@@ -154,13 +154,16 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     cv2.drawContours(img_contour, [convexHull], -1, (0, 240, 0), thickness=3)
 
     cv2.drawContours(img_contour, cont, -1, (255,0,0), thickness=3)
+
+    shape = cv2.approxPolyDP(cont, 120, True)
+    cv2.drawContours(img_contour, [shape], -1, (0, 0, 250), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
 
     if img.save:
         # cv2.imwrite("0{}_3dilate.png".format(img.basename),     dilate)
         # cv2.imwrite("0{}_4edges_gray.png".format(img.basename), edges_gray)
         # cv2.imwrite("0{}_5edges_bin.png".format(img.basename),  edges_bin)
-        cv2.imwrite("0{}_6edges_opened.png".format(img.basename),     edges_opened)
+        # cv2.imwrite("0{}_6edges_opened.png".format(img.basename),     edges_opened)
         cv2.imwrite("0{}_7countours.png".format(img.basename),  img_contour_drawn)
 
     exit()
