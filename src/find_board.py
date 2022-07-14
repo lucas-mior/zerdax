@@ -250,6 +250,7 @@ def impossible2(img, lines):
 
     save(img, "0{}_10canny{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
     save(img, "0{}_14countours.png".format(img.basename),  img_contour_drawn)
+    return [0, 0, 0, 0]
 
 def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     save(img, "0{}_00gray.png".format(img.basename, c_thrl, c_thrh), img.small)
