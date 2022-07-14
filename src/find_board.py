@@ -226,7 +226,7 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     save(img, "0{}_09cuthull.png".format(img.basename), img.hull)
     img_wang = lwang.wang_filter(img.hull)
 
-    h_inil = round(0.3 * (img.hull.shape[1]+img.hull.shape[0]))
+    h_inil = round(0.4 * (img.hull.shape[1]+img.hull.shape[0]))
     c_thrl = 110
     c_thrh = 210
     while c_thrl > 5 and c_thrh > 50:
@@ -236,18 +236,18 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
         while h_thrv > 31:
             h_minl = h_inil
             while h_minl > 201:
+                print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
                 h_maxg = 10
-                while h_maxg < 99:
+                while h_maxg < 60:
                     lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
-                    print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
                     if lines is not None and lines.shape[0] >= 4:
                         gotlines = True
                         break
                     h_maxg += 2
                 if gotlines:
                     break
-                h_minl -= 20
-            h_thrv -= 3
+                h_minl -= 50
+            h_thrv -= 5
             if gotlines:
                 break
 
@@ -260,8 +260,9 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
             for line in lines:
                 for x1,y1,x2,y2 in line:
                     cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.fact))
-
             img_contour_bin = drawn_lines[:,:,2]
+            save(img, "0{}_09hough{}_{}_{}.png".format(img.basename, h_thrv, h_minl, h_maxg), img_contour_bin)
+
             contours, _ = cv2.findContours(img_contour_bin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
             areas = [cv2.contourArea(c) for c in contours]
             perim = [cv2.arcLength(c, True) for c in contours]
@@ -288,7 +289,6 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     img_contour_drawn = cv2.addWeighted(img.hull3ch, 0.5, img_contour, 0.8, 0)
 
     save(img, "0{}_10canny{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
-    save(img, "0{}_09hough{}_{}_{}.png".format(img.basename, h_thrv, h_minl, h_maxg), img_contour_bin)
     save(img, "0{}_14countours.png".format(img.basename),  img_contour_drawn)
 
     exit()
