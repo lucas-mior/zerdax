@@ -83,15 +83,15 @@ def find_hull(img):
     save(img, "0{}_01wang.png".format(img.basename), img_wang)
 
     got = False
-    k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-    k_dil_s = 5
+    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+    kd = 5
     lasta = 0
-    while k_dil_s <= 30:
-        k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (k_dil_s,k_dil_s+3))
+    while kd <= 30:
+        k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kd+3))
         dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img_wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
-        edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, k_open, iterations = 1)
+        edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
         contours, _ = cv2.findContours(edges_opened, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         perim = [cv2.arcLength(c, True) for c in contours]
@@ -104,7 +104,7 @@ def find_hull(img):
             break
         elif a > lasta - 20000:
             print("{} < {}, p = {}".format(a, amin, perim[max_index]))
-            k_dil_s += 1
+            kd += 1
             lasta = a
         else:
             print("{} < {}: failed. p = {}".format(a, amin, perim[max_index]))
