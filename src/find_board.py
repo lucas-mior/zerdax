@@ -202,7 +202,7 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     save(img, "0{}_08cuthull.png".format(img.basename), img.hull)
     img_wang = lwang.wang_filter(img.hull)
     
-    contours, max_index = find_best_cont(img, img_wang, 0.5*img.harea)
+    contours, max_index = find_best_cont(img, img_wang, 0.7*img.harea)
     img_contour = np.empty(img.hull3ch.shape, dtype='uint8') * 0
     cont = contours[max_index]
     hull = cv2.convexHull(cont)
