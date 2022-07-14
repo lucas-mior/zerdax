@@ -233,11 +233,11 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
         img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
         gotlines = False
         h_thrv = 60
-        while h_thrv > 30:
+        while h_thrv > 31:
             h_minl = h_inil
-            while h_minl > 200:
+            while h_minl > 201:
                 h_maxg = 10
-                while h_maxg < 100:
+                while h_maxg < 99:
                     lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
                     if lines is not None and lines.shape[0] >= 4:
                         gotlines = True
