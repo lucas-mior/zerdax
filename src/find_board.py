@@ -134,16 +134,17 @@ def find_hull(img):
         perim = [cv2.arcLength(c, True) for c in contours]
         max_index = np.argmax(areas)
         a = areas[max_index]
-        if a > (0.25 * img.sarea):
-            print("{} > {}, p = {}".format(a, img.sarea, perim[max_index]))
+        amin = 0.25 * img.sarea
+        if a > amin:
+            print("{} > {}, p = {}".format(a, amin, perim[max_index]))
             got = True
             break
         elif a > lasta - 20000:
-            print("{} < {}, p = {}".format(a, img.sarea, perim[max_index]))
+            print("{} < {}, p = {}".format(a, amin, perim[max_index]))
             k_dil_s += 1
             lasta = a
         else:
-            print("{} < {}: failed. p = {}".format(a, img.sarea, perim[max_index]))
+            print("{} < {}: failed. p = {}".format(a, amin, perim[max_index]))
             break
 
     img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
@@ -188,7 +189,7 @@ def broad_hull(img, hull):
     Pxmin[0] = max(0, Pxmin[0]-10)
     Pymin[1] = max(0, Pymin[1]-10)
     Pxmax[0] = min(img.swidth, Pxmax[0]+10)
-    Pymax[1] = min(img.sheigth, Pymax[1]+10)
+    Pymax[1] = min(img.sheigth, Pymax[1]+100)
 
     if Pxmin[1] < Pxmax[1]:
         Pxmin[1] -= 10
@@ -211,21 +212,63 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
 
     hull = find_hull(img)
     limx, limy = broad_hull(img, hull)
+
     limx[0] = round(limx[0] / img.fact)
     limx[1] = round(limx[1] / img.fact)
     limy[0] = round(limy[0] / img.fact)
     limy[1] = round(limy[1] / img.fact)
 
-    img.hull = img.gray[limx[0]:limx[1], limy[0]:limy[1]]
+    img.hull = img.gray[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.xoff = limx[0]
     img.yoff = limy[0]
-
+    img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
+    img.harea = img.hull.shape[0] * img.hull.shape[1]
+    print("img.hull", img.hull.shape[0], img.hull.shape[1], img.harea)
     save(img, "0{}_09cuthull.png".format(img.basename), img.hull)
-
     img_wang = lwang.wang_filter(img.hull)
-    img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
+
+    c_thrl = 110
+    c_thrh = 190
+    kcs = 5
+
+    while kcs < 20:
+        img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
+        k_close = cv2.getStructuringElement(cv2.MORPH_RECT, (kcs,kcs))
+        # k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
+        edges_closed = cv2.morphologyEx(img_canny, cv2.MORPH_CLOSE, k_close, iterations = 1)
+        # edges_opened = cv2.morphologyEx(edges_closed, cv2.MORPH_OPEN, k_open, iterations = 1)
+        contours, _ = cv2.findContours(edges_closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        areas = [cv2.contourArea(c) for c in contours]
+        perim = [cv2.arcLength(c, True) for c in contours]
+        max_index = np.argmax(areas)
+        a = areas[max_index]
+        p = perim[max_index]
+        amin = round(0.4 * img.harea)
+        if a > amin:
+            print("{} > {}, p = {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, kcs))
+            break
+        else:
+            print("{} < {}, p = {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, kcs))
+            if c_thrl <= 5:
+                kcs += 1
+            else:
+                c_thrl = max(5, c_thrl - 10)
+                c_thrh = max(10, c_thrh - 10)
+
+    img_contour = np.empty(img.hull3ch.shape, dtype='uint8') * 0
+    print("imgcontout: ", img_contour.shape)
+    cont = contours[max_index]
+    # hull = cv2.convexHull(cont)
+    # cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
+    cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
+
+    print("img.hull: ", img.hull.shape)
+    img_contour_drawn = cv2.addWeighted(img.hull3ch, 0.5, img_contour, 0.8, 0)
 
     save(img, "0{}_10canny{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
+    # save(img, "0{}_11edges_opened{}_{}.png".format(img.basename, c_thrl, c_thrh), edges_opened)
+    save(img, "0{}_12edges_closed{}_{}.png".format(img.basename, c_thrl, c_thrh), edges_closed)
+    save(img, "0{}_14countours.png".format(img.basename),  img_contour_drawn)
 
     exit()
     # lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
