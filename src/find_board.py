@@ -202,15 +202,6 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     save(img, "0{}_08cuthull.png".format(img.basename), img.hull)
     img_wang = lwang.wang_filter(img.hull)
     
-    contours, max_index = find_best_cont(img, img_wang, 0.5*img.harea)
-    img_contour = np.empty(img.hull3ch.shape, dtype='uint8') * 0
-    cont = contours[max_index]
-    hull = cv2.convexHull(cont)
-    cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
-    cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
-    img_contour_drawn = cv2.addWeighted(img.hull3ch, 0.5, img_contour, 0.8, 0)
-    save(img, "0{}_09countours.png".format(img.basename),  img_contour_drawn)
-
     exit()
     # lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
 
