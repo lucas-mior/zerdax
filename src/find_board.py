@@ -111,8 +111,8 @@ def draw_hough(img, lines):
     return drawn_lines
 
 def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
-    if img.save:
-        cv2.imwrite("0{}_0gray.png".format(img.basename, c_thrl, c_thrh), img.small)
+    # if img.save:
+    #     cv2.imwrite("0{}_0gray.png".format(img.basename, c_thrl, c_thrh), img.small)
 
     img_wang = wang.wang_filter(img.small)
     # if img.save:
@@ -130,8 +130,8 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
         dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img_wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
-        opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, k_open, iterations = 1)
-        contours, _ = cv2.findContours(opened, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, k_open, iterations = 1)
+        contours, _ = cv2.findContours(edges_opened, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         perim = [cv2.arcLength(c, True) for c in contours]
         max_index = np.argmax(areas)
@@ -160,7 +160,7 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
         # cv2.imwrite("0{}_3dilate.png".format(img.basename),     dilate)
         # cv2.imwrite("0{}_4edges_gray.png".format(img.basename), edges_gray)
         # cv2.imwrite("0{}_5edges_bin.png".format(img.basename),  edges_bin)
-        cv2.imwrite("0{}_6opened.png".format(img.basename),     opened)
+        cv2.imwrite("0{}_6edges_opened.png".format(img.basename),     edges_opened)
         cv2.imwrite("0{}_7countours.png".format(img.basename),  img_contour_drawn)
 
     exit()
