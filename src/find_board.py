@@ -226,27 +226,32 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     save(img, "0{}_09cuthull.png".format(img.basename), img.hull)
     img_wang = lwang.wang_filter(img.hull)
 
+    h_inil = round(0.3 * (img.hull.shape[1]+img.hull.shape[0]))
     c_thrl = 110
-    c_thrh = 240
+    c_thrh = 210
     while c_thrl > 5:
-        h_thrv = 80
-        h_minl = round(0.5 * img.hull.shape[1])
-        h_maxg = 10
         img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
-        lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
-        got = True
-        while lines is None or lines.shape[0] < 4:
-            print("@ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-            h_thrv = max(50, h_thrv - 2)
-            h_minl = max(200, h_minl - 10)
-            h_maxg = min(100, h_maxg + 2)
-            lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
-            if h_thrv < 51 or h_minl < 201 or h_maxg > 99:
-                print("failed @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-                got = False
+        gotlines = False
+        h_thrv = 60
+        while h_thrv > 30:
+            h_minl = h_inil
+            while h_minl > 200:
+                h_maxg = 10
+                while h_maxg < 100:
+                    lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
+                    if lines is not None and lines.shape[0] >= 4:
+                        gotlines = True
+                        break
+                    h_maxg = min(100, h_maxg + 2)
+                if gotlines:
+                    break
+                h_minl = max(200, h_minl - 10)
+            if gotlines:
                 break
-        if not got:
-            print("not got")
+            h_thrv = max(29, h_thrv - 2)
+            print("HOUGH failed @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
+
+        if not gotlines:
             c_thrl = max(5, c_thrl - 10)
             c_thrh = max(10, c_thrh - 15)
             continue
@@ -257,9 +262,7 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
                 cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.fact))
 
         img_contour_bin = drawn_lines[:,:,2]
-        save(img, "0{}_09hough{}_{}_{}.png".format(img.basename, h_thrv, h_minl, h_maxg), img_contour_bin)
         contours, _ = cv2.findContours(img_contour_bin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        print("countours:", contours)
         areas = [cv2.contourArea(c) for c in contours]
         perim = [cv2.arcLength(c, True) for c in contours]
         max_index = np.argmax(areas)
@@ -280,11 +283,12 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
 
     shape = cv2.approxPolyDP(cont, 300, True) 
-    cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
-    cv2.drawContours(img_contour, [shape],   -1, (0,255,0), thickness=3)
+    cv2.drawContours(img_contour, cont,    -1, (255,0,0), thickness=3)
+    cv2.drawContours(img_contour, [shape], -1, (0,255,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.hull3ch, 0.5, img_contour, 0.8, 0)
 
     save(img, "0{}_10canny{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
+    save(img, "0{}_09hough{}_{}_{}.png".format(img.basename, h_thrv, h_minl, h_maxg), img_contour_bin)
     save(img, "0{}_14countours.png".format(img.basename),  img_contour_drawn)
 
     exit()
