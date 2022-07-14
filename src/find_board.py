@@ -153,24 +153,24 @@ def broad_hull(img, hull):
     Pymin = hull[np.argmin(hull[:,0,1]),0]
     Pymax = hull[np.argmax(hull[:,0,1]),0]
 
-    Pxmin[0] = max(0, Pxmin[0]-10)
-    Pymin[1] = max(0, Pymin[1]-60) # peças de trás vao além
-    Pxmax[0] = min(img.swidth, Pxmax[0]+10)
-    Pymax[1] = min(img.sheigth, Pymax[1]+10)
+    Pxmin[0] = max(0, Pxmin[0]-20)
+    Pymin[1] = max(0, Pymin[1]-70) # peças de trás vao além
+    Pxmax[0] = min(img.swidth, Pxmax[0]+20)
+    Pymax[1] = min(img.sheigth, Pymax[1]+20)
 
     if Pxmin[1] < Pxmax[1]:
-        Pxmin[1] -= 10
-        Pxmax[1] += 10
+        Pxmin[1] -= 20
+        Pxmax[1] += 20
     else:
-        Pxmax[1] -= 10
-        Pxmin[1] += 10
+        Pxmax[1] -= 20
+        Pxmin[1] += 20
 
     if Pymin[0] < Pymax[0]:
-        Pymin[0] -= 10
-        Pymax[0] += 10
+        Pymin[0] -= 20
+        Pymax[0] += 20
     else:
-        Pymax[0] -= 10
-        Pymin[0] += 10
+        Pymax[0] -= 20
+        Pymin[0] += 20
 
     return [Pymin[1],Pymax[1]], [Pxmin[0],Pxmax[0]]
 
