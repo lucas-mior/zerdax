@@ -122,7 +122,7 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     #     cv2.imwrite("0{}_2canny_on_wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
 
     got = False
-    k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3,5))
+    k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     k_dil_s = 5
     lasta = 0
     while k_dil_s <= 20:
@@ -131,32 +131,37 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
         edges_gray = cv2.divide(img_wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
         opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, k_open, iterations = 1)
-        contours, _ = cv2.findContours(opened, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+        contours, _ = cv2.findContours(opened, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
+        perim = [cv2.arcLength(c, True) for c in contours]
         max_index = np.argmax(areas)
         a = areas[max_index]
         if a > (0.25 * img.sarea):
-            print("{} > {}".format(a, img.sarea))
+            print("{} > {}, p = {}".format(a, img.sarea, perim[max_index]))
             got = True
             break
         elif a > lasta - 20000:
-            print("{} < {}".format(a, img.sarea))
+            print("{} < {}, p = {}".format(a, img.sarea, perim[max_index]))
             k_dil_s += 1
             lasta = a
         else:
-            print("{}: giving up: ".format(a))
+            print("{}: giving up: , p = {}".format(a, perim[max_index]))
             break
 
     img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-    cv2.drawContours(img_contour, contours[max_index], -1, (255,0,0), thickness=3)
+    cont = contours[max_index]
+    convexHull = cv2.convexHull(cont)
+    cv2.drawContours(img_contour, [convexHull], -1, (0, 240, 0), thickness=3)
+
+    cv2.drawContours(img_contour, cont, -1, (255,0,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
 
     if img.save:
-        cv2.imwrite("0{}_3dilate{}_{}.png".format(img.basename, 8, 8), dilate)
-        cv2.imwrite("0{}_4edges_gray{}_{}.png".format(img.basename, 8, 8), edges_gray)
-        cv2.imwrite("0{}_5edges_bin{}_{}.png".format(img.basename, 8, 8), edges_bin)
-        cv2.imwrite("0{}_6opened{}_{}.png".format(img.basename, 8, 8), opened)
-        cv2.imwrite("0{}_7countours{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_contour_drawn)
+        # cv2.imwrite("0{}_3dilate.png".format(img.basename),     dilate)
+        # cv2.imwrite("0{}_4edges_gray.png".format(img.basename), edges_gray)
+        # cv2.imwrite("0{}_5edges_bin.png".format(img.basename),  edges_bin)
+        cv2.imwrite("0{}_6opened.png".format(img.basename),     opened)
+        cv2.imwrite("0{}_7countours.png".format(img.basename),  img_contour_drawn)
 
     exit()
     img_contour_bin = img_contour[:,:,0]
