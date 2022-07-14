@@ -78,10 +78,7 @@ def draw_hough(img, lines):
 
     return drawn_lines
 
-def find_hull(img):
-    img_wang = lwang.wang_filter(img.small)
-    save(img, "0{}_01wang.png".format(img.basename), img_wang)
-
+def find_best_cont(img, img_wang):
     got = False
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 5
@@ -110,17 +107,25 @@ def find_hull(img):
             print("{} < {}: failed. p = {}".format(a, amin, perim[max_index]))
             break
 
+    save(img, "0{}_03dilate.png".format(img.basename),     dilate)
+    save(img, "0{}_04edges_gray.png".format(img.basename), edges_gray)
+    save(img, "0{}_05edges_bin.png".format(img.basename),  edges_bin)
+    save(img, "0{}_06edges_opened.png".format(img.basename),     edges_opened)
+
+    return contours, max_index
+
+def find_hull(img):
+    img_wang = lwang.wang_filter(img.small)
+    save(img, "0{}_01wang.png".format(img.basename), img_wang)
+
+    contours,max_index = find_best_cont(img, img_wang)
+
     img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cont = contours[max_index]
     hull = cv2.convexHull(cont)
     cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
     cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
-
-    save(img, "0{}_03dilate.png".format(img.basename),     dilate)
-    save(img, "0{}_04edges_gray.png".format(img.basename), edges_gray)
-    save(img, "0{}_05edges_bin.png".format(img.basename),  edges_bin)
-    save(img, "0{}_06edges_opened.png".format(img.basename),     edges_opened)
     save(img, "0{}_07countours.png".format(img.basename),  img_contour_drawn)
 
     return hull
