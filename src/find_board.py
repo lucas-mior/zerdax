@@ -121,24 +121,31 @@ def find_lines(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     # if img.save:
     #     cv2.imwrite("0{}_2canny_on_wang{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
 
-    k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
-    k_dil_s = 8
+    got = False
+    k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+    k_dil_s = 5
+    lasta = 0
     while k_dil_s <= 20:
-        k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (k_dil_s,k_dil_s))
+        k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (k_dil_s,k_dil_s+3))
         dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img_wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
-        opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, k_open, iterations = 2)
+        opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, k_open, iterations = 1)
         contours, _ = cv2.findContours(opened, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         max_index = np.argmax(areas)
         a = areas[max_index]
         if a > (0.25 * img.sarea):
-            print("found area big enough : ", areas[max_index])
+            print("{} > {}".format(a, img.sarea))
+            got = True
             break
+        elif a > lasta - 20000:
+            print("{} < {}".format(a, img.sarea))
+            k_dil_s += 1
+            lasta = a
         else:
-            print("area too small : ", areas[max_index])
-        k_dil_s += 1
+            print("{}: giving up: ".format(a))
+            break
 
     img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(img_contour, contours[max_index], -1, (255,0,0), thickness=3)
