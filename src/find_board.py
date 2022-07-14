@@ -84,7 +84,7 @@ def find_best_cont(img, img_wang, amin):
     kd = 5
     lasta = 0
     while kd <= 30:
-        k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kd+3))
+        k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kd))
         dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img_wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
