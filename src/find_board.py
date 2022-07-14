@@ -201,6 +201,16 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
     save(img, "0{}_08cuthull.png".format(img.basename), img.hull)
     img_wang = lwang.wang_filter(img.hull)
+
+    contours, max_index = try_impossible(img, img_wang)
+
+    img_contour = np.empty(img.hull3ch.shape, dtype='uint8') * 0
+    cont = contours[max_index]
+    hull = cv2.convexHull(cont)
+    cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
+    cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
+    img_contour_drawn = cv2.addWeighted(img.hull3ch, 0.5, img_contour, 0.8, 0)
+    save(img, "0{}_12hullonhough.png".format(img.basename),  img_contour_drawn)
     
     exit()
     # lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
@@ -220,3 +230,59 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
 
     save(img, "0{}_9intersections.png".format(img.basename), image)
     return (10, 300, 110, 310)
+
+def try_impossible(img, img_wang):
+    c_thrl0 = 100
+    c_thrh0 = 220
+    h_maxg0 = 10
+    h_minl0 = round((img.hwidth + img.hheigth)*0.3)
+    h_thrv0 = round(h_minl0 / 6)
+
+    img_canny = cv2.Canny(img_wang, c_thrl0, c_thrh0)
+    lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv0,  None, h_minl0, h_maxg0)
+
+    c_thrl = c_thrl0
+    c_thrh = c_thrh0
+    got = False
+
+    while c_thrl > 10 and c_thrh > 50:
+        img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
+        h_maxg = h_maxg0
+        h_minl = h_minl0
+        h_thrv = h_thrv0
+        while h_maxg < 50 and h_minl > (h_minl0 / 2):
+            lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
+            if (h_maxg % 3) == 0:
+                print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
+            if lines is not None and lines.shape[0] >= 4:
+                drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+                for line in lines:
+                    for x1,y1,x2,y2 in line:
+                        cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
+
+                linesbin = drawn_lines[:,:,2]
+                contours, _ = cv2.findContours(linesbin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+                areas = [cv2.contourArea(c) for c in contours]
+                perim = [cv2.arcLength(c, True) for c in contours]
+                max_index = np.argmax(areas)
+                a = areas[max_index]
+                amin = 0.4 * img.harea
+                if a > amin:
+                    print("{} > {}, p = {}".format(a, amin, perim[max_index]))
+                    got = True
+                    break
+                else:
+                    print("{} < {}, p = {}".format(a, amin, perim[max_index]))
+            h_maxg += 2
+            h_minl -= 10
+            h_thrv = round(h_minl / 3)
+        if got:
+            break
+        c_thrl -= 10
+        c_thrh -= 15
+
+    img_hough = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
+    save(img, "0{}_14hough.png".format(img.basename), img_hough)
+    save(img, "0{}_13canny.png".format(img.basename), img_canny)
+
+    return contours, max_index
