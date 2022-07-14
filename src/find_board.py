@@ -232,28 +232,30 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     while c_thrl > 5 and c_thrh > 50:
         img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
         gotlines = False
-        h_thrv = 60
-        while h_thrv > 31:
-            h_minl = h_inil
-            while h_minl > 201:
-                print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-                h_maxg = 10
-                while h_maxg < 60:
-                    lines = cv2.HoughLinesP(img_canny, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
+        h_thrv = 40
+        while h_thrv > 30:
+            print("HOUGH @ {}, {}, {}".format(c_thrl, c_thrh, h_thrv), end='')
+            h_maxg = 12
+            while h_maxg < 60:
+                print(", {}".format(h_maxg), end='')
+                h_minl = h_inil
+                while h_minl > round(0.8 * h_inil):
+                    lines = cv2.HoughLinesP(img_canny, 4, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
                     if lines is not None and lines.shape[0] >= 4:
                         gotlines = True
                         break
-                    h_maxg += 2
+                    h_minl -= 20
+                print(", {}".format(h_minl))
                 if gotlines:
                     break
-                h_minl -= 50
-            h_thrv -= 5
+                h_maxg += 3
             if gotlines:
                 break
+            h_thrv -= 5
 
         if not gotlines:
-            c_thrl -= 10
-            c_thrh -= 15
+            c_thrl -= 5
+            c_thrh -= 8
             pass
         else:
             drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
@@ -275,8 +277,8 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
                 break
             else:
                 print("{} < {}, p = {}, @ {}, {}, {}, {}, {}".format(a, amin, p, c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-                c_thrl -= 10
-                c_thrh -= 15
+                c_thrl -= 5
+                c_thrh -= 8
 
     img_contour = np.empty(img.hull3ch.shape, dtype='uint8') * 0
     cont = contours[max_index]
