@@ -117,7 +117,7 @@ def draw_hough(img, lines):
 
 def find_hull(img):
     img_wang = lwang.wang_filter(img.small)
-    save(img, "0{}_1wang.png".format(img.basename), img_wang)
+    save(img, "0{}_01wang.png".format(img.basename), img_wang)
 
     got = False
     k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
@@ -153,11 +153,11 @@ def find_hull(img):
     cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
 
-    save(img, "0{}_3dilate.png".format(img.basename),     dilate)
-    save(img, "0{}_4edges_gray.png".format(img.basename), edges_gray)
-    save(img, "0{}_5edges_bin.png".format(img.basename),  edges_bin)
-    save(img, "0{}_6edges_opened.png".format(img.basename),     edges_opened)
-    save(img, "0{}_7countours.png".format(img.basename),  img_contour_drawn)
+    save(img, "0{}_03dilate.png".format(img.basename),     dilate)
+    save(img, "0{}_04edges_gray.png".format(img.basename), edges_gray)
+    save(img, "0{}_05edges_bin.png".format(img.basename),  edges_bin)
+    save(img, "0{}_06edges_opened.png".format(img.basename),     edges_opened)
+    save(img, "0{}_07countours.png".format(img.basename),  img_contour_drawn)
 
     return hull
 
@@ -166,8 +166,7 @@ def find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg):
     lines = cv2.HoughLinesP(img_contour_bin, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
     drawn_lines = draw_hough(img, lines)
     img_hough = cv2.addWeighted(img.gray3ch, 0.5, drawn_lines, 0.8, 0)
-    if img.save:
-        cv2.imwrite("0{}_8edges{}_{}_hough{}_{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_hough)
+    save("0{}_08edges{}_{}_hough{}_{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_hough)
 
     aux = np.zeros((lines.shape[0], 1, 6))
     aux[:,0,0:4] = np.copy(lines[:,0,0:4])
@@ -204,17 +203,29 @@ def broad_hull(img, hull):
     else:
         Pymax[0] -= 10
         Pymin[0] += 10
-    return (Pymin[1],Pymax[1]), (Pxmin[0],Pxmax[0])
+    
+    return [Pymin[1],Pymax[1]], [Pxmin[0],Pxmax[0]]
 
 def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
-    if img.save:
-        cv2.imwrite("0{}_0gray.png".format(img.basename, c_thrl, c_thrh), img.small)
+    save(img, "0{}_00gray.png".format(img.basename, c_thrl, c_thrh), img.small)
 
     hull = find_hull(img)
     limx, limy = broad_hull(img, hull)
-    img.hull = img.small[limx[0]:limx[1], limy[0]:limy[1]]
+    limx[0] = round(limx[0] / img.fact)
+    limx[1] = round(limx[1] / img.fact)
+    limy[0] = round(limy[0] / img.fact)
+    limy[1] = round(limy[1] / img.fact)
 
-    save(img, "0{}_9cuthull.png".format(img.basename), img.hull)
+    img.hull = img.gray[limx[0]:limx[1], limy[0]:limy[1]]
+    img.xoff = limx[0]
+    img.yoff = limy[0]
+
+    save(img, "0{}_09cuthull.png".format(img.basename), img.hull)
+
+    img_wang = lwang.wang_filter(img.hull)
+    img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
+
+    save(img, "0{}_10canny{}_{}.png".format(img.basename, c_thrl, c_thrh), img_canny)
 
     exit()
     # lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
