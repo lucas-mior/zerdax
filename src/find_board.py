@@ -200,7 +200,7 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     img.hyoff = limy[0]
     img = reduce_hull(img)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
-    save(img, "0{}_08cuthull.png".format(img.basename), img.hull)
+    # save(img, "0{}_08cuthull.png".format(img.basename), img.hull)
     img_wang = lwang.wang_filter(img.hull)
 
     lines = try_impossible(img, img_wang)
@@ -244,7 +244,8 @@ def try_impossible(img, img_wang):
             got_canny = True
             break
         else:
-            print("{} < {}, @ {}, {}".format(a, amin, c_thrl, c_thrh))
+            if amin - a < amin/2:
+                print("{} < {}, @ {}, {}".format(a, amin, c_thrl, c_thrh))
             c_thrl -= 9
             c_thrh -= 18
     
@@ -261,7 +262,7 @@ def try_impossible(img, img_wang):
         while h_maxg < 10 and h_minl > (h_minl0 / 3):
             lines = cv2.HoughLinesP(img_canny, 1, np.pi / 360,  h_thrv,  None, h_minl, h_maxg)
             print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-            if lines is not None and lines.shape[0] >= 20:
+            if lines is not None and lines.shape[0] >= 4 + 10:
                 if True:
                     got_hough = True
                     drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
