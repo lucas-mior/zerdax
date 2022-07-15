@@ -12,6 +12,18 @@ import matplotlib.pyplot as plt
 
 import lwang
 
+def lines_radius_theta(lines):
+    aux = np.zeros((lines.shape[0], 1, 6), dtype='int32')
+    aux[:,0,0:4] = np.copy(lines[:,0,0:4])
+    lines = aux
+    i = 0
+    for line in lines:
+        for x1,y1,x2,y2,r,t in line:
+            lines[i, 0, 4] = round(radius(x1,y1,x2,y2))
+            lines[i, 0, 5] = round(theta(x1,y1,x2,y2))
+            i += 1
+    return lines
+
 def save(img, filename, image):
     if img.save and not exists(filename):
         cv2.imwrite(filename, image)
@@ -24,10 +36,10 @@ def find_intersections(img, lines):
     last = (0,0)
 
     i = 0
-    for x1, y1, x2, y2, r, t in lines:
+    for x1,y1,x2,y2,r,t in lines:
         l1 = [(x1,y1), (x2,y2)]
         j = 0
-        for xx1, yy1, xx2, yy2, rr, tt in lines:
+        for xx1,yy1,xx2,yy2,rr,tt in lines:
             l2 =  [(xx1,yy1), (xx2,yy2)]
             if (x1,y1) == (xx1,yy1) and (x2,y2) == (xx2,yy2):
                 continue
@@ -263,11 +275,13 @@ def try_impossible(img, img_wang):
             lines = cv2.HoughLinesP(img_canny, 1, np.pi / 360,  h_thrv,  None, h_minl, h_maxg)
             print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
             if lines is not None and lines.shape[0] >= 4 + 10:
+                lines = lines_radius_theta(lines)
+                inter = find_intersections(img, lines[:,0,:])
                 if True:
                     got_hough = True
                     drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
                     for line in lines:
-                        for x1,y1,x2,y2 in line:
+                        for x1,y1,x2,y2,r,t in line:
                             cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
                     break
             h_maxg += 1
@@ -276,6 +290,13 @@ def try_impossible(img, img_wang):
     else:
         print("canny failed")
 
+    print("intersections: ", inter)
+    drawn_circles = np.copy(img.hull3ch) * 0
+    for p in inter:
+        cv2.circle(drawn_circles, p, radius=3, color=(255, 0, 0), thickness=-1)
+    image = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
+
+    save(img, "0{}_9intersections.png".format(img.basename), image)
     img_hough = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
     save(img, "0{}_14hough.png".format(img.basename), img_hough)
     save(img, "0{}_13canny.png".format(img.basename), img_canny)
