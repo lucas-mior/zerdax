@@ -178,7 +178,7 @@ def broad_hull(img, hull):
 def reduce_hull(img):
     img.hwidth = 900
     img.hfact = img.hwidth / img.hull.shape[1]
-    img.hheigth = round(img.sfact * img.gray.shape[0])
+    img.hheigth = round(img.hfact * img.hull.shape[0])
 
     img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
     img.harea = img.hwidth * img.hheigth
