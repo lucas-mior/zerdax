@@ -3,6 +3,7 @@ import numpy as np
 import math
 import sys
 from Image import Image
+from Angles import Angles
 from pathlib import Path
 from os.path import exists
 
@@ -196,7 +197,17 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     # save(img, "{}_08cuthull.png".format(img.basename), img.hull)
     img_wang = lwang.wang_filter(img.hull)
 
-    lines = try_impossible(img, img_wang)
+    lines, angles = try_impossible(img, img_wang)
+    contours, max_index = magic_angle(img, angles)
+
+    img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+    cont = contours[max_index]
+    hull = cv2.convexHull(cont)
+    cv2.drawContours(img_contour, [hull], -1, (0, 255, 0), thickness=3)
+    cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
+    img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
+    save(img, "{}_07countours.png".format(img.basename),  img_contour_drawn)
+
 
     exit()
 
@@ -272,7 +283,7 @@ def try_impossible(img, img_wang):
         # drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
         # save(img, "{}_9intersections.png".format(img.basename), drawn_circles)
 
-    return lines
+    return lines, angles
 
 def filter_lines(img, lines):
     rem = np.empty(lines.shape[0])
@@ -339,14 +350,22 @@ def magic_angle(img, angles):
     img_wang = lwang.wang_filter(img.small)
     # save(img, "{}_01wang.png".format(img.basename), img_wang)
 
-    contours,max_index = find_best_cont(img, img_wang, 0.25*img.sarea)
+    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+    k = Angles.set(angles)
+    print("k: ",k)
+    dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k)
+    edges_gray = cv2.divide(img_wang, dilate, scale = 255)
+    edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
+    # edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
+    contours, _ = cv2.findContours(edges_bin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    areas = [cv2.contourArea(c) for c in contours]
+    perim = [cv2.arcLength(c, True) for c in contours]
+    max_index = np.argmax(areas)
+    a = areas[max_index]
 
-    img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-    cont = contours[max_index]
-    hull = cv2.convexHull(cont)
-    cv2.drawContours(img_contour, [hull], -1, (0, 255, 0), thickness=3)
-    cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
-    img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
-    # save(img, "{}_07countours.png".format(img.basename),  img_contour_drawn)
+    save(img, "{}_03dilate.png".format(img.basename),       dilate)
+    save(img, "{}_04edges_gray.png".format(img.basename),   edges_gray)
+    save(img, "{}_05edges_bin.png".format(img.basename),    edges_bin)
+    # save(img, "{}_06edges_opened.png".format(img.basename), edges_opened)
 
-    return hull
+    return contours, max_index
