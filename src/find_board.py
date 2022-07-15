@@ -348,6 +348,6 @@ def magic_angle(img, angles):
     max_index = np.argmax(areas)
     a = areas[max_index]
 
-    save(img, "0edges.png", edges_bin)
+    save(img, "{}_1edges.png".format(img.basename), edges_bin)
 
     return contours, max_index
