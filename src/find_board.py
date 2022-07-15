@@ -341,11 +341,13 @@ def magic_angle(img, angles):
     dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k)
     edges_gray = cv2.divide(img_wang, dilate, scale = 255)
     edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
-    # edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
+    edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
     contours, _ = cv2.findContours(edges_bin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     areas = [cv2.contourArea(c) for c in contours]
     perim = [cv2.arcLength(c, True) for c in contours]
     max_index = np.argmax(areas)
     a = areas[max_index]
+
+    save(img, "0edges.png", edges_bin)
 
     return contours, max_index
