@@ -142,24 +142,6 @@ def find_hull(img):
 
     return hull
 
-def find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg):
-    img_contour_bin = img_contour[:,:,0]
-    lines = cv2.HoughLinesP(img_contour_bin, 2, np.pi / 180,  h_thrv,  None, h_minl, h_maxg)
-    drawn_lines = draw_hough(img, lines)
-    img_hough = cv2.addWeighted(img.gray3ch, 0.5, drawn_lines, 0.8, 0)
-    # save("0{}_08edges{}_{}_hough{}_{}_{}.png".format(img.basename, 8, 8, h_thrv, h_minl, h_maxg), img_hough)
-
-    aux = np.zeros((lines.shape[0], 1, 6))
-    aux[:,0,0:4] = np.copy(lines[:,0,0:4])
-    lines = np.float32(aux)
-    i = 0
-    for line in lines:
-        for x1,y1,x2,y2,r,t in line:
-            lines[i, 0, 4] = radius(x1,y1,x2,y2)
-            lines[i, 0, 5] = theta(x1,y1,x2,y2)
-            i += 1
-    return lines
-
 def broad_hull(img, hull):
     Pxmin = hull[np.argmin(hull[:,0,0]),0]
     Pxmax = hull[np.argmax(hull[:,0,0]),0]
