@@ -118,16 +118,16 @@ def find_best_cont(img, img_wang, amin):
             print("{} < {}: failed. p = {}".format(a, amin, perim[max_index]))
             break
 
-    # save(img, "0{}_03dilate.png".format(img.basename),     dilate)
-    # save(img, "0{}_04edges_gray.png".format(img.basename), edges_gray)
-    # save(img, "0{}_05edges_bin.png".format(img.basename),  edges_bin)
-    # save(img, "0{}_06edges_opened.png".format(img.basename),     edges_opened)
+    # save(img, "{}_03dilate.png".format(img.basename),     dilate)
+    # save(img, "{}_04edges_gray.png".format(img.basename), edges_gray)
+    # save(img, "{}_05edges_bin.png".format(img.basename),  edges_bin)
+    # save(img, "{}_06edges_opened.png".format(img.basename),     edges_opened)
 
     return contours, max_index
 
 def find_hull(img):
     img_wang = lwang.wang_filter(img.small)
-    # save(img, "0{}_01wang.png".format(img.basename), img_wang)
+    # save(img, "{}_01wang.png".format(img.basename), img_wang)
 
     contours,max_index = find_best_cont(img, img_wang, 0.25*img.sarea)
 
@@ -137,7 +137,7 @@ def find_hull(img):
     cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
     cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
-    # save(img, "0{}_07countours.png".format(img.basename),  img_contour_drawn)
+    # save(img, "{}_07countours.png".format(img.basename),  img_contour_drawn)
 
     return hull
 
@@ -178,7 +178,7 @@ def reduce_hull(img):
     return img
 
 def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
-    # save(img, "0{}_00gray.png".format(img.basename, c_thrl, c_thrh), img.small)
+    # save(img, "{}_00gray.png".format(img.basename, c_thrl, c_thrh), img.small)
 
     hull = find_hull(img)
     limx, limy = broad_hull(img, hull)
@@ -193,7 +193,7 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     img.hyoff = limy[0]
     img = reduce_hull(img)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
-    # save(img, "0{}_08cuthull.png".format(img.basename), img.hull)
+    # save(img, "{}_08cuthull.png".format(img.basename), img.hull)
     img_wang = lwang.wang_filter(img.hull)
 
     lines = try_impossible(img, img_wang)
@@ -257,20 +257,20 @@ def try_impossible(img, img_wang):
         print("canny failed")
 
     if got_canny:
-        save(img, "0{}_13canny.png".format(img.basename), img_canny)
+        save(img, "{}_13canny.png".format(img.basename), img_canny)
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
         for line in lines:
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-        save(img, "0{}_14hough.png".format(img.basename), drawn_lines)
+        save(img, "{}_14hough.png".format(img.basename), drawn_lines)
 
         # drawn_circles = np.copy(img.hull3ch) * 0
         # for p in inter:
         #     cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
         # drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
-        # save(img, "0{}_9intersections.png".format(img.basename), drawn_circles)
+        # save(img, "{}_9intersections.png".format(img.basename), drawn_circles)
 
     return lines
 
@@ -307,11 +307,11 @@ def lines_kmeans(img, lines):
     print("centers: ", centers)
 
     fig = plt.figure()
-    plt.hist(A[:,5], 180, [-90, 90], color = 'r')
-    plt.hist(B[:,5], 180, [-90, 90], color = 'b')
-    plt.hist(C[:,5], 180, [-90, 90], color = 'g')
-    plt.hist(centers, 45, [-90, 90], color = 'y')
-    fig.savefig('tests/0{}_15kmeans0.png'.format(img.basename))
+    plt.hist(A[:,5], 180, [-90, 90], color = 'red')
+    plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
+    plt.hist(C[:,5], 180, [-90, 90], color = 'green')
+    plt.hist(centers, 20, [-90, 90], color = 'yellow')
+    fig.savefig('tests/{}_15kmeans0.png'.format(img.basename))
 
     d1 = abs(centers[0] - centers[1])
     d2 = abs(centers[0] - centers[2])
@@ -326,17 +326,17 @@ def lines_kmeans(img, lines):
         A = lines[labels==0]
         B = lines[labels==1]
         fig = plt.figure()
-        plt.hist(A[:,5], 180, [-90, 90], color = 'r')
-        plt.hist(B[:,5], 180, [-90, 90], color = 'b')
-        plt.hist(centers, 10, [-90, 90], color = 'y')
-        fig.savefig('tests/0{}_15kmeans1.png'.format(img.basename))
+        plt.hist(A[:,5], 180, [-90, 90], color = 'red')
+        plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
+        plt.hist(centers, 20, [-90, 90], color = 'yellow')
+        fig.savefig('tests/{}_15kmeans1.png'.format(img.basename))
 
     lines = np.int32(lines)
     return lines, centers
 
-def find_hull(img):
+def magic_angle(img, angles):
     img_wang = lwang.wang_filter(img.small)
-    # save(img, "0{}_01wang.png".format(img.basename), img_wang)
+    # save(img, "{}_01wang.png".format(img.basename), img_wang)
 
     contours,max_index = find_best_cont(img, img_wang, 0.25*img.sarea)
 
@@ -346,6 +346,6 @@ def find_hull(img):
     cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
     cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
-    # save(img, "0{}_07countours.png".format(img.basename),  img_contour_drawn)
+    # save(img, "{}_07countours.png".format(img.basename),  img_contour_drawn)
 
     return hull
