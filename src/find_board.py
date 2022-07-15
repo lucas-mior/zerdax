@@ -310,7 +310,7 @@ def lines_kmeans(img, lines):
     plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
     plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
     plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
-    plt.hist(centers, 20, [-90, 90], color = (0.9, 0.9, 0.0, 0.8))
+    plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
     fig.savefig('tests/{}_15kmeans0.png'.format(img.basename))
 
     d1 = abs(centers[0] - centers[1])
@@ -329,7 +329,7 @@ def lines_kmeans(img, lines):
         plt.xticks(range(-90, 90, 10))
         plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
         plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-        plt.hist(centers, 20, [-90, 90], color = (0.0, 0.9, 0.9, 0.7))
+        plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
         fig.savefig('tests/{}_15kmeans1.png'.format(img.basename))
 
     lines = np.int32(lines)
