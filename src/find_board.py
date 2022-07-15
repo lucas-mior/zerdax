@@ -134,7 +134,6 @@ def find_hull(img):
     img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cont = contours[max_index]
     hull = cv2.convexHull(cont)
-    cv2.approxPolyDP
     cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
     cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
@@ -334,3 +333,19 @@ def lines_kmeans(img, lines):
 
     lines = np.int32(lines)
     return lines, centers
+
+def find_hull(img):
+    img_wang = lwang.wang_filter(img.small)
+    # save(img, "0{}_01wang.png".format(img.basename), img_wang)
+
+    contours,max_index = find_best_cont(img, img_wang, 0.25*img.sarea)
+
+    img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+    cont = contours[max_index]
+    hull = cv2.convexHull(cont)
+    cv2.drawContours(img_contour, [hull], -1, (0, 240, 0), thickness=3)
+    cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
+    img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
+    # save(img, "0{}_07countours.png".format(img.basename),  img_contour_drawn)
+
+    return hull
