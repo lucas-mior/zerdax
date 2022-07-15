@@ -352,7 +352,7 @@ def magic_angle(img, angles):
 
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     k = Angles.set(angles)
-    print("k: ",k)
+    print("k =", k)
     dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k)
     edges_gray = cv2.divide(img_wang, dilate, scale = 255)
     edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
