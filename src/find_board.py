@@ -314,7 +314,8 @@ def try_impossible(img, img_wang):
 def filter_lines(img, lines):
 
     print("before: ",lines)
-    rem = [0 for i in range(0, lines.shape[0])]
+    rem = np.empty(lines.shape[0])
+    rem = np.int32(rem)
 
     i = 0
     for line in lines:
