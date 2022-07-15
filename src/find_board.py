@@ -218,20 +218,6 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     lines = try_impossible(img, img_wang)
 
     exit()
-    # lines = find_lines(img, c_thl, c_thh, h_th, h_minl, h_maxg)
-
-    intersections = find_intersections(img, lines[:,0,:])
-    intersections = intersections[intersections[:,0].argsort()]
-    intersections = np.unique(intersections, axis=0)
-    intersections = intersections[intersections[:,0].argsort()]
-
-    drawn_circles = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
-
-    for p in intersections:
-        cv2.circle(drawn_circles, p, radius=3, color=(255, 0, 0), thickness=-1)
-
-    points = drawn_circles[:,:,0]
-    image = cv2.addWeighted(img.gray3ch, 0.5, drawn_circles, 0.8, 0)
 
     return (10, 300, 110, 310)
 
@@ -259,7 +245,7 @@ def try_impossible(img, img_wang):
                 print("{} < {}, @ {}, {}".format(a, amin, c_thrl, c_thrh))
             c_thrl -= 9
             c_thrh -= 18
-    
+
     h_maxg0 = 2
     h_minl0 = round((img.hwidth + img.hheigth)*0.1)
     h_thrv0 = round(h_minl0 / 6)
@@ -277,6 +263,7 @@ def try_impossible(img, img_wang):
                 lines = lines_radius_theta(lines)
                 lines = filter_lines(img, lines)
                 lines, angles = lines_kmeans(img, lines)
+                print("angles: ", angles)
                 inter = find_intersections(img, lines[:,0,:])
                 if inter.shape[0] >= 20:
                     got_hough = True
@@ -291,18 +278,18 @@ def try_impossible(img, img_wang):
     if got_canny:
         save(img, "0{}_13canny.png".format(img.basename), img_canny)
     if got_hough:
-        drawn_circles = np.copy(img.hull3ch) * 0
-        for p in inter:
-            cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
-        drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
-        save(img, "0{}_9intersections.png".format(img.basename), drawn_circles)
-
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
         for line in lines:
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
         save(img, "0{}_14hough.png".format(img.basename), drawn_lines)
+
+        # drawn_circles = np.copy(img.hull3ch) * 0
+        # for p in inter:
+        #     cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
+        # drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
+        # save(img, "0{}_9intersections.png".format(img.basename), drawn_circles)
 
     return lines
 
