@@ -256,7 +256,7 @@ def try_impossible(img, img_wang):
             got_canny = True
             break
         else:
-            if amin - a < amin/2:
+            if amin - a < amin:
                 print("{} < {}, @ {}, {}".format(a, amin, c_thrl, c_thrh))
             c_thrl -= 9
             c_thrh -= 18
@@ -266,39 +266,46 @@ def try_impossible(img, img_wang):
     h_maxg0 = 2
     h_minl0 = round((img.hwidth + img.hheigth)*0.1)
     h_thrv0 = round(h_minl0 / 6)
+    h_angl0 = np.pi / 720
 
     if got_canny:
         h_maxg = h_maxg0
         h_minl = h_minl0
         h_thrv = h_thrv0
-        while h_maxg < 10 and h_minl > (h_minl0 / 3):
-            lines = cv2.HoughLinesP(img_canny, 1, np.pi / 360,  h_thrv,  None, h_minl, h_maxg)
+        h_angl = h_angl0
+        while h_maxg < 10 and h_minl > (h_minl0 / 4) and h_angl < (np.pi / 180):
+            lines = cv2.HoughLinesP(img_canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
             print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
             if lines is not None and lines.shape[0] >= 4 + 10:
                 lines = lines_radius_theta(lines)
+                print("found lines", lines.shape[0])
                 inter = find_intersections(img, lines[:,0,:])
-                if True:
+                print("found inter", inter.shape[0])
+                if inter.shape[0] >= 20:
                     got_hough = True
-                    drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-                    for line in lines:
-                        for x1,y1,x2,y2,r,t in line:
-                            cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
                     break
             h_maxg += 1
-            h_minl -= 5
-            h_thrv = round(h_minl / 5)
+            h_minl -= 10
+            h_thrv = round(h_minl / 6)
+            h_angl += np.pi/3600
     else:
         print("canny failed")
 
-    print("intersections: ", inter)
-    drawn_circles = np.copy(img.hull3ch) * 0
-    for p in inter:
-        cv2.circle(drawn_circles, p, radius=3, color=(255, 0, 0), thickness=-1)
-    image = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
+    if got_canny:
+        save(img, "0{}_13canny.png".format(img.basename), img_canny)
+    if got_hough:
+        print("intersections: ", inter)
+        drawn_circles = np.copy(img.hull3ch) * 0
+        for p in inter:
+            cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
+        drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
+        save(img, "0{}_9intersections.png".format(img.basename), drawn_circles)
 
-    save(img, "0{}_9intersections.png".format(img.basename), image)
-    img_hough = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-    save(img, "0{}_14hough.png".format(img.basename), img_hough)
-    save(img, "0{}_13canny.png".format(img.basename), img_canny)
+        drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+        for line in lines:
+            for x1,y1,x2,y2,r,t in line:
+                cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
+        drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
+        save(img, "0{}_14hough.png".format(img.basename), drawn_lines)
 
     return lines
