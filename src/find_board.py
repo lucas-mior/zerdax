@@ -304,13 +304,13 @@ def lines_kmeans(img, lines):
     C = lines[labels==2]
 
     print("compactness: ", compactness)
-    print("centers: ", centers)
 
     fig = plt.figure()
-    plt.hist(A[:,5], 180, [-90, 90], color = 'red')
-    plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
-    plt.hist(C[:,5], 180, [-90, 90], color = 'green')
-    plt.hist(centers, 20, [-90, 90], color = 'yellow')
+    plt.xticks(range(-90, 91, 10))
+    plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+    plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+    plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
+    plt.hist(centers, 20, [-90, 90], color = (0.9, 0.9, 0.0, 0.8))
     fig.savefig('tests/{}_15kmeans0.png'.format(img.basename))
 
     d1 = abs(centers[0] - centers[1])
@@ -326,9 +326,10 @@ def lines_kmeans(img, lines):
         A = lines[labels==0]
         B = lines[labels==1]
         fig = plt.figure()
-        plt.hist(A[:,5], 180, [-90, 90], color = 'red')
-        plt.hist(B[:,5], 180, [-90, 90], color = 'blue')
-        plt.hist(centers, 20, [-90, 90], color = 'yellow')
+        plt.xticks(range(-90, 90, 10))
+        plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+        plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+        plt.hist(centers, 20, [-90, 90], color = (0.0, 0.9, 0.9, 0.7))
         fig.savefig('tests/{}_15kmeans1.png'.format(img.basename))
 
     lines = np.int32(lines)
