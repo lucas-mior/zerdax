@@ -278,6 +278,7 @@ def try_impossible(img, img_wang):
             print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
             if lines is not None and lines.shape[0] >= 4 + 10:
                 lines = lines_radius_theta(lines)
+                lines = filter_lines(img, lines)
                 print("found lines", lines.shape[0])
                 inter = find_intersections(img, lines[:,0,:])
                 print("found inter", inter.shape[0])
@@ -309,3 +310,46 @@ def try_impossible(img, img_wang):
         save(img, "0{}_14hough.png".format(img.basename), drawn_lines)
 
     return lines
+
+def filter_lines(img, lines):
+
+    print("before: ",lines)
+    rem = [0 for i in range(0, lines.shape[0])]
+
+    i = 0
+    for line in lines:
+        for x1,y1,x2,y2,r,t in line:
+            if x1 < 3 and x2 < 3 or y1 < 3 and y2 < 3:
+                rem[i] = 1
+            elif (img.hwidth - x1 < 3) and (img.hwidth - x2) < 3 or (img.hheigth - y1) < 3 and (img.hheigth - y2) < 3:
+                rem[i] = 1
+            else:
+                rem[i] = 0
+        i += 1
+
+    A = lines[rem==0]
+    lines = A
+    print("filter: ",lines)
+    print("rem: ",rem)
+    return lines
+
+    # lines = np.float32(lines)
+    # criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    # flags = cv2.KMEANS_RANDOM_CENTERS
+    # compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
+
+    # A = lines[labels==0]
+    # B = lines[labels==1]
+
+    # print("A: \n", A)
+    # print("B: \n", B)
+    # print("compactness: ", compactness)
+
+    # print("OLD centers: ", centers)
+
+    # fig = plt.figure()
+    # plt.hist(A[:,5], 180, [-90, 90], color = 'r')
+    # plt.hist(B[:,5], 180, [-90, 90], color = 'b')
+    # plt.hist(centers, 45, [-90, 90], color = 'y')
+    # fig.savefig('1{}4_kmeans0.png'.format(img.basename))
+    # exit()
