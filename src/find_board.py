@@ -8,7 +8,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 from Image import Image
-from aux import save,savefig
+from aux import *
 import lwang
 
 def find_board(img):
@@ -29,7 +29,6 @@ def find_board(img):
 
     save(img, "edges", img.edges)
     img.angles, img.select_lines = find_angles(img)
-    print("img.selectlines: ", img.select_lines.shape)
     lines = try_impossible(img)
 
     return (10, 300, 110, 310)
@@ -39,12 +38,12 @@ def find_hull(img):
 
     edges_opened,contours,max_index = find_best_cont(img, img_wang, 0.25*img.sarea)
 
-    drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cont = contours[max_index]
     hull = cv2.convexHull(cont)
-    cv2.drawContours(drawn_contours, [hull], -1, (0, 255, 0), thickness=3)
-    cv2.drawContours(drawn_contours, cont,   -1, (255,0,0), thickness=3)
-    drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
+    # drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+    # cv2.drawContours(drawn_contours, [hull], -1, (0, 255, 0), thickness=3)
+    # cv2.drawContours(drawn_contours, cont,   -1, (255,0,0), thickness=3)
+    # drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
 
     return edges_opened, hull
 
@@ -86,6 +85,68 @@ def broad_hull(img, hull):
     Pymax[1] = min(img.sheigth, Pymax[1]+20)
 
     return [Pymin[1],Pymax[1]], [Pxmin[0],Pxmax[0]]
+
+def find_angles(img):
+    c_thrl0 = 100
+    c_thrh0 = 200
+    c_thrl = c_thrl0
+    c_thrh = c_thrh0
+
+    img_wang = lwang.wang_filter(img.hull)
+    while c_thrl > 10 and c_thrh > 50:
+        img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
+        contours, _ = cv2.findContours(img_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        areas = [cv2.contourArea(c) for c in contours]
+        max_index = np.argmax(areas)
+        a = areas[max_index]
+        amin = 0.3 * img.harea
+        if a > amin:
+            print("{} > {}, @ {}, {}".format(a, amin, c_thrl, c_thrh))
+            break
+        else:
+            if amin - a < amin:
+                print("{} < {}, @ {}, {}".format(a, amin, c_thrl, c_thrh))
+            c_thrl -= 9
+            c_thrh -= 18
+
+    h_maxg0 = 2
+    h_minl0 = round((img.hwidth + img.hheigth)*0.1)
+    h_thrv0 = round(h_minl0 / 6)
+    h_angl0 = np.pi / 720
+
+    h_maxg = h_maxg0
+    h_minl = h_minl0
+    h_thrv = h_thrv0
+    h_angl = h_angl0
+    while h_maxg < 10 and h_minl > (h_minl0 / 4) and h_angl < (np.pi / 180):
+        lines = cv2.HoughLinesP(img_canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
+        print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
+        if lines is not None and lines.shape[0] >= 4 + 10:
+            lines = lines_radius_theta(lines)
+            lines = filter_lines(img, lines)
+            lines, angles = lines_kmeans(img, lines)
+            print("angles: ", angles)
+            inter = find_intersections(img, lines[:,0,:])
+            break
+        h_maxg += 1
+        h_minl -= 10
+        h_thrv = round(h_minl / 6)
+        h_angl += np.pi/3600
+
+    drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+    for line in lines:
+        for x1,y1,x2,y2,r,t in line:
+            cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
+    drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
+    save(img, "hough", drawn_lines)
+
+    drawn_circles = np.copy(img.hull3ch) * 0
+    for p in inter:
+        cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
+    drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
+    save(img, "intersections".format(img.basename), drawn_circles)
+
+    return angles, lines
 
 def lines_radius_theta(lines):
     aux = np.zeros((lines.shape[0], 1, 6), dtype='int32')
@@ -145,12 +206,6 @@ def find_intersections(img, lines):
 
     inter = np.array(inter, dtype='int32')
     return inter
-
-def radius(x1,y1,x2,y2):
-    return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
-
-def theta(x1,y1,x2,y2):
-    return math.degrees(math.atan2((y1-y2),(x2-x1)))
 
 def reduce_hull(img):
     img.hwidth = 900
@@ -297,64 +352,3 @@ def lines_kmeans(img, lines):
     lines = np.int32(lines)
     return lines, centers
 
-def find_angles(img):
-    c_thrl0 = 100
-    c_thrh0 = 200
-    c_thrl = c_thrl0
-    c_thrh = c_thrh0
-
-    img_wang = lwang.wang_filter(img.hull)
-    while c_thrl > 10 and c_thrh > 50:
-        img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
-        contours, _ = cv2.findContours(img_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        areas = [cv2.contourArea(c) for c in contours]
-        max_index = np.argmax(areas)
-        a = areas[max_index]
-        amin = 0.3 * img.harea
-        if a > amin:
-            print("{} > {}, @ {}, {}".format(a, amin, c_thrl, c_thrh))
-            break
-        else:
-            if amin - a < amin:
-                print("{} < {}, @ {}, {}".format(a, amin, c_thrl, c_thrh))
-            c_thrl -= 9
-            c_thrh -= 18
-
-    h_maxg0 = 2
-    h_minl0 = round((img.hwidth + img.hheigth)*0.1)
-    h_thrv0 = round(h_minl0 / 6)
-    h_angl0 = np.pi / 720
-
-    h_maxg = h_maxg0
-    h_minl = h_minl0
-    h_thrv = h_thrv0
-    h_angl = h_angl0
-    while h_maxg < 10 and h_minl > (h_minl0 / 4) and h_angl < (np.pi / 180):
-        lines = cv2.HoughLinesP(img_canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
-        print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-        if lines is not None and lines.shape[0] >= 4 + 10:
-            lines = lines_radius_theta(lines)
-            lines = filter_lines(img, lines)
-            lines, angles = lines_kmeans(img, lines)
-            print("angles: ", angles)
-            inter = find_intersections(img, lines[:,0,:])
-            break
-        h_maxg += 1
-        h_minl -= 10
-        h_thrv = round(h_minl / 6)
-        h_angl += np.pi/3600
-
-    drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-    for line in lines:
-        for x1,y1,x2,y2,r,t in line:
-            cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
-    drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-    save(img, "hough", drawn_lines)
-
-    drawn_circles = np.copy(img.hull3ch) * 0
-    for p in inter:
-        cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
-    drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
-    save(img, "intersections".format(img.basename), drawn_circles)
-
-    return angles, lines
