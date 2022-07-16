@@ -178,67 +178,38 @@ def find_board(img):
 
     save(img, "edges", img.edges)
     save(img, "hull", img.hull)
-    # lines, angles, c_thrl, c_thrh = try_impossible(img, img_wang)
+    lines, angles = try_impossible(img, img_wang)
 
     return (10, 300, 110, 310)
 
 def try_impossible(img, img_wang):
-    c_thrl0 = 100
-    c_thrh0 = 200
-    c_thrl = c_thrl0
-    c_thrh = c_thrh0
-    got_canny = True
     got_hough = False
-
-    while c_thrl > 10 and c_thrh > 50:
-        img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
-        contours, _ = cv2.findContours(img_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        areas = [cv2.contourArea(c) for c in contours]
-        max_index = np.argmax(areas)
-        a = areas[max_index]
-        amin = 0.3 * img.harea
-        if a > amin:
-            print("{} > {}, @ {}, {}".format(a, amin, c_thrl, c_thrh))
-            got_canny = True
-            break
-        else:
-            if amin - a < amin:
-                print("{} < {}, @ {}, {}".format(a, amin, c_thrl, c_thrh))
-            c_thrl -= 9
-            c_thrh -= 18
-
     h_maxg0 = 2
     h_minl0 = round((img.hwidth + img.hheigth)*0.1)
     h_thrv0 = round(h_minl0 / 6)
     h_angl0 = np.pi / 720
 
-    if got_canny:
-        h_maxg = h_maxg0
-        h_minl = h_minl0
-        h_thrv = h_thrv0
-        h_angl = h_angl0
-        while h_maxg < 10 and h_minl > (h_minl0 / 4) and h_angl < (np.pi / 180):
-            lines = cv2.HoughLinesP(img_canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
-            print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-            if lines is not None and lines.shape[0] >= 4 + 10:
-                lines = lines_radius_theta(lines)
-                lines = filter_lines(img, lines)
-                lines, angles = lines_kmeans(img, lines)
-                print("angles: ", angles)
-                inter = find_intersections(img, lines[:,0,:])
-                if inter.shape[0] >= 20:
-                    got_hough = True
-                    break
-            h_maxg += 1
-            h_minl -= 10
-            h_thrv = round(h_minl / 6)
-            h_angl += np.pi/3600
-    else:
-        print("canny failed")
+    h_maxg = h_maxg0
+    h_minl = h_minl0
+    h_thrv = h_thrv0
+    h_angl = h_angl0
+    while h_maxg < 10 and h_minl > (h_minl0 / 4) and h_angl < (np.pi / 180):
+        lines = cv2.HoughLinesP(img_wang, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
+        print("HOUGH @ {}, {}, {}".format(h_thrv, h_minl, h_maxg))
+        if lines is not None and lines.shape[0] >= 4 + 10:
+            lines = lines_radius_theta(lines)
+            lines = filter_lines(img, lines)
+            lines, angles = lines_kmeans(img, lines)
+            print("angles: ", angles)
+            inter = find_intersections(img, lines[:,0,:])
+            if inter.shape[0] >= 20:
+                got_hough = True
+                break
+        h_maxg += 1
+        h_minl -= 10
+        h_thrv = round(h_minl / 6)
+        h_angl += np.pi/3600
 
-    if got_canny:
-        save(img, "canny", img_canny)
-        pass
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
         for line in lines:
@@ -253,7 +224,7 @@ def try_impossible(img, img_wang):
         drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
         save(img, "intersections".format(img.basename), drawn_circles)
 
-    return lines, angles, c_thrl, c_thrh
+    return lines, angles
 
 def filter_lines(img, lines):
     rem = np.empty(lines.shape[0])
