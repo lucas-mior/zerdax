@@ -5,7 +5,7 @@ import sys
 from Image import Image
 from angles import set_kernels
 from pathlib import Path
-from aux import save
+from aux import save,savefig
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -25,13 +25,12 @@ def lines_radius_theta(lines):
             i += 1
     return lines
 
-def det(a, b):
+def determinant(a, b):
     return a[0]*b[1] - a[1]*b[0]
 
 def find_intersections(img, lines):
     inter = []
     last = (0,0)
-    diff = [(0,0), (0,0)]
 
     i = 0
     for x1,y1,x2,y2,r,t in lines:
@@ -45,17 +44,17 @@ def find_intersections(img, lines):
             if abs(t - tt) < 30:
                 continue
 
-            diff[0] = (l1[0][0] - l1[1][0], l2[0][0] - l2[1][0])
-            diff[1] = (l1[0][1] - l1[1][1], l2[0][1] - l2[1][1])
+            xdiff = (l1[0][0] - l1[1][0], l2[0][0] - l2[1][0])
+            ydiff = (l1[0][1] - l1[1][1], l2[0][1] - l2[1][1])
 
-            div = det(diff[0], diff[1])
+            div = determinant(xdiff, ydiff)
             if div == 0:
                 j += 1
                 continue
 
-            d = (det(*l1), det(*l2))
-            x = det(d, diff[0]) / div
-            y = det(d, diff[1]) / div
+            d = (determinant(*l1), determinant(*l2))
+            x = determinant(d, xdiff) / div
+            y = determinant(d, ydiff) / div
 
             if x > img.swidth or y > img.sheigth or x < 0 or y < 0:
                 j += 1
@@ -297,7 +296,7 @@ def lines_kmeans(img, lines):
     plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
     plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
     plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
-    # fig.savefig('15kmeans0.png'.format(img.basename))
+    savefig(img, "kmeans0", fig)
 
     d1 = abs(centers[0] - centers[1])
     d2 = abs(centers[0] - centers[2])
@@ -316,7 +315,7 @@ def lines_kmeans(img, lines):
         plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
         plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
         plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
-        # fig.savefig('15kmeans1.png'.format(img.basename))
+        savefig(img, "kmeans1", fig)
 
     lines = np.int32(lines)
     return lines, centers
