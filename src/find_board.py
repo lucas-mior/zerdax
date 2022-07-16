@@ -82,7 +82,7 @@ def find_best_cont(img, img_wang, amin):
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 5
     lasta = 0
-    while kd <= 30:
+    while kd <= 50:
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kd))
         dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img_wang, dilate, scale = 255)
@@ -160,7 +160,6 @@ def reduce_hull(img):
 
 def find_board(img):
     edges_opened, hull = find_hull(img)
-    save(img, "edgesfull", edges_opened)
     limx, limy = broad_hull(img, hull)
 
     img.edges = edges_opened[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
@@ -174,41 +173,41 @@ def find_board(img):
     img.hyoff = limy[0]
     img = reduce_hull(img)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
-    img_wang = lwang.wang_filter(img.hull)
 
     save(img, "edges", img.edges)
-    save(img, "hull", img.hull)
-    lines, angles = try_impossible(img, img_wang)
+    lines, angles = try_impossible(img)
 
     return (10, 300, 110, 310)
 
-def try_impossible(img, img_wang):
+def try_impossible(img):
     got_hough = False
     h_maxg0 = 2
-    h_minl0 = round((img.hwidth + img.hheigth)*0.1)
+    h_minl0 = round((img.hwidth + img.hheigth)*0.05)
     h_thrv0 = round(h_minl0 / 6)
-    h_angl0 = np.pi / 720
+    h_angl0 = np.pi / 1440
 
     h_maxg = h_maxg0
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
-    while h_maxg < 10 and h_minl > (h_minl0 / 4) and h_angl < (np.pi / 180):
-        lines = cv2.HoughLinesP(img_wang, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
-        print("HOUGH @ {}, {}, {}".format(h_thrv, h_minl, h_maxg))
-        if lines is not None and lines.shape[0] >= 4 + 10:
+    while h_angl < (np.pi / 360):
+        lines = cv2.HoughLinesP(img.edges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
+        print("HOUGH @ {}, {}, {}, {}".format(h_angl, h_thrv, h_minl, h_maxg))
+        if lines is not None and lines.shape[0] >= 50:
             lines = lines_radius_theta(lines)
             lines = filter_lines(img, lines)
             lines, angles = lines_kmeans(img, lines)
             print("angles: ", angles)
             inter = find_intersections(img, lines[:,0,:])
-            if inter.shape[0] >= 20:
+            if inter.shape[0] >= 50:
                 got_hough = True
                 break
-        h_maxg += 1
-        h_minl -= 10
-        h_thrv = round(h_minl / 6)
-        h_angl += np.pi/3600
+        while h_maxg < 8:
+            h_maxg += 1
+        while h_minl > h_minl0 / 4: 
+            h_minl -= 10
+            h_thrv = round(h_minl / 3)
+        h_angl += np.pi/7200
 
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
@@ -267,7 +266,7 @@ def lines_kmeans(img, lines):
     plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
     plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
     plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
-    savefig(img, "kmeans0", fig)
+    # savefig(img, "kmeans0", fig)
 
     d1 = abs(centers[0] - centers[1])
     d2 = abs(centers[0] - centers[2])
@@ -286,7 +285,7 @@ def lines_kmeans(img, lines):
         plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
         plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
         plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
-        savefig(img, "kmeans1", fig)
+        # savefig(img, "kmeans1", fig)
 
     lines = np.int32(lines)
     return lines, centers
