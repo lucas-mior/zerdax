@@ -87,14 +87,14 @@ def broad_hull(img, hull):
     return [Pymin[1],Pymax[1]], [Pxmin[0],Pxmax[0]]
 
 def find_angles(img):
-    wmin = 9
-    c_thrl0 = 100
+    wmin = 6
+    c_thrl0 = 80
     c_thrh0 = 200
     c_thrl = c_thrl0
     c_thrh = c_thrh0
 
     img_wang = lwang.wang_filter(img.hull)
-    while c_thrl > 10 and c_thrh > 50:
+    while c_thrh > 70:
         img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
         w = img_canny.mean()
         if w > wmin:
@@ -103,8 +103,9 @@ def find_angles(img):
         else:
             if wmin - w < wmin:
                 print("{} < {}, @ {}, {}".format(w, wmin, c_thrl, c_thrh))
+        while c_thrl > 10:
             c_thrl -= 9
-            c_thrh -= 18
+        c_thrh -= 9
 
     save(img, "canny", img_canny)
 
