@@ -105,12 +105,12 @@ def find_best_cont(img, img_wang, amin):
             print("{} < {}: failed. p = {}".format(a, amin, perim[max_index]))
             break
 
-    return contours, max_index
+    return edges_opened, contours, max_index
 
 def find_hull(img):
     img_wang = lwang.wang_filter(img.sgray)
 
-    contours,max_index = find_best_cont(img, img_wang, 0.25*img.sarea)
+    edges_opened,contours,max_index = find_best_cont(img, img_wang, 0.25*img.sarea)
 
     img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cont = contours[max_index]
@@ -119,7 +119,7 @@ def find_hull(img):
     cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
 
-    return hull
+    return edges_opened, hull
 
 def broad_hull(img, hull):
     Pxmin = hull[np.argmin(hull[:,0,0]),0]
@@ -154,13 +154,16 @@ def reduce_hull(img):
     img.hheigth = round(img.hfact * img.hull.shape[0])
 
     img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
+    img.edges = cv2.resize(img.edges, (img.hwidth, img.hheigth))
     img.harea = img.hwidth * img.hheigth
     return img
 
 def find_board(img):
-    hull = find_hull(img)
+    edges_opened, hull = find_hull(img)
+    save(img, "edgesfull", edges_opened)
     limx, limy = broad_hull(img, hull)
 
+    img.edges = edges_opened[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     limx[0] = round(limx[0] / img.sfact)
     limx[1] = round(limx[1] / img.sfact)
     limy[0] = round(limy[0] / img.sfact)
@@ -173,7 +176,9 @@ def find_board(img):
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
     img_wang = lwang.wang_filter(img.hull)
 
-    lines, angles, c_thrl, c_thrh = try_impossible(img, img_wang)
+    save(img, "edges", img.edges)
+    save(img, "hull", img.hull)
+    # lines, angles, c_thrl, c_thrh = try_impossible(img, img_wang)
 
     return (10, 300, 110, 310)
 
