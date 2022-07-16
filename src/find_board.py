@@ -105,19 +105,19 @@ def find_best_cont(img, img_wang, amin):
             print("{} < {}: failed. p = {}".format(a, amin, perim[max_index]))
             break
 
-    return edges_opened, contours, max_index
+    return edges_opened, contours, max_index, perim[max_index]
 
 def find_hull(img):
     img_wang = lwang.wang_filter(img.sgray)
 
     edges_opened,contours,max_index = find_best_cont(img, img_wang, 0.25*img.sarea)
 
-    img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+    drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cont = contours[max_index]
     hull = cv2.convexHull(cont)
-    cv2.drawContours(img_contour, [hull], -1, (0, 255, 0), thickness=3)
-    cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
-    img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
+    cv2.drawContours(drawn_contours, [hull], -1, (0, 255, 0), thickness=3)
+    cv2.drawContours(drawn_contours, cont,   -1, (255,0,0), thickness=3)
+    drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
 
     return edges_opened, hull
 
@@ -181,7 +181,7 @@ def find_board(img):
 
 def try_impossible(img):
     got_hough = False
-    h_maxg0 = 2
+    h_maxg0 = 0
     h_minl0 = round((img.hwidth + img.hheigth)*0.05)
     h_thrv0 = round(h_minl0 / 6)
     h_angl0 = np.pi / 1440
@@ -202,12 +202,12 @@ def try_impossible(img):
             if inter.shape[0] >= 50:
                 got_hough = True
                 break
-        while h_maxg < 8:
-            h_maxg += 1
+        # while h_maxg < 5:
+        #     h_maxg += 1
         while h_minl > h_minl0 / 4: 
-            h_minl -= 10
-            h_thrv = round(h_minl / 3)
-        h_angl += np.pi/7200
+            h_minl -= 5
+            h_thrv = round(h_minl / 1.5)
+        h_angl += np.pi/1440
 
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
