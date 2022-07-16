@@ -3,7 +3,6 @@ import numpy as np
 import math
 import sys
 from Image import Image
-from angles import set_kernels
 from pathlib import Path
 from aux import save,savefig
 
@@ -106,7 +105,6 @@ def find_best_cont(img, img_wang, amin):
             print("{} < {}: failed. p = {}".format(a, amin, perim[max_index]))
             break
 
-    save(img, "rect", edges_opened)
     return contours, max_index
 
 def find_hull(img):
@@ -177,13 +175,6 @@ def find_board(img):
 
     lines, angles, c_thrl, c_thrh = try_impossible(img, img_wang)
 
-    img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-    cont = contours[max_index]
-    hull = cv2.convexHull(cont)
-    cv2.drawContours(img_contour, [hull], -1, (0, 255, 0), thickness=3)
-    cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
-    img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
-
     return (10, 300, 110, 310)
 
 def try_impossible(img, img_wang):
@@ -241,7 +232,7 @@ def try_impossible(img, img_wang):
         print("canny failed")
 
     if got_canny:
-        # save(img, "canny", img_canny)
+        save(img, "canny", img_canny)
         pass
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
@@ -268,7 +259,11 @@ def filter_lines(img, lines):
         for x1,y1,x2,y2,r,t in line:
             if x1 < 3 and x2 < 3 or y1 < 3 and y2 < 3:
                 rem[i] = 1
-            elif (img.hwidth - x1 < 3) and (img.hwidth - x2) < 3 or (img.hheigth - y1) < 3 and (img.hheigth - y2) < 3:
+            elif (img.hwidth - x1) < 3 and (img.hwidth - x2) < 3 or (img.hheigth - y1) < 3 and (img.hheigth - y2) < 3:
+                rem[i] = 1
+            elif (x1 < 3 or (img.hwidth - x1) < 3) and (y2 < 3 or (img.hheigth - y2) < 3):
+                rem[i] = 1
+            elif (x2 < 3 or (img.hwidth - x2) < 3) and (y1 < 3 or (img.hheigth - y1) < 3):
                 rem[i] = 1
             else:
                 rem[i] = 0
@@ -296,7 +291,7 @@ def lines_kmeans(img, lines):
     plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
     plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
     plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
-    # savefig(img, "kmeans0", fig)
+    savefig(img, "kmeans0", fig)
 
     d1 = abs(centers[0] - centers[1])
     d2 = abs(centers[0] - centers[2])
@@ -315,7 +310,7 @@ def lines_kmeans(img, lines):
         plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
         plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
         plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
-        # savefig(img, "kmeans1", fig)
+        savefig(img, "kmeans1", fig)
 
     lines = np.int32(lines)
     return lines, centers
