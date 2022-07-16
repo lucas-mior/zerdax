@@ -53,7 +53,6 @@ def find_best_cont(img, img_wang, amin):
     kd = 3
     while kd <= 50:
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd+round(kd/2),kd))
-        print("kdil:", k_dil)
         dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img_wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
@@ -122,7 +121,7 @@ def find_angles(img):
         lines = cv2.HoughLinesP(img_canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
         print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
         if lines is not None and lines.shape[0] >= 4 + 10:
-            lines = lines_radius_theta(lines)
+            lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines, angles = lines_kmeans(img, lines)
             print("angles: ", angles)
@@ -147,18 +146,6 @@ def find_angles(img):
     save(img, "intersections".format(img.basename), drawn_circles)
 
     return angles, lines
-
-def lines_radius_theta(lines):
-    aux = np.zeros((lines.shape[0], 1, 6), dtype='int32')
-    aux[:,0,0:4] = np.copy(lines[:,0,0:4])
-    lines = aux
-    i = 0
-    for line in lines:
-        for x1,y1,x2,y2,r,t in line:
-            lines[i, 0, 4] = round(radius(x1,y1,x2,y2))
-            lines[i, 0, 5] = round(theta(x1,y1,x2,y2))
-            i += 1
-    return lines
 
 def determinant(a, b):
     return a[0]*b[1] - a[1]*b[0]
@@ -232,7 +219,7 @@ def try_impossible(img):
         lines = cv2.HoughLinesP(img.edges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
         print("impossible @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         if lines is not None and lines.shape[0] >= 70:
-            lines = lines_radius_theta(lines)
+            lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines = filter_angles(img, lines)
             aux = np.copy(img.select_lines)
@@ -351,4 +338,3 @@ def lines_kmeans(img, lines):
 
     lines = np.int32(lines)
     return lines, centers
-
