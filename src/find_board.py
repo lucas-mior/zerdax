@@ -64,7 +64,7 @@ def find_intersections(img, lines):
                     inter.append((x,y))
                     last = (x,y)
                 else:
-                    print("Close point ignored: ({},{}) ~ ({},{})".format(last[0],last[1],x,y))
+                    # print("Close point ignored: ({},{}) ~ ({},{})".format(last[0],last[1],x,y))
                     continue
         i += 1
 
@@ -175,7 +175,7 @@ def find_board(img):
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
 
     save(img, "edges", img.edges)
-    angles = find_angles(img)
+    img.angles = find_angles(img)
     lines = try_impossible(img)
 
     return (10, 300, 110, 310)
@@ -184,7 +184,7 @@ def try_impossible(img):
     got_hough = False
     h_maxg0 = 0
     h_minl0 = round((img.hwidth + img.hheigth)*0.05)
-    h_thrv0 = round(h_minl0 / 6)
+    h_thrv0 = round(h_minl0 / 3)
     h_angl0 = np.pi / 1440
 
     h_maxg = h_maxg0
@@ -193,20 +193,20 @@ def try_impossible(img):
     h_angl = h_angl0
     while h_angl < (np.pi / 360):
         lines = cv2.HoughLinesP(img.edges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
-        print("HOUGH @ {}, {}, {}, {}".format(h_angl, h_thrv, h_minl, h_maxg))
-        if lines is not None and lines.shape[0] >= 50:
+        print("HOUGH @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
+        if lines is not None and lines.shape[0] >= 70:
             lines = lines_radius_theta(lines)
             lines = filter_lines(img, lines)
+            lines = filter_angles(img, lines)
             inter = find_intersections(img, lines[:,0,:])
-            if inter.shape[0] >= 50:
-                got_hough = True
-                break
+            got_hough = True
+            break
         # while h_maxg < 5:
         #     h_maxg += 1
-        while h_minl > h_minl0 / 4: 
-            h_minl -= 5
-            h_thrv = round(h_minl / 1.5)
-        h_angl += np.pi/1440
+        while h_minl > h_minl0 / 3: 
+            h_minl -= 8
+            h_thrv = round(h_minl / 3)
+        h_angl += np.pi / 7200
 
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
@@ -221,6 +221,8 @@ def try_impossible(img):
             cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
         drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
         save(img, "intersections".format(img.basename), drawn_circles)
+    else:
+        print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
 
     return lines
 
@@ -247,6 +249,28 @@ def filter_lines(img, lines):
     lines = A
     return lines
 
+def filter_angles(img, lines):
+    rem = np.empty(lines.shape[0])
+    rem = np.int32(rem)
+
+    i = 0
+    for line in lines:
+        for x1,y1,x2,y2,r,t in line:
+            if abs(t - img.angles[0]) > 12 and abs(t - img.angles[1]) > 12:
+                if img.angles.shape == 2:
+                    rem[i] = 1
+                elif abs(t - img.angles[2]) > 12:
+                    rem[i] = 1
+                else:
+                    rem[i] = 0
+            else:
+                rem[i] = 0
+        i += 1
+
+    A = lines[rem==0]
+    lines = A
+    return lines
+
 def lines_kmeans(img, lines):
     lines = np.float32(lines)
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
@@ -259,12 +283,12 @@ def lines_kmeans(img, lines):
 
     print("compactness: ", compactness)
 
-    fig = plt.figure()
-    plt.xticks(range(-90, 91, 10))
-    plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-    plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-    plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
-    plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
+    # fig = plt.figure()
+    # plt.xticks(range(-90, 91, 10))
+    # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+    # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+    # plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
+    # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
     # savefig(img, "kmeans0", fig)
 
     d1 = abs(centers[0] - centers[1])
@@ -279,11 +303,11 @@ def lines_kmeans(img, lines):
         compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
         A = lines[labels==0]
         B = lines[labels==1]
-        fig = plt.figure()
-        plt.xticks(range(-90, 90, 10))
-        plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-        plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-        plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
+        # fig = plt.figure()
+        # plt.xticks(range(-90, 90, 10))
+        # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+        # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+        # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
         # savefig(img, "kmeans1", fig)
 
     lines = np.int32(lines)
@@ -328,15 +352,12 @@ def find_angles(img):
         while h_maxg < 10 and h_minl > (h_minl0 / 4) and h_angl < (np.pi / 180):
             lines = cv2.HoughLinesP(img_canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
             print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
-            if lines is not None and lines.shape[0] >= 4 + 10:
+            if lines is not None and lines.shape[0] >= 4 + 20:
                 lines = lines_radius_theta(lines)
                 lines = filter_lines(img, lines)
                 lines, angles = lines_kmeans(img, lines)
                 print("angles: ", angles)
                 inter = find_intersections(img, lines[:,0,:])
-                if inter.shape[0] >= 20:
-                    got_hough = True
-                    break
             h_maxg += 1
             h_minl -= 10
             h_thrv = round(h_minl / 6)
