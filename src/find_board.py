@@ -29,6 +29,7 @@ def find_board(img):
 
     save(img, "edges", img.edges)
     img.angles, img.select_lines = find_angles(img)
+    exit()
     lines = try_impossible(img)
 
     return (10, 300, 110, 310)
@@ -86,6 +87,7 @@ def broad_hull(img, hull):
     return [Pymin[1],Pymax[1]], [Pxmin[0],Pxmax[0]]
 
 def find_angles(img):
+    wmin = 9
     c_thrl0 = 100
     c_thrh0 = 200
     c_thrl = c_thrl0
@@ -94,19 +96,17 @@ def find_angles(img):
     img_wang = lwang.wang_filter(img.hull)
     while c_thrl > 10 and c_thrh > 50:
         img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
-        contours, _ = cv2.findContours(img_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        areas = [cv2.contourArea(c) for c in contours]
-        max_index = np.argmax(areas)
-        a = areas[max_index]
-        amin = 0.3 * img.harea
-        if a > amin:
-            print("{} > {}, @ {}, {}".format(a, amin, c_thrl, c_thrh))
+        w = img_canny.mean()
+        if w > wmin:
+            print("{} > {}, @ {}, {}".format(w, wmin, c_thrl, c_thrh))
             break
         else:
-            if amin - a < amin:
-                print("{} < {}, @ {}, {}".format(a, amin, c_thrl, c_thrh))
+            if wmin - w < wmin:
+                print("{} < {}, @ {}, {}".format(w, wmin, c_thrl, c_thrh))
             c_thrl -= 9
             c_thrh -= 18
+
+    save(img, "canny", img_canny)
 
     h_maxg0 = 2
     h_minl0 = round((img.hwidth + img.hheigth)*0.1)
