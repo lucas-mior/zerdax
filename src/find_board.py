@@ -5,7 +5,7 @@ import sys
 from Image import Image
 from Angles import Angles
 from pathlib import Path
-from os.path import exists
+from aux import save
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -24,10 +24,6 @@ def lines_radius_theta(lines):
             lines[i, 0, 5] = round(theta(x1,y1,x2,y2))
             i += 1
     return lines
-
-def save(img, filename, image):
-    if img.save and not exists(filename):
-        cv2.imwrite("tests/{}".format(filename), image)
 
 def det(a, b):
     return a[0]*b[1] - a[1]*b[0]
@@ -83,7 +79,7 @@ def theta(x1,y1,x2,y2):
     return math.degrees(math.atan2((y2-y1),(x2-x1)))
 
 def draw_hough(img, lines):
-    drawn_lines = cv2.cvtColor(img.small, cv2.COLOR_GRAY2BGR) * 0
+    drawn_lines = cv2.cvtColor(img.sgray, cv2.COLOR_GRAY2BGR) * 0
 
     for line in lines:
         for x1,y1,x2,y2 in line:
@@ -122,7 +118,7 @@ def find_best_cont(img, img_wang, amin):
     return contours, max_index
 
 def find_hull(img):
-    img_wang = lwang.wang_filter(img.small)
+    img_wang = lwang.wang_filter(img.sgray)
 
     contours,max_index = find_best_cont(img, img_wang, 0.25*img.sarea)
 
@@ -171,7 +167,7 @@ def reduce_hull(img):
     img.harea = img.hwidth * img.hheigth
     return img
 
-def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
+def find_board(img):
     hull = find_hull(img)
     limx, limy = broad_hull(img, hull)
 
@@ -187,7 +183,7 @@ def find_board(img, c_thrl, c_thrh, h_thrv, h_minl, h_maxg):
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
     img_wang = lwang.wang_filter(img.hull)
 
-    lines, angles, c_thrl, c_thrl = try_impossible(img, img_wang)
+    lines, angles, c_thrl, c_thrh = try_impossible(img, img_wang)
     contours, max_index = magic_angle(img, angles, c_thrl, c_thrh)
 
     img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
@@ -254,20 +250,20 @@ def try_impossible(img, img_wang):
         print("canny failed")
 
     if got_canny:
-        save(img, "{}_canny.png".format(img.basename), img_canny)
+        save(img, "canny", img_canny)
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
         for line in lines:
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-        save(img, "{}_hough.png".format(img.basename), drawn_lines)
+        save(img, "hough", drawn_lines)
 
         # drawn_circles = np.copy(img.hull3ch) * 0
         # for p in inter:
         #     cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
         # drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
-        # save(img, "{}_9intersections.png".format(img.basename), drawn_circles)
+        # save(img, "intersections".format(img.basename), drawn_circles)
 
     return lines, angles, c_thrl, c_thrh
 
@@ -333,10 +329,9 @@ def lines_kmeans(img, lines):
     return lines, centers
 
 def magic_angle(img, angles, c_thrl, c_thrh):
-    print("canny: ", c_thrl, c_thrh)
-    img_wang = lwang.wang_filter(img.small)
-    img_wang = cv2.Canny(img_wang, c_thrl - 10, c_thrh - 100)
-    save(img, "{}canny.png".format(img.basename), img_wang)
+    img_wang = lwang.wang_filter(img.sgray)
+    img_wang = cv2.Canny(img_wang, c_thrl, c_thrh)
+    save(img, "canny", img_wang)
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
     k = Angles.set(angles)
     print("k =", k)
@@ -358,7 +353,7 @@ def magic_angle(img, angles, c_thrl, c_thrh):
     cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
     img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
 
-    save(img, "{}_1edges.png".format(img.basename), edges_bin)
-    save(img, "{}_2contor.png".format(img.basename), img_contour_drawn)
+    save(img, "edges", edges_bin)
+    save(img, "contor", img_contour_drawn)
 
     return contours, max_index

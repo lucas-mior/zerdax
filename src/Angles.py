@@ -46,6 +46,7 @@ class Angles:
             i += 1
 
         i -= 1
+        print("k0: ", k0)
         k = k0.sum(axis=0)
         k = np.uint8(k)
         return k
