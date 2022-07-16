@@ -76,7 +76,7 @@ def radius(x1,y1,x2,y2):
     return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
 
 def theta(x1,y1,x2,y2):
-    return math.degrees(math.atan2((y2-y1),(x2-x1)))
+    return math.degrees(math.atan2((y1-y2),(x2-x1)))
 
 def find_best_cont(img, img_wang, amin):
     got = False
@@ -295,7 +295,7 @@ def lines_kmeans(img, lines):
     plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
     plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
     plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
-    # fig.savefig('tests/{}_15kmeans0.png'.format(img.basename))
+    fig.savefig('15kmeans0.png'.format(img.basename))
 
     d1 = abs(centers[0] - centers[1])
     d2 = abs(centers[0] - centers[2])
@@ -314,37 +314,41 @@ def lines_kmeans(img, lines):
         plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
         plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
         plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
-        # fig.savefig('tests/{}_15kmeans1.png'.format(img.basename))
+        fig.savefig('15kmeans1.png'.format(img.basename))
 
     lines = np.int32(lines)
     return lines, centers
 
 def magic_angle(img, angles, c_thrl, c_thrh):
     img_wang = lwang.wang_filter(img.sgray)
-    img_wang = cv2.Canny(img_wang, c_thrl, c_thrh)
-    save(img, "canny", img_wang)
-    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
-    k = set_kernels(angles)
-    print("k =", k)
-    img_wang = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, ko, iterations = 1)
-    dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k, iterations = 1)
-    edges_bin = dilate
-    # edges_gray = cv2.divide(img_wang, dilate, scale = 255)
-    # edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
-    edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, k, iterations = 1)
-    contours, _ = cv2.findContours(edges_bin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    areas = [cv2.contourArea(c) for c in contours]
-    perim = [cv2.arcLength(c, True) for c in contours]
-    max_index = np.argmax(areas)
+    img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
+    save(img, "canny", img_canny)
 
+    kernels = set_kernels(angles)
+    i = 0
+    boost = np.zeros((kernels.shape[0], img_canny.shape[0], img_canny.shape[1]), dtype='uint8')
+    print("canny: [{}, {}]".format(img_canny.min(), img_canny.max()))
+    for k in kernels:
+        print("k =", k)
+        boost[i] = cv2.morphologyEx(boost[i], cv2.MORPH_OPEN, k, iterations = 1)
+        boost[i] = cv2.morphologyEx(img_canny, cv2.MORPH_CLOSE, k, iterations = 1)
+        save(img, "boost{}".format(i), boost[i])
+        print("boost[{}]: [{}, {}]".format(i, boost[i].min(), boost[i].max()))
+        i += 1
+
+    img_dil = boost.sum(axis=0, dtype='uint8')
+    print("img_dil:", img_dil.shape)
+    contours, _ = cv2.findContours(img_dil, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    areas = [cv2.contourArea(c) for c in contours]
+    max_index = np.argmax(areas)
     cont = contours[max_index]
     hull = cv2.convexHull(cont)
     img_contour = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(img_contour, [hull], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
-    img_contour_drawn = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
+    img_contour = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
 
-    save(img, "edges", edges_bin)
-    save(img, "contor", img_contour_drawn)
+    save(img, "edges", img_dil)
+    save(img, "contor", img_contour)
 
     return contours, max_index
