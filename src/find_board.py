@@ -55,7 +55,7 @@ def find_intersections(img, lines):
             x = determinant(d, xdiff) / div
             y = determinant(d, ydiff) / div
 
-            if x > img.swidth or y > img.sheigth or x < 0 or y < 0:
+            if x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
                 j += 1
                 continue
             else:
