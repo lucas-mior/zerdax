@@ -321,7 +321,6 @@ def lines_kmeans(img, lines):
 
 def magic_angle(img, angles, c_thrl, c_thrh):
     img_wang = lwang.wang_filter(img.sgray)
-    img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
     save(img, "canny", img_canny)
 
     kernels = set_kernels(angles)
@@ -330,8 +329,9 @@ def magic_angle(img, angles, c_thrl, c_thrh):
     print("canny: [{}, {}]".format(img_canny.min(), img_canny.max()))
     for k in kernels:
         print("k =", k)
-        boost[i] = cv2.morphologyEx(boost[i], cv2.MORPH_OPEN, k, iterations = 1)
-        boost[i] = cv2.morphologyEx(img_canny, cv2.MORPH_CLOSE, k, iterations = 1)
+        boost[i] = cv2.morphologyEx(boost[i], cv2.MORPH_DILATE, k, iterations = 1)
+        boost[i] = cv2.divide(img_wang, dilate, scale = 255)
+        boost[i] = cv2.bitwise_not(cv2.threshold(boost[i], 0, 255, cv2.THRESH_OTSU)[1])
         save(img, "boost{}".format(i), boost[i])
         print("boost[{}]: [{}, {}]".format(i, boost[i].min(), boost[i].max()))
         i += 1
