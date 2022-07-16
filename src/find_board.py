@@ -89,6 +89,7 @@ def find_best_cont(img, img_wang, amin):
         edges_gray = cv2.divide(img_wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
         edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
+        save(img, "rect", edges_opened)
         contours, _ = cv2.findContours(edges_opened, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         perim = [cv2.arcLength(c, True) for c in contours]
@@ -241,7 +242,7 @@ def try_impossible(img, img_wang):
         print("canny failed")
 
     if got_canny:
-        save(img, "canny", img_canny)
+        # save(img, "canny", img_canny)
         pass
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
@@ -249,13 +250,13 @@ def try_impossible(img, img_wang):
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-        save(img, "hough", drawn_lines)
+        # save(img, "hough", drawn_lines)
 
         drawn_circles = np.copy(img.hull3ch) * 0
         for p in inter:
             cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
         drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
-        save(img, "intersections".format(img.basename), drawn_circles)
+        # save(img, "intersections".format(img.basename), drawn_circles)
 
     return lines, angles, c_thrl, c_thrh
 
@@ -324,21 +325,15 @@ def magic_angle(img, angles, c_thrl, c_thrh):
     img_wang = lwang.wang_filter(img.sgray)
 
     kernels = set_kernels(angles)
-    i = 0
     k0 = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
-    kd = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))
     boost = np.zeros((kernels.shape[0], img_wang.shape[0], img_wang.shape[1]), dtype='uint8')
-    dil = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, kd, iterations = 1)
-    dil = cv2.divide(img_wang, dil, scale = 255)
-    dil = cv2.bitwise_not(cv2.threshold(dil, 0, 255, cv2.THRESH_OTSU)[1])
-    save(img, "{}dilate".format(i), dil)
+    i = 0
     for k in kernels:
-        boost[i] = cv2.filter2D(dil, -1, k)
-        save(img, "{}boost_filter2D".format(i), boost[i])
-        print("boost: ", boost[i,0:5,0:5])
-        print("boost: ", type(boost[0,0,0]))
-        boost[i] = cv2.morphologyEx(boost[i], cv2.MORPH_OPEN, k0, iterations = 1)
-        save(img, "{}boost_open".format(i), boost[i])
+        boost[i] = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k, iterations = 1)
+        boost[i] = cv2.divide(img_wang, boost[i], scale = 255)
+        boost[i] = cv2.bitwise_not(cv2.threshold(boost[i], 0, 255, cv2.THRESH_OTSU)[1])
+        boost[i] = cv2.morphologyEx(boost[i], cv2.MORPH_OPEN, k, iterations = 1)
+        save(img, "{}boost".format(i), boost[i])
         i += 1
 
     img_dil = boost.sum(axis=0, dtype='uint8')
@@ -352,7 +347,7 @@ def magic_angle(img, angles, c_thrl, c_thrh):
     cv2.drawContours(img_contour, cont,   -1, (255,0,0), thickness=3)
     img_contour = cv2.addWeighted(img.gray3ch, 0.5, img_contour, 0.8, 0)
 
-    save(img, "edges", img_dil)
+    save(img, "3edges", img_dil)
     # save(img, "contor", img_contour)
 
     return contours, max_index
