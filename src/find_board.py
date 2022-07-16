@@ -326,16 +326,19 @@ def magic_angle(img, angles, c_thrl, c_thrh):
     kernels = set_kernels(angles)
     i = 0
     k0 = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
+    kd = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))
     boost = np.zeros((kernels.shape[0], img_wang.shape[0], img_wang.shape[1]), dtype='uint8')
+    dil = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, kd, iterations = 1)
+    dil = cv2.divide(img_wang, dil, scale = 255)
+    dil = cv2.bitwise_not(cv2.threshold(dil, 0, 255, cv2.THRESH_OTSU)[1])
+    save(img, "{}dilate".format(i), dil)
     for k in kernels:
-        boost[i] = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k, iterations = 1)
-        save(img, "{}boost".format(i), boost[i])
-        boost[i] = cv2.divide(img_wang, boost[i], scale = 255)
-        save(img, "{}boost".format(i), boost[i])
-        boost[i] = cv2.bitwise_not(cv2.threshold(boost[i], 0, 255, cv2.THRESH_OTSU)[1])
-        save(img, "{}boost".format(i), boost[i])
-        boost[i] = cv2.morphologyEx(boost[i], cv2.MORPH_OPEN, k, iterations = 1)
-        save(img, "{}boost".format(i), boost[i])
+        boost[i] = cv2.filter2D(dil, -1, k)
+        save(img, "{}boost_filter2D".format(i), boost[i])
+        print("boost: ", boost[i,0:5,0:5])
+        print("boost: ", type(boost[0,0,0]))
+        boost[i] = cv2.morphologyEx(boost[i], cv2.MORPH_OPEN, k0, iterations = 1)
+        save(img, "{}boost_open".format(i), boost[i])
         i += 1
 
     img_dil = boost.sum(axis=0, dtype='uint8')
