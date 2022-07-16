@@ -3,7 +3,7 @@ import numpy as np
 import math
 import sys
 from Image import Image
-from Angles import Angles
+from angles import set_kernels
 from pathlib import Path
 from aux import save
 
@@ -77,15 +77,6 @@ def radius(x1,y1,x2,y2):
 
 def theta(x1,y1,x2,y2):
     return math.degrees(math.atan2((y2-y1),(x2-x1)))
-
-def draw_hough(img, lines):
-    drawn_lines = cv2.cvtColor(img.sgray, cv2.COLOR_GRAY2BGR) * 0
-
-    for line in lines:
-        for x1,y1,x2,y2 in line:
-            cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
-
-    return drawn_lines
 
 def find_best_cont(img, img_wang, amin):
     got = False
@@ -333,7 +324,7 @@ def magic_angle(img, angles, c_thrl, c_thrh):
     img_wang = cv2.Canny(img_wang, c_thrl, c_thrh)
     save(img, "canny", img_wang)
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
-    k = Angles.set(angles)
+    k = set_kernels(angles)
     print("k =", k)
     img_wang = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, ko, iterations = 1)
     dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k, iterations = 1)
