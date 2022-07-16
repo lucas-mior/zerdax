@@ -175,7 +175,8 @@ def find_board(img):
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
 
     save(img, "edges", img.edges)
-    img.angles = find_angles(img)
+    img.angles, img.select_lines = find_angles(img)
+    print("img.selectlines: ", img.select_lines.shape)
     lines = try_impossible(img)
 
     return (10, 300, 110, 310)
@@ -191,13 +192,15 @@ def try_impossible(img):
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
-    while h_angl < (np.pi / 360):
+    while h_angl < (np.pi / 180):
         lines = cv2.HoughLinesP(img.edges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
-        print("HOUGH @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
+        print("impossible @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         if lines is not None and lines.shape[0] >= 70:
             lines = lines_radius_theta(lines)
             lines = filter_lines(img, lines)
             lines = filter_angles(img, lines)
+            aux = np.copy(img.select_lines)
+            lines = np.append(lines, aux, axis=0) 
             inter = find_intersections(img, lines[:,0,:])
             got_hough = True
             break
@@ -382,4 +385,4 @@ def find_angles(img):
         drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
         save(img, "intersections".format(img.basename), drawn_circles)
 
-    return angles
+    return angles, lines
