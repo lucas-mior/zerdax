@@ -89,7 +89,6 @@ def find_best_cont(img, img_wang, amin):
         edges_gray = cv2.divide(img_wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
         edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
-        save(img, "rect", edges_opened)
         contours, _ = cv2.findContours(edges_opened, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         perim = [cv2.arcLength(c, True) for c in contours]
@@ -107,6 +106,7 @@ def find_best_cont(img, img_wang, amin):
             print("{} < {}: failed. p = {}".format(a, amin, perim[max_index]))
             break
 
+    save(img, "rect", edges_opened)
     return contours, max_index
 
 def find_hull(img):
@@ -297,7 +297,7 @@ def lines_kmeans(img, lines):
     plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
     plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
     plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
-    savefig(img, "kmeans0", fig)
+    # savefig(img, "kmeans0", fig)
 
     d1 = abs(centers[0] - centers[1])
     d2 = abs(centers[0] - centers[2])
@@ -316,7 +316,7 @@ def lines_kmeans(img, lines):
         plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
         plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
         plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
-        savefig(img, "kmeans1", fig)
+        # savefig(img, "kmeans1", fig)
 
     lines = np.int32(lines)
     return lines, centers
@@ -332,7 +332,7 @@ def magic_angle(img, angles, c_thrl, c_thrh):
         boost[i] = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k, iterations = 1)
         boost[i] = cv2.divide(img_wang, boost[i], scale = 255)
         boost[i] = cv2.bitwise_not(cv2.threshold(boost[i], 0, 255, cv2.THRESH_OTSU)[1])
-        boost[i] = cv2.morphologyEx(boost[i], cv2.MORPH_OPEN, k, iterations = 1)
+        boost[i] = cv2.morphologyEx(boost[i], cv2.MORPH_OPEN, k0, iterations = 1)
         save(img, "{}boost".format(i), boost[i])
         i += 1
 
