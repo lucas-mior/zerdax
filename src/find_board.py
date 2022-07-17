@@ -11,13 +11,10 @@ from Image import Image
 from aux import *
 import lwang
 
-def find_morph(img):
-
 def find_board(img):
     img.wang = lwang.wang_filter(img.sgray)
-    img.medges, hull = find_morph(img)
-    edges_opened, hull = find_hull(img)
-    limx, limy = broad_hull(img, hull)
+    img.medges, img.hullxy = find_morph(img)
+    limx, limy = broad_hull(img)
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     limx[0] = round(limx[0] / img.sfact)
@@ -40,20 +37,22 @@ def find_board(img):
     corners = (10, 300, 110, 310)
     return corners
 
-def find_hull(img):
-    edges_opened,contours = find_best_cont(img, 0.25*img.sarea)
+def find_morph(img):
+    medges,contour,gottable = find_best_cont(img, 0.25*img.sarea)
 
-    cont = contours[max_index]
-    hull = cv2.convexHull(cont)
-    # drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-    # cv2.drawContours(drawn_contours, [hull], -1, (0, 255, 0), thickness=3)
-    # cv2.drawContours(drawn_contours, cont,   -1, (255,0,0), thickness=3)
-    # drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
+    if gottable:
+        hull = cv2.convexHull(contour)
+        # drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+        # cv2.drawContours(drawn_contours, [hull], -1, (0, 255, 0), thickness=3)
+        # cv2.drawContours(drawn_contours, contour,   -1, (255,0,0), thickness=3)
+        # drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
+    else:
+        hull = [[0, 0], [img.sgray.shape[0]-1, 0], [img.sgray.shape[0]-1, img.sgray.shape[0]-1], [0, img.sgray.shape[0]-1]]
 
-    return edges_opened, hull
+    return medges, hull
 
 def find_best_cont(img, amin):
-    got = False
+    gottable = False
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 3
     while kd <= 30:
@@ -64,18 +63,17 @@ def find_best_cont(img, amin):
         edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
         contours, _ = cv2.findContours(edges_opened, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
-        perim = [cv2.arcLength(c, True) for c in contours]
         max_index = np.argmax(areas)
         a = areas[max_index]
         if a > amin:
-            print("{} > {}, p = {}".format(a, amin, perim[max_index]))
-            got = True
+            print("{} > {}, p = {}".format(a, amin))
+            gottable = True
             break
         else:
-            print("{} < {}, p = {}".format(a, amin, perim[max_index]))
+            print("{} < {}, p = {}".format(a, amin))
             kd += 1
 
-    return edges_opened, contours
+    return edges_opened,contours[max_index],gottable
 
 def broad_hull(img, hull):
     Pxmin = hull[np.argmin(hull[:,0,0]),0]
