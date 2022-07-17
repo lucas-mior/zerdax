@@ -33,24 +33,33 @@ def find_board(img):
     img.clahe = clahe.apply(img.wang0)
     img.wang = lwang.wang_filter(img.clahe)
     img.canny = find_canny(img)
-    Amin = 0.3 * img.sarea
+    Amin = 0.4 * img.sarea
+    print("Amin =", Amin)
     Amax = 0.8 * img.sarea
-    img.medges, img.hullxy, img.got_hull = find_morph(img, Amax, Amin)
+    img.medges,img.hullxy,img.got_hull,increasing = find_morph(img, Amax, Amin)
 
     if not img.got_hull:
-        print("clahe 4")
-        clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(4, 4))
-        img.clahe = clahe.apply(img.wang0)
-        img.wang = lwang.wang_filter(img.clahe)
-        img.canny = find_canny(img)
-        img.medges, img.hullxy, img.got_hull = find_morph(img, Amax, Amin)
+        if not increasing:
+            Amin -= 0.02 * img.sarea
+            print("Amin =", Amin)
+        else:
+            print("clahe 4")
+            clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(4, 4))
+            img.clahe = clahe.apply(img.wang0)
+            img.wang = lwang.wang_filter(img.clahe)
+            img.canny = find_canny(img)
+        img.medges, img.hullxy, img.got_hull ,increasing = find_morph(img, Amax, Amin)
     if not img.got_hull:
-        print("clahe 5")
-        clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(5, 5))
-        img.clahe = clahe.apply(img.wang0)
-        img.wang = lwang.wang_filter(img.clahe)
-        img.canny = find_canny(img)
-        img.medges, img.hullxy, img.got_hull = find_morph(img, Amax, Amin)
+        if not increasing:
+            Amin -= 0.02 * img.sarea
+            print("Amin =", Amin)
+        else:
+            print("clahe 5")
+            clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(5, 5))
+            img.clahe = clahe.apply(img.wang0)
+            img.wang = lwang.wang_filter(img.clahe)
+            img.canny = find_canny(img)
+        img.medges, img.hullxy, img.got_hull, increasing = find_morph(img, Amax, Amin)
 
     save(img, "medges", img.medges)
     limx, limy = broad_hull(img)
@@ -81,9 +90,13 @@ def find_board(img):
 
 def find_morph(img, Amax, Amin):
     got_hull = False
+    alast = 0
+    increasing = False
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 5
-    while kd <= 15:
+    while kd <= 12:
+        if (kd == 7):
+            alast = a
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kd+round(kd/3)))
         dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img.wang, dilate, scale = 255)
@@ -105,15 +118,19 @@ def find_morph(img, Amax, Amin):
             print("{} ? {} ? {} @ ksize = {}".format(Amin, a, Amax, kd))
             kd += 1
 
+    if not got_hull:
+        diff = a - alast
+        mdiff = 0.12 * Amin
+        if (diff > mdiff) and (a > Amin/2.5):
+            print("diff: {} > {}, increasing".format(diff, mdiff))
+            increasing = True
+        else:
+            print("diff: {} < {}, not incr".format(diff, mdiff))
+            increasing = False
+
     medges = edges_bin
 
-    drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-    cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
-    cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
-    drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
-    # save(img, "convex", drawn_contours)
-
-    return medges, hullxy, got_hull
+    return medges, hullxy, got_hull, increasing
 
 def broad_hull(img):
     Pxmin = img.hullxy[np.argmin(img.hullxy[:,0,0]),0]
