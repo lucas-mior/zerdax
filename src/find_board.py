@@ -364,7 +364,7 @@ def lines_kmeans(img, lines):
         A = lines[labels==0]
         B = lines[labels==1]
         fig = plt.figure()
-        plt.xticks(range(-90, 90, 10))
+        plt.xticks(range(-90, 91, 10))
         plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
         plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
         plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
