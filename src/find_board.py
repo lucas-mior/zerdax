@@ -26,6 +26,7 @@ def find_board(img):
     img.hxoff = limx[0]
     img.hyoff = limy[0]
     img = reduce_hull(img)
+    save(img, "hull", img.hull)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
     save(img, "edges", img.medges)
     exit()
@@ -41,10 +42,11 @@ def find_morph(img):
     medges,contour = find_best_cont(img, 0.25*img.sarea)
 
     hullxy = cv2.convexHull(contour)
-    # drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-    # cv2.drawContours(drawn_contours, [hull], -1, (0, 255, 0), thickness=3)
-    # cv2.drawContours(drawn_contours, contour,   -1, (255,0,0), thickness=3)
-    # drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
+    drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+    cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
+    cv2.drawContours(drawn_contours, contour,   -1, (255,0,0), thickness=3)
+    drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
+    save(img, "convex", drawn_contours)
 
     return medges, hullxy
 
