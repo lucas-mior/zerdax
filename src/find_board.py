@@ -12,7 +12,6 @@ from aux import *
 import lwang
 
 def find_board(img):
-    save(img, "sgray", img.sgray)
     img.wang = lwang.wang_filter(img.sgray)
     img.canny = find_canny(img)
     img.medges, img.hullxy = find_morph(img)
