@@ -38,24 +38,20 @@ def find_board(img):
     return corners
 
 def find_morph(img):
-    medges,contour,gottable = find_best_cont(img, 0.25*img.sarea)
+    medges,contour = find_best_cont(img, 0.25*img.sarea)
 
-    if gottable:
-        hull = cv2.convexHull(contour)
-        # drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-        # cv2.drawContours(drawn_contours, [hull], -1, (0, 255, 0), thickness=3)
-        # cv2.drawContours(drawn_contours, contour,   -1, (255,0,0), thickness=3)
-        # drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
-    else:
-        hull = [[0, 0], [img.sgray.shape[0]-1, 0], [img.sgray.shape[0]-1, img.sgray.shape[0]-1], [0, img.sgray.shape[0]-1]]
+    hullxy = cv2.convexHull(contour)
+    # drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+    # cv2.drawContours(drawn_contours, [hull], -1, (0, 255, 0), thickness=3)
+    # cv2.drawContours(drawn_contours, contour,   -1, (255,0,0), thickness=3)
+    # drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
 
-    return medges, hull
+    return medges, hullxy
 
 def find_best_cont(img, amin):
-    gottable = False
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 3
-    while kd <= 30:
+    while kd <= 100:
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd+round(kd/2),kd))
         dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img.wang, dilate, scale = 255)
@@ -66,20 +62,23 @@ def find_best_cont(img, amin):
         max_index = np.argmax(areas)
         a = areas[max_index]
         if a > amin:
-            print("{} > {}, p = {}".format(a, amin))
-            gottable = True
+            print("{} > {} @ ksize = {}".format(a, amin, kd))
             break
         else:
-            print("{} < {}, p = {}".format(a, amin))
+            print("{} < {} @ ksize = {}".format(a, amin, kd))
             kd += 1
+        if kd == 30:
+            medges = edges_opened
+    if kd < 30:
+        medges = edges_opened
 
-    return edges_opened,contours[max_index],gottable
+    return medges,contours[max_index]
 
-def broad_hull(img, hull):
-    Pxmin = hull[np.argmin(hull[:,0,0]),0]
-    Pxmax = hull[np.argmax(hull[:,0,0]),0]
-    Pymin = hull[np.argmin(hull[:,0,1]),0]
-    Pymax = hull[np.argmax(hull[:,0,1]),0]
+def broad_hull(img):
+    Pxmin = img.hullxy[np.argmin(img.hullxy[:,0,0]),0]
+    Pxmax = img.hullxy[np.argmax(img.hullxy[:,0,0]),0]
+    Pymin = img.hullxy[np.argmin(img.hullxy[:,0,1]),0]
+    Pymax = img.hullxy[np.argmax(img.hullxy[:,0,1]),0]
 
     Pxmin[0] = max(0, Pxmin[0]-20)
     Pymin[1] = max(0, Pymin[1]-70) # peças de trás vao além
