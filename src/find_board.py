@@ -26,9 +26,12 @@ def update_hull(img):
     return hullxy
 
 def find_board(img):
+    img.sgray = cv2.equalizeHist(img.sgray)
     img.wang = lwang.wang_filter(img.sgray)
+    img.wang = cv2.equalizeHist(img.wang)
     img.canny = find_canny(img)
     img.medges, img.hullxy = find_morph(img)
+    save(img, "medges", img.medges)
     limx, limy = broad_hull(img)
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
@@ -55,42 +58,38 @@ def find_board(img):
     return corners
 
 def find_morph(img):
-    Aok = 0.4 * img.sarea
-    Ami = 0.3 * img.sarea
+    Amax = 0.6 * img.sarea
+    Amin = 0.3 * img.sarea
     alast = 0
-    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))
     kd = 3
     while kd <= 40:
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kd+round(kd/3)))
         dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img.wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
-        edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
-        edges_wcanny = edges_opened + img.canny
+        if (kd % 2) == 0 and kd > 20:
+            edges_bin = cv2.bitwise_not(edges_bin)
+            # ko = cv2.getStructuringElement(cv2.MORPH_RECT, (10,10))
+        else:
+            pass
+            # ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+
+        # edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
+        edges_wcanny = edges_bin + img.canny
         contours, _ = cv2.findContours(edges_wcanny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         max_index = np.argmax(areas)
         cont = contours[max_index]
         hullxy = cv2.convexHull(cont)
         a = cv2.contourArea(hullxy)
-        if a > Aok:
-            print("{} > {} @ ksize = {}".format(a, Aok, kd))
+        if a > Amin and a < Amax:
+            print("{} < {} < {} @ ksize = {}".format(Amin, a, Amax, kd))
             break
-        elif kd > 30:
-            print("{} < {} @ ksize = {}".format(a, Aok, kd))
-            if a > alast - 10000:
-                alast = a
-                kd += 1
-                continue
-            elif a > aok:
-                break
         else:
-            print("{} < {} @ ksize = {}".format(a, Aok, kd))
-            alast = a
+            print("{} ? {} ? {} @ ksize = {}".format(Amin, a, Amax, kd))
             kd += 1
-            pass
 
-    medges = edges_opened
+    medges = edges_bin
 
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
@@ -119,7 +118,7 @@ def find_canny(img, wmin = 6):
     c_thrl = c_thrl0
     c_thrh = c_thrh0
 
-    while c_thrh > 70:
+    while c_thrh > 20:
         img.canny = cv2.Canny(img.wang, c_thrl, c_thrh)
         w = img.canny.mean()
         if w > wmin:
@@ -132,7 +131,7 @@ def find_canny(img, wmin = 6):
             c_thrl -= 9
         c_thrh -= 9
 
-    save(img, "canny", img.canny)
+    # save(img, "canny", img.canny)
     return img.canny
 
 def find_angles(img):
@@ -182,7 +181,7 @@ def find_angles(img):
         for x1,y1,x2,y2,r,t in line:
             cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
     drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-    save(img, "hough", drawn_lines)
+    # save(img, "hough", drawn_lines)
 
     return angles, lines
 
@@ -218,10 +217,9 @@ def find_intersections(img, lines):
             y = round(determinant(d, ydiff) / div)
 
             if cv2.pointPolygonTest(img.shull, (x,y), True) < -20:
-                print("outside hull")
                 j += 1
                 continue
-            elif x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
+            if x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
                 j += 1
                 continue
             else:
@@ -290,7 +288,7 @@ def magic_lines(img):
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
-        save(img, "hough", drawn_lines)
+        # save(img, "hough", drawn_lines)
 
         draw_lines = draw_lines[:,:,2]
         img.medges += draw_lines
