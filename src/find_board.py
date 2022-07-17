@@ -22,32 +22,32 @@ def update_hull(img):
     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.hull3ch, 0.5, drawn_contours, 0.8, 0)
-    save(img, "convex", drawn_contours)
     return hullxy
 
 def find_board(img):
-    save(img, "gray", img.sgray)
     img.wang = lwang.wang_filter(img.sgray)
-    save(img, "wang", img.wang)
 
     clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(3, 3))
     img.clahe = clahe.apply(img.wang)
-    save(img, "clahe3", img.clahe)
+    img.wang = lwang.wang_filter(img.clahe)
     img.canny = find_canny(img)
     img.medges, img.hullxy, img.got_hull = find_morph(img)
+    print("clahe 3")
 
     if not img.got_hull:
+        print("clahe 5")
         img.wang = lwang.wang_filter(img.wang)
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(5, 5))
         img.clahe = clahe.apply(img.wang)
-        save(img, "clahe5", img.clahe)
+        img.wang = lwang.wang_filter(img.clahe)
         img.canny = find_canny(img)
         img.medges, img.hullxy, img.got_hull = find_morph(img)
     if not img.got_hull:
+        print("clahe 7")
         img.wang = lwang.wang_filter(img.wang)
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(7, 7))
         img.clahe = clahe.apply(img.wang)
-        save(img, "clahe7", img.clahe)
+        img.wang = lwang.wang_filter(img.clahe)
         img.canny = find_canny(img)
         img.medges, img.hullxy, img.got_hull = find_morph(img)
 
@@ -66,7 +66,6 @@ def find_board(img):
     img.hxoff = limx[0]
     img.hyoff = limy[0]
     img = reduce_hull(img)
-    save(img, "cuthull", img.hull)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
 
     img.canny = find_canny(img)
@@ -81,15 +80,15 @@ def find_board(img):
 def find_morph(img):
     got_hull = False
     Amax = 0.6 * img.sarea
-    Amin = 0.3 * img.sarea
+    Amin = 0.35 * img.sarea
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 3
-    while kd <= 40:
+    while kd <= 15:
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kd+round(kd/3)))
         dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img.wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
-        if kd == 20 or kd == 30:
+        if kd == 15:
             edges_bin = cv2.bitwise_not(edges_bin)
 
         # edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
@@ -114,7 +113,6 @@ def find_morph(img):
     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
-    save(img, "convex0", drawn_contours)
 
     return medges, hullxy, got_hull
 
@@ -138,7 +136,7 @@ def find_canny(img, wmin = 6):
     c_thrh = c_thrh0
 
     while c_thrh > 20:
-        img.canny = cv2.Canny(img.clahe, c_thrl, c_thrh)
+        img.canny = cv2.Canny(img.wang, c_thrl, c_thrh)
         w = img.canny.mean()
         if w > wmin:
             print("{0:0=.2f} > {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
@@ -308,11 +306,11 @@ def magic_lines(img):
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
-        save(img, "hough_f", drawn_lines)
+        save(img, "hough", drawn_lines)
 
         draw_lines = draw_lines[:,:,2]
         img.medges += draw_lines
-        save(img, "medges_f", img.medges)
+        save(img, "medges", img.medges)
         img.shull = update_hull(img)
         inter = find_intersections(img, lines[:,0,:])
 
@@ -381,13 +379,13 @@ def lines_kmeans(img, lines):
     B = lines[labels==1]
     C = lines[labels==2]
 
-    fig = plt.figure()
-    plt.xticks(range(-90, 91, 10))
-    plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-    plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-    plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
-    plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
-    savefig(img, "kmeans0", fig)
+    # fig = plt.figure()
+    # plt.xticks(range(-90, 91, 10))
+    # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+    # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+    # plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
+    # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
+    # savefig(img, "kmeans0", fig)
 
     d1 = abs(centers[0] - centers[1])
     d2 = abs(centers[0] - centers[2])
@@ -401,12 +399,12 @@ def lines_kmeans(img, lines):
         compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
         A = lines[labels==0]
         B = lines[labels==1]
-        fig = plt.figure()
-        plt.xticks(range(-90, 91, 10))
-        plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-        plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-        plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
-        savefig(img, "kmeans1", fig)
+        # fig = plt.figure()
+        # plt.xticks(range(-90, 91, 10))
+        # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+        # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+        # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
+        # savefig(img, "kmeans1", fig)
 
     diff = []
     diff.append((abs(centers[0] - 90), -90))
