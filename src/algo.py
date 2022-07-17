@@ -27,7 +27,7 @@ def full(filename, save):
     img.save = save
     img.board = find_board(img)
 
-    print("board:", img.board)
+    print("\033[37;1;1mboard: \033[0;m", img.board)
 
     predicted_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
     return predicted_fen

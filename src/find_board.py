@@ -26,6 +26,7 @@ def update_hull(img):
     return hullxy
 
 def find_board(img):
+    save(img, "gray", img.sgray)
     img.wang0 = lwang.wang_filter(img.sgray)
 
     print("clahe 3")
@@ -33,14 +34,14 @@ def find_board(img):
     img.clahe = clahe.apply(img.wang0)
     img.wang = lwang.wang_filter(img.clahe)
     img.canny = find_canny(img)
-    Amin = 0.4 * img.sarea
+    Amin = 0.3 * img.sarea
     print("Amin =", Amin)
-    Amax = 0.8 * img.sarea
+    Amax = 0.7 * img.sarea
     img.medges,img.hullxy,img.got_hull,increasing = find_morph(img, Amax, Amin)
 
     if not img.got_hull:
         if not increasing:
-            Amin -= 0.02 * img.sarea
+            Amin -= 0.01 * img.sarea
             print("Amin =", Amin)
         else:
             print("clahe 4")
@@ -51,7 +52,7 @@ def find_board(img):
         img.medges, img.hullxy, img.got_hull ,increasing = find_morph(img, Amax, Amin)
     if not img.got_hull:
         if not increasing:
-            Amin -= 0.02 * img.sarea
+            Amin -= 0.01 * img.sarea
             print("Amin =", Amin)
         else:
             print("clahe 5")

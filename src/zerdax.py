@@ -16,9 +16,9 @@ def parseargs():
 def Main():
     args = parseargs()
     image = args.image
-    print("\033[01;38;1m======= Zerdax {} =======\033[0;m".format(image))
+    print("\033[31;1;1m==========\033[37;1;1m zerdax {} \033[31;1;1m==========\033[0;m".format(image))
     fen = algo.full(image, args.savein)
-    print("FEN: ", fen)
+    print("\n\033[01;38;1mFEN:\033[0;m", fen)
 
 if __name__ == '__main__':
     Main()
