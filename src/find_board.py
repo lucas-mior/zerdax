@@ -38,7 +38,7 @@ def find_board(img):
     return corners
 
 def find_hull(img):
-    edges_opened,contours,max_index = find_best_cont(img, 0.25*img.sarea)
+    edges_opened,contours = find_best_cont(img, 0.25*img.sarea)
 
     cont = contours[max_index]
     hull = cv2.convexHull(cont)
@@ -72,7 +72,7 @@ def find_best_cont(img, amin):
             print("{} < {}, p = {}".format(a, amin, perim[max_index]))
             kd += 1
 
-    return edges_opened, contours, max_index
+    return edges_opened, contours
 
 def broad_hull(img, hull):
     Pxmin = hull[np.argmin(hull[:,0,0]),0]
