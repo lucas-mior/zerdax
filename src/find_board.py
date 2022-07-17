@@ -379,12 +379,9 @@ def lines_kmeans(img, lines):
 def skelet(edges):
     img1 = edges.copy()
 
-    # Structuring Element
-    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
-    # Create an empty output image to hold values
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
     thin = np.zeros(img1.shape,dtype='uint8')
 
-    # Loop until erosion leads to an empty set
     while (cv2.countNonZero(img1)!=0):
         erode = cv2.erode(img1,kernel)
         opening = cv2.morphologyEx(erode,cv2.MORPH_OPEN,kernel)
