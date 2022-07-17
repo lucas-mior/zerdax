@@ -11,6 +11,20 @@ from Image import Image
 from aux import *
 import lwang
 
+def update_hull(img):
+    contours, _ = cv2.findContours(img.medges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    areas = [cv2.contourArea(c) for c in contours]
+    max_index = np.argmax(areas)
+    cont = contours[max_index]
+    hullxy = cv2.convexHull(cont)
+
+    drawn_contours = np.empty(img.hull3ch.shape, dtype='uint8') * 0
+    cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
+    cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
+    drawn_contours = cv2.addWeighted(img.hull3ch, 0.5, drawn_contours, 0.8, 0)
+    save(img, "convex", drawn_contours)
+    return hullxy
+
 def find_board(img):
     img.wang = lwang.wang_filter(img.sgray)
     img.canny = find_canny(img)
@@ -35,30 +49,21 @@ def find_board(img):
     img.medges += img.canny
     save(img, "medges", img.medges)
     img.angles, img.select_lines = find_angles(img)
+
+    img.shull = update_hull(img)
     lines = magic_lines(img)
 
     corners = (10, 300, 110, 310)
     return corners
 
 def find_morph(img):
-    medges,contour,hullxy = find_best_cont(img)
-
-    drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-    cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
-    cv2.drawContours(drawn_contours, contour, -1, (255, 0, 0), thickness=3)
-    drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
-    # save(img, "convex", drawn_contours)
-
-    return medges, hullxy
-
-def find_best_cont(img):
     Aok = 0.4 * img.sarea
     Ami = 0.3 * img.sarea
     alast = 0
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))
     kd = 3
     while kd <= 40:
-        k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd+round(kd/2),kd))
+        k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kd+round(kd/3)))
         dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img.wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
@@ -70,8 +75,6 @@ def find_best_cont(img):
         cont = contours[max_index]
         hullxy = cv2.convexHull(cont)
         a = cv2.contourArea(hullxy)
-        if kd == 20:
-            medges = edges_opened
         if a > Aok:
             print("{} > {} @ ksize = {}".format(a, Aok, kd))
             break
@@ -89,10 +92,15 @@ def find_best_cont(img):
             kd += 1
             pass
 
-    if kd < 20:
-        medges = edges_opened
+    medges = edges_opened
 
-    return medges,cont,hullxy
+    drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+    cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
+    cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
+    drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
+    save(img, "convex", drawn_contours)
+
+    return medges, hullxy
 
 def broad_hull(img):
     Pxmin = img.hullxy[np.argmin(img.hullxy[:,0,0]),0]
@@ -197,7 +205,7 @@ def find_intersections(img, lines):
             if (x1,y1) == (xx1,yy1) and (x2,y2) == (xx2,yy2):
                 continue
 
-            if abs(t - tt) < 30:
+            if abs(t - tt) < 40:
                 continue
 
             xdiff = (l1[0][0] - l1[1][0], l2[0][0] - l2[1][0])
@@ -209,10 +217,12 @@ def find_intersections(img, lines):
                 continue
 
             d = (determinant(*l1), determinant(*l2))
-            x = determinant(d, xdiff) / div
-            y = determinant(d, ydiff) / div
+            x = round(determinant(d, xdiff) / div)
+            y = round(determinant(d, ydiff) / div)
 
-            if x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
+            if cv2.pointPolygonTest(img.shull, (x,y), False) == -1:
+                print("outside hull")
+            elif x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
                 j += 1
                 continue
             else:
@@ -244,13 +254,14 @@ def magic_lines(img):
     h_maxg0 = 0
     h_minl0 = round((img.hwidth + img.hheigth)*0.1)
     h_thrv0 = round(h_minl0 / 3)
-    h_angl0 = np.pi / 1440
+    h_angl0 = np.pi / 720
 
     h_maxg = h_maxg0
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
-    while h_angl < (np.pi / 90):
+    j = 0
+    while h_angl < (np.pi / 30):
         lines = cv2.HoughLinesP(img.medges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
         if lines is not None:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
@@ -265,13 +276,13 @@ def magic_lines(img):
 
         if lines is not None:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
-        if h_minl > h_minl0 / 5:
-            h_minl -= 8
+        if h_minl > h_minl0 / 10:
+            h_minl -= 10
             h_thrv = round(h_minl / 3)
-        if h_maxg < 30:
+        if h_maxg < 30 and j % 5 == 0:
             h_maxg += 1
-
-        h_angl += np.pi / 14400
+        j += 1
+        h_angl += np.pi / 7200
 
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
