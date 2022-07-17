@@ -33,20 +33,20 @@ def find_board(img):
     img.clahe = clahe.apply(img.wang0)
     img.wang = lwang.wang_filter(img.clahe)
     img.canny = find_canny(img)
-    Amin = 0.4 * img.sarea
+    Amin = 0.3 * img.sarea
     Amax = 0.8 * img.sarea
     img.medges, img.hullxy, img.got_hull = find_morph(img, Amax, Amin)
 
     if not img.got_hull:
-        print("clahe 5")
-        clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(5, 5))
+        print("clahe 4")
+        clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(4, 4))
         img.clahe = clahe.apply(img.wang0)
         img.wang = lwang.wang_filter(img.clahe)
         img.canny = find_canny(img)
         img.medges, img.hullxy, img.got_hull = find_morph(img, Amax, Amin)
     if not img.got_hull:
-        print("clahe 7")
-        clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(7, 7))
+        print("clahe 5")
+        clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(5, 5))
         img.clahe = clahe.apply(img.wang0)
         img.wang = lwang.wang_filter(img.clahe)
         img.canny = find_canny(img)
@@ -81,17 +81,16 @@ def find_board(img):
 
 def find_morph(img, Amax, Amin):
     got_hull = False
-    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
-    kd = 3
+    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+    kd = 5
     while kd <= 15:
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kd+round(kd/3)))
         dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img.wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
 
-        edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
-        if kd > 5:
-            edges_wcanny = edges_open + img.canny
+        edges_bin = cv2.morphologyEx(edges_bin, cv2.MORPH_ERODE, ko, iterations = 1)
+        edges_wcanny = edges_bin + img.canny
         contours, _ = cv2.findContours(edges_wcanny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         max_index = np.argmax(areas)
