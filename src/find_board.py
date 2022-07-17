@@ -104,7 +104,7 @@ def find_canny(img):
         else:
             if wmin - w < wmin:
                 print("{} < {}, @ {}, {}".format(w, wmin, c_thrl, c_thrh))
-        while c_thrl > 10:
+        if c_thrl > 10:
             c_thrl -= 9
         c_thrh -= 9
 
@@ -112,28 +112,41 @@ def find_canny(img):
     return img.canny
 
 def find_angles(img):
+    got_hough = False
     h_maxg0 = 2
-    h_minl0 = round((img.hwidth + img.hheigth)*0.1)
+    h_minl0 = round((img.hwidth + img.hheigth)*0.2)
     h_thrv0 = round(h_minl0 / 6)
-    h_angl0 = np.pi / 720
+    h_angl0 = np.pi / 360
 
     h_maxg = h_maxg0
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
-    while h_maxg < 10 and h_minl > (h_minl0 / 4) and h_angl < (np.pi / 180):
+    while h_angl < (np.pi / 22.5):
         lines = cv2.HoughLinesP(img.canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
         print("HOUGH @ {}º, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
-        if lines is not None and lines.shape[0] >= 4 + 10:
+        if lines is not None and lines.shape[0] >= 4 + 20:
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines, angles = lines_kmeans(img, lines)
             print("angles: ", angles)
+            got_hough = True
             break
-        h_maxg += 1
-        h_minl -= 10
-        h_thrv = round(h_minl / 6)
-        h_angl += np.pi/3600
+        elif lines is not None:
+            print("got lines:", lines.shape[0])
+        if h_maxg < 20:
+            h_maxg += 1
+        if h_minl > h_minl0 / 2:
+            h_minl -= 10
+
+        h_thrv = round(h_minl / 10)
+        h_angl += np.pi/14400
+
+    if not got_hough:
+        lines = radius_theta(lines)
+        lines = filter_lines(img, lines)
+        lines, angles = lines_kmeans(img, lines)
+        print("angles: ", angles)
 
     drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
     for line in lines:
@@ -224,9 +237,9 @@ def try_impossible(img):
             inter = find_intersections(img, lines[:,0,:])
             got_hough = True
             break
-        # while h_maxg < 5:
+        # if h_maxg < 5:
         #     h_maxg += 1
-        while h_minl > h_minl0 / 3:
+        if h_minl > h_minl0 / 3:
             h_minl -= 8
             h_thrv = round(h_minl / 3)
         h_angl += np.pi / 7200
