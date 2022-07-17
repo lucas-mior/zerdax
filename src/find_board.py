@@ -257,9 +257,9 @@ def magic_lines(img):
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines = filter_angles(img, lines)
-            aux = np.copy(img.select_lines)
-            lines = np.append(lines, aux, axis=0)
             if lines.shape[0] >= 30:
+                aux = np.copy(img.select_lines)
+                lines = np.append(lines, aux, axis=0)
                 got_hough = True
                 break
 
