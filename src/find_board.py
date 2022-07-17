@@ -39,7 +39,7 @@ def find_board(img):
     return corners
 
 def find_morph(img):
-    medges,contour = find_best_cont(img, 0.25*img.sarea)
+    medges,contour = find_best_cont(img)
 
     hullxy = cv2.convexHull(contour)
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
@@ -50,7 +50,10 @@ def find_morph(img):
 
     return medges, hullxy
 
-def find_best_cont(img, amin):
+def find_best_cont(img):
+    Aok = 0.25 * img.sarea
+    Ami = 0.2 * img.sarea
+    alast = 0
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 3
     while kd <= 100:
@@ -63,14 +66,24 @@ def find_best_cont(img, amin):
         areas = [cv2.contourArea(c) for c in contours]
         max_index = np.argmax(areas)
         a = areas[max_index]
-        if a > amin:
-            print("{} > {} @ ksize = {}".format(a, amin, kd))
-            break
-        else:
-            print("{} < {} @ ksize = {}".format(a, amin, kd))
-            kd += 1
         if kd == 30:
             medges = edges_opened
+        if a > Aok:
+            print("{} > {} @ ksize = {}".format(a, Aok, kd))
+            break
+        elif kd > 30:
+            print("{} < {} @ ksize = {}".format(a, Aok, kd))
+            if a > alast - 10000:
+                alast = a
+                kd += 1
+                continue
+            elif a > aok:
+                break
+        else:
+            alast = a
+            kd += 1
+            pass
+
     if kd < 30:
         medges = edges_opened
 
