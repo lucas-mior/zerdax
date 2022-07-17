@@ -22,34 +22,35 @@ def update_hull(img):
     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.hull3ch, 0.5, drawn_contours, 0.8, 0)
+    save(img, "convex", drawn_contours)
     return hullxy
 
 def find_board(img):
-    img.wang = lwang.wang_filter(img.sgray)
+    img.wang0 = lwang.wang_filter(img.sgray)
 
+    print("clahe 3")
     clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(3, 3))
-    img.clahe = clahe.apply(img.wang)
+    img.clahe = clahe.apply(img.wang0)
     img.wang = lwang.wang_filter(img.clahe)
     img.canny = find_canny(img)
-    img.medges, img.hullxy, img.got_hull = find_morph(img)
-    print("clahe 3")
+    Amin = 0.4 * img.sarea
+    Amax = 0.8 * img.sarea
+    img.medges, img.hullxy, img.got_hull = find_morph(img, Amax, Amin)
 
     if not img.got_hull:
         print("clahe 5")
-        img.wang = lwang.wang_filter(img.wang)
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(5, 5))
-        img.clahe = clahe.apply(img.wang)
+        img.clahe = clahe.apply(img.wang0)
         img.wang = lwang.wang_filter(img.clahe)
         img.canny = find_canny(img)
-        img.medges, img.hullxy, img.got_hull = find_morph(img)
+        img.medges, img.hullxy, img.got_hull = find_morph(img, Amax, Amin)
     if not img.got_hull:
         print("clahe 7")
-        img.wang = lwang.wang_filter(img.wang)
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(7, 7))
-        img.clahe = clahe.apply(img.wang)
+        img.clahe = clahe.apply(img.wang0)
         img.wang = lwang.wang_filter(img.clahe)
         img.canny = find_canny(img)
-        img.medges, img.hullxy, img.got_hull = find_morph(img)
+        img.medges, img.hullxy, img.got_hull = find_morph(img, Amax, Amin)
 
     save(img, "medges", img.medges)
     limx, limy = broad_hull(img)
@@ -68,8 +69,9 @@ def find_board(img):
     img = reduce_hull(img)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
 
-    img.canny = find_canny(img)
+    img.canny = find_canny(img, wmin = 8)
     img.medges += img.canny
+    save(img, "medgescanny", img.medges)
     img.angles, img.select_lines = find_angles(img)
 
     lines = magic_lines(img)
@@ -77,22 +79,19 @@ def find_board(img):
     corners = (10, 300, 110, 310)
     return corners
 
-def find_morph(img):
+def find_morph(img, Amax, Amin):
     got_hull = False
-    Amax = 0.6 * img.sarea
-    Amin = 0.35 * img.sarea
-    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
     kd = 3
     while kd <= 15:
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kd+round(kd/3)))
         dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img.wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
-        if kd == 15:
-            edges_bin = cv2.bitwise_not(edges_bin)
 
-        # edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
-        edges_wcanny = edges_bin + img.canny
+        edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
+        if kd > 5:
+            edges_wcanny = edges_open + img.canny
         contours, _ = cv2.findContours(edges_wcanny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         max_index = np.argmax(areas)
@@ -113,6 +112,7 @@ def find_morph(img):
     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
+    # save(img, "convex", drawn_contours)
 
     return medges, hullxy, got_hull
 
@@ -148,7 +148,7 @@ def find_canny(img, wmin = 6):
             c_thrl -= 9
         c_thrh -= 9
 
-    save(img, "canny", img.canny)
+    # save(img, "canny", img.canny)
     return img.canny
 
 def find_angles(img):
@@ -198,7 +198,7 @@ def find_angles(img):
         for x1,y1,x2,y2,r,t in line:
             cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
     drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-    save(img, "hough_select", drawn_lines)
+    # save(img, "hough_select", drawn_lines)
 
     return angles, lines
 
@@ -306,7 +306,7 @@ def magic_lines(img):
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
-        save(img, "hough", drawn_lines)
+        # save(img, "hough", drawn_lines)
 
         draw_lines = draw_lines[:,:,2]
         img.medges += draw_lines
