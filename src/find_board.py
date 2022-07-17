@@ -41,24 +41,22 @@ def find_board(img):
     return corners
 
 def find_morph(img):
-    medges,contour = find_best_cont(img)
+    medges,hullxy = find_best_cont(img)
 
-    hullxy = cv2.convexHull(contour)
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
-    cv2.drawContours(drawn_contours, contour,   -1, (255,0,0), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
     save(img, "convex", drawn_contours)
 
     return medges, hullxy
 
 def find_best_cont(img):
-    Aok = 0.25 * img.sarea
-    Ami = 0.2 * img.sarea
+    Aok = 0.4 * img.sarea
+    Ami = 0.3 * img.sarea
     alast = 0
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (7,7))
     kd = 3
-    while kd <= 60:
+    while kd <= 40:
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd+round(kd/2),kd))
         dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img.wang, dilate, scale = 255)
@@ -66,6 +64,9 @@ def find_best_cont(img):
         edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
         contours, _ = cv2.findContours(edges_opened, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
+        max_index = np.argmax(areas)
+        hullxy = cv2.convexHull(contours[max_index])
+        areas = [cv2.contourArea(hullxy)]
         max_index = np.argmax(areas)
         a = areas[max_index]
         if kd == 30:
@@ -90,7 +91,7 @@ def find_best_cont(img):
     if kd < 30:
         medges = edges_opened
 
-    return medges,contours[max_index]
+    return medges,hullxy
 
 def broad_hull(img):
     Pxmin = img.hullxy[np.argmin(img.hullxy[:,0,0]),0]
