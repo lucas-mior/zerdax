@@ -10,12 +10,12 @@ i = 0
 def save(img, filename, image):
     global i
     if img.save and not exists(filename):
-        cv2.imwrite("{0}{1:1=2d}_{2}.png".format(img.basename, i, filename), image)
+        cv2.imwrite("{}{:02d}_{}.png".format(img.basename, i, filename), image)
     i += 1
 
 def savefig(img, filename, fig):
     global i
-    fig.savefig("{0}{1:1=2d}_{2}.png".format(img.basename, i, filename))
+    fig.savefig("{}{:02d}_{}.png".format(img.basename, i, filename))
     i += 1
 
 def radius(x1,y1,x2,y2):

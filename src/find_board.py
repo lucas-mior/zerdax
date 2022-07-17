@@ -29,16 +29,34 @@ def find_board(img):
     save(img, "gray", img.sgray)
     img.wang = lwang.wang_filter(img.sgray)
     save(img, "wang", img.wang)
-    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(5, 5))
-    img.wang = clahe.apply(img.wang)
-    save(img, "clahe", img.wang)
+
+    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(3, 3))
+    img.clahe = clahe.apply(img.wang)
+    save(img, "clahe3", img.clahe)
     img.canny = find_canny(img)
-    img.medges, img.hullxy = find_morph(img)
+    img.medges, img.hullxy, img.got_hull = find_morph(img)
+
+    if not img.got_hull:
+        img.wang = lwang.wang_filter(img.wang)
+        clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(5, 5))
+        img.clahe = clahe.apply(img.wang)
+        save(img, "clahe5", img.clahe)
+        img.canny = find_canny(img)
+        img.medges, img.hullxy, img.got_hull = find_morph(img)
+    if not img.got_hull:
+        img.wang = lwang.wang_filter(img.wang)
+        clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(7, 7))
+        img.clahe = clahe.apply(img.wang)
+        save(img, "clahe7", img.clahe)
+        img.canny = find_canny(img)
+        img.medges, img.hullxy, img.got_hull = find_morph(img)
+
     save(img, "medges", img.medges)
     limx, limy = broad_hull(img)
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.wang = img.wang[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
+    img.clahe = img.clahe[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     limx[0] = round(limx[0] / img.sfact)
     limx[1] = round(limx[1] / img.sfact)
     limy[0] = round(limy[0] / img.sfact)
@@ -61,21 +79,18 @@ def find_board(img):
     return corners
 
 def find_morph(img):
+    got_hull = False
     Amax = 0.6 * img.sarea
     Amin = 0.3 * img.sarea
-    alast = 0
+    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 3
     while kd <= 40:
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kd+round(kd/3)))
         dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img.wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
-        if (kd % 2) == 0 and kd > 20:
+        if kd == 20 or kd == 30:
             edges_bin = cv2.bitwise_not(edges_bin)
-            # ko = cv2.getStructuringElement(cv2.MORPH_RECT, (10,10))
-        else:
-            pass
-            # ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
 
         # edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
         edges_wcanny = edges_bin + img.canny
@@ -86,7 +101,8 @@ def find_morph(img):
         hullxy = cv2.convexHull(cont)
         a = cv2.contourArea(hullxy)
         if a > Amin and a < Amax:
-            print("{} < {} < {} @ ksize = {}".format(Amin, a, Amax, kd))
+            print("{} < {} < {} @ ksize = {} [GOTHULL]".format(Amin, a, Amax, kd))
+            got_hull = True
             break
         else:
             print("{} ? {} ? {} @ ksize = {}".format(Amin, a, Amax, kd))
@@ -100,7 +116,7 @@ def find_morph(img):
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
     save(img, "convex0", drawn_contours)
 
-    return medges, hullxy
+    return medges, hullxy, got_hull
 
 def broad_hull(img):
     Pxmin = img.hullxy[np.argmin(img.hullxy[:,0,0]),0]
@@ -122,7 +138,7 @@ def find_canny(img, wmin = 6):
     c_thrh = c_thrh0
 
     while c_thrh > 20:
-        img.canny = cv2.Canny(img.wang, c_thrl, c_thrh)
+        img.canny = cv2.Canny(img.clahe, c_thrl, c_thrh)
         w = img.canny.mean()
         if w > wmin:
             print("{0:0=.2f} > {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
@@ -219,10 +235,10 @@ def find_intersections(img, lines):
             x = round(determinant(d, xdiff) / div)
             y = round(determinant(d, ydiff) / div)
 
-            if cv2.pointPolygonTest(img.shull, (x,y), True) < -20:
+            if img.got_hull and cv2.pointPolygonTest(img.shull, (x,y), True) < -20:
                 j += 1
                 continue
-            if x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
+            elif x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
                 j += 1
                 continue
             else:
@@ -246,6 +262,7 @@ def reduce_hull(img):
     img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
     img.medges = cv2.resize(img.medges, (img.hwidth, img.hheigth))
     img.wang = cv2.resize(img.wang, (img.hwidth, img.hheigth))
+    img.clahe = cv2.resize(img.clahe, (img.hwidth, img.hheigth))
     img.harea = img.hwidth * img.hheigth
     return img
 
