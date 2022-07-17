@@ -45,12 +45,10 @@ def find_board(img):
     # save(img, "hull", img.hull)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
 
-    img.canny = find_canny(img, wmin = 7)
+    img.canny = find_canny(img)
     img.medges += img.canny
-    save(img, "medges", img.medges)
     img.angles, img.select_lines = find_angles(img)
 
-    img.shull = update_hull(img)
     lines = magic_lines(img)
 
     corners = (10, 300, 110, 310)
@@ -116,7 +114,6 @@ def broad_hull(img):
     return [Pymin[1],Pymax[1]], [Pxmin[0],Pxmax[0]]
 
 def find_canny(img, wmin = 6):
-    wmin = 6
     c_thrl0 = 80
     c_thrh0 = 200
     c_thrl = c_thrl0
@@ -126,11 +123,11 @@ def find_canny(img, wmin = 6):
         img.canny = cv2.Canny(img.wang, c_thrl, c_thrh)
         w = img.canny.mean()
         if w > wmin:
-            print("{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
+            print("{0:0=.2f} > {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
             break
         else:
             if wmin - w < wmin:
-                print("{0:0=.2f} > {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
+                print("{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
         if c_thrl > 10:
             c_thrl -= 9
         c_thrh -= 9
@@ -220,8 +217,10 @@ def find_intersections(img, lines):
             x = round(determinant(d, xdiff) / div)
             y = round(determinant(d, ydiff) / div)
 
-            if cv2.pointPolygonTest(img.shull, (x,y), False) == -1:
+            if cv2.pointPolygonTest(img.shull, (x,y), True) < -20:
                 print("outside hull")
+                j += 1
+                continue
             elif x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
                 j += 1
                 continue
@@ -286,13 +285,19 @@ def magic_lines(img):
 
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+        draw_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
         for line in lines:
             for x1,y1,x2,y2,r,t in line:
-                cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
-        drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
+                cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
+        drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
         save(img, "hough", drawn_lines)
 
+        draw_lines = draw_lines[:,:,2]
+        img.medges += draw_lines
+        save(img, "medges", img.medges)
+        img.shull = update_hull(img)
         inter = find_intersections(img, lines[:,0,:])
+
         drawn_circles = np.copy(img.hull3ch) * 0
         for p in inter:
             cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
