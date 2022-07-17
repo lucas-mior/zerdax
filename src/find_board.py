@@ -33,7 +33,8 @@ def find_board(img):
     exit()
     lines = try_impossible(img)
 
-    return (10, 300, 110, 310)
+    corners = (10, 300, 110, 310)
+    return corners
 
 def find_hull(img):
     img_wang = lwang.wang_filter(img.sgray)
