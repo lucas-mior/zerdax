@@ -26,9 +26,12 @@ def update_hull(img):
     return hullxy
 
 def find_board(img):
-    img.sgray = cv2.equalizeHist(img.sgray)
+    save(img, "gray", img.sgray)
     img.wang = lwang.wang_filter(img.sgray)
-    img.wang = cv2.equalizeHist(img.wang)
+    save(img, "wang", img.wang)
+    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(5, 5))
+    img.wang = clahe.apply(img.wang)
+    save(img, "clahe", img.wang)
     img.canny = find_canny(img)
     img.medges, img.hullxy = find_morph(img)
     save(img, "medges", img.medges)
@@ -45,7 +48,7 @@ def find_board(img):
     img.hxoff = limx[0]
     img.hyoff = limy[0]
     img = reduce_hull(img)
-    # save(img, "hull", img.hull)
+    save(img, "cuthull", img.hull)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
 
     img.canny = find_canny(img)
@@ -95,7 +98,7 @@ def find_morph(img):
     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
-    save(img, "convex", drawn_contours)
+    save(img, "convex0", drawn_contours)
 
     return medges, hullxy
 
@@ -131,7 +134,7 @@ def find_canny(img, wmin = 6):
             c_thrl -= 9
         c_thrh -= 9
 
-    # save(img, "canny", img.canny)
+    save(img, "canny", img.canny)
     return img.canny
 
 def find_angles(img):
@@ -181,7 +184,7 @@ def find_angles(img):
         for x1,y1,x2,y2,r,t in line:
             cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
     drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-    # save(img, "hough", drawn_lines)
+    save(img, "hough_select", drawn_lines)
 
     return angles, lines
 
@@ -288,11 +291,11 @@ def magic_lines(img):
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
-        # save(img, "hough", drawn_lines)
+        save(img, "hough_f", drawn_lines)
 
         draw_lines = draw_lines[:,:,2]
         img.medges += draw_lines
-        save(img, "medges", img.medges)
+        save(img, "medges_f", img.medges)
         img.shull = update_hull(img)
         inter = find_intersections(img, lines[:,0,:])
 
@@ -361,13 +364,13 @@ def lines_kmeans(img, lines):
     B = lines[labels==1]
     C = lines[labels==2]
 
-    # fig = plt.figure()
-    # plt.xticks(range(-90, 91, 10))
-    # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-    # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-    # plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
-    # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
-    # savefig(img, "kmeans0", fig)
+    fig = plt.figure()
+    plt.xticks(range(-90, 91, 10))
+    plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+    plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+    plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
+    plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
+    savefig(img, "kmeans0", fig)
 
     d1 = abs(centers[0] - centers[1])
     d2 = abs(centers[0] - centers[2])
@@ -381,12 +384,12 @@ def lines_kmeans(img, lines):
         compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
         A = lines[labels==0]
         B = lines[labels==1]
-        # fig = plt.figure()
-        # plt.xticks(range(-90, 91, 10))
-        # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-        # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-        # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
-        # savefig(img, "kmeans1", fig)
+        fig = plt.figure()
+        plt.xticks(range(-90, 91, 10))
+        plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+        plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+        plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
+        savefig(img, "kmeans1", fig)
 
     diff = []
     diff.append((abs(centers[0] - 90), -90))
