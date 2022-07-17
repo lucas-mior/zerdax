@@ -33,7 +33,7 @@ def find_board(img):
 
     img.canny = find_canny(img)
     img.medges += img.canny
-    save(img, "medges", img.medges)
+    # save(img, "medges", img.medges)
     img.angles, img.select_lines = find_angles(img)
     lines = magic_lines(img)
 
@@ -127,14 +127,14 @@ def find_canny(img):
             c_thrl -= 9
         c_thrh -= 9
 
-    # save(img, "canny", img.canny)
+    save(img, "canny", img.canny)
     return img.canny
 
 def find_angles(img):
     got_hough = False
     h_maxg0 = 2
     h_minl0 = round((img.hwidth + img.hheigth)*0.2)
-    h_thrv0 = round(h_minl0 / 6)
+    h_thrv0 = round(h_minl0 / 10)
     h_angl0 = np.pi / 360
 
     h_maxg = h_maxg0
@@ -177,7 +177,7 @@ def find_angles(img):
         for x1,y1,x2,y2,r,t in line:
             cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
     drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-    # save(img, "hough", drawn_lines)
+    save(img, "hough", drawn_lines)
 
     return angles, lines
 
@@ -243,16 +243,16 @@ def magic_lines(img):
     got_hough = False
     h_maxg0 = 0
     h_minl0 = round((img.hwidth + img.hheigth)*0.1)
-    h_thrv0 = round(h_minl0 / 10)
-    h_angl0 = np.pi / 1440
+    h_thrv0 = round(h_minl0 / 3)
+    h_angl0 = np.pi / 360
 
     h_maxg = h_maxg0
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
     while h_angl < (np.pi / 90):
-        lines = cv2.HoughLinesP(img.medges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
-        if lines is not None and lines.shape[0] >= 70:
+        lines = cv2.HoughLinesP(img.canny, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
+        if lines is not None and lines.shape[0] >= 30:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
@@ -265,9 +265,12 @@ def magic_lines(img):
 
         if lines is not None:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
-        if h_minl > h_minl0 / 3:
+        if h_minl > h_minl0 / 5:
             h_minl -= 8
-            h_thrv = round(h_minl / 10)
+            h_thrv = round(h_minl / 3)
+        if h_maxg < 30:
+            h_maxg += 1
+
         h_angl += np.pi / 14400
 
     if got_hough:
