@@ -31,7 +31,7 @@ def find_board(img):
     # save(img, "hull", img.hull)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
 
-    img.canny = find_canny(img)
+    img.canny = find_canny(img, wmin = 7)
     img.medges += img.canny
     save(img, "medges", img.medges)
     img.angles, img.select_lines = find_angles(img)
@@ -107,7 +107,7 @@ def broad_hull(img):
 
     return [Pymin[1],Pymax[1]], [Pxmin[0],Pxmax[0]]
 
-def find_canny(img):
+def find_canny(img, wmin = 6):
     wmin = 6
     c_thrl0 = 80
     c_thrh0 = 200
@@ -299,13 +299,13 @@ def filter_lines(img, lines):
     i = 0
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
-            if x1 < 3 and x2 < 3 or y1 < 3 and y2 < 3:
+            if x1 < 5 and x2 < 5 or y1 < 5 and y2 < 5:
                 rem[i] = 1
-            elif (img.hwidth - x1) < 3 and (img.hwidth - x2) < 3 or (img.hheigth - y1) < 3 and (img.hheigth - y2) < 3:
+            elif (img.hwidth - x1) < 5 and (img.hwidth - x2) < 5 or (img.hheigth - y1) < 5 and (img.hheigth - y2) < 5:
                 rem[i] = 1
-            elif (x1 < 3 or (img.hwidth - x1) < 3) and (y2 < 3 or (img.hheigth - y2) < 3):
+            elif (x1 < 5 or (img.hwidth - x1) < 5) and (y2 < 5 or (img.hheigth - y2) < 5):
                 rem[i] = 1
-            elif (x2 < 3 or (img.hwidth - x2) < 3) and (y1 < 3 or (img.hheigth - y1) < 3):
+            elif (x2 < 5 or (img.hwidth - x2) < 5) and (y1 < 5 or (img.hheigth - y1) < 5):
                 rem[i] = 1
             else:
                 rem[i] = 0

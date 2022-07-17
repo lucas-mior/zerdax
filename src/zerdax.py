@@ -5,9 +5,11 @@ import algo
 
 def parseargs():
     parser = argparse.ArgumentParser(description='Convert chess photo to FEN')
-    parser.add_argument('image',              type=str, default=None, help='Nome do arquivo da foto')
+
+    parser.add_argument('image',             type=str, default=None, help='Nome do arquivo da foto')
     parser.add_argument('-dummy', nargs='?', type=int, default=30,    help='Dummy argument')
     parser.add_argument('-savein', action=argparse.BooleanOptionalAction,default=False,help='Save intermediate steps')
+
     args = parser.parse_args()
     return args
 
