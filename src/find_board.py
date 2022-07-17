@@ -164,7 +164,7 @@ def find_angles(img):
             minlines = 60
 
         h_thrv = round(h_minl / 10)
-        h_angl += np.pi/14400
+        h_angl += np.pi / 14400
 
     if not got_hough:
         lines = radius_theta(lines)
@@ -242,9 +242,9 @@ def reduce_hull(img):
 def magic_lines(img):
     got_hough = False
     h_maxg0 = 0
-    h_minl0 = round((img.hwidth + img.hheigth)*0.05)
-    h_thrv0 = round(h_minl0 / 3)
-    h_angl0 = np.pi / 1440
+    h_minl0 = round((img.hwidth + img.hheigth)*0.1)
+    h_thrv0 = round(h_minl0 / 10)
+    h_angl0 = np.pi / 7200
 
     h_maxg = h_maxg0
     h_minl = h_minl0
@@ -266,9 +266,9 @@ def magic_lines(img):
         if lines is not None:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         if h_minl > h_minl0 / 3:
-            h_minl -= 8
-            h_thrv = round(h_minl / 3)
-        h_angl += np.pi / 7200
+            h_minl -= 10
+            h_thrv = round(h_minl / 10)
+        h_angl += np.pi / 14400
 
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
@@ -343,13 +343,13 @@ def lines_kmeans(img, lines):
     B = lines[labels==1]
     C = lines[labels==2]
 
-    # fig = plt.figure()
-    # plt.xticks(range(-90, 91, 10))
-    # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-    # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-    # plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
-    # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
-    # savefig(img, "kmeans0", fig)
+    fig = plt.figure()
+    plt.xticks(range(-90, 91, 10))
+    plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+    plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+    plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
+    plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
+    savefig(img, "kmeans0", fig)
 
     d1 = abs(centers[0] - centers[1])
     d2 = abs(centers[0] - centers[2])
@@ -363,12 +363,26 @@ def lines_kmeans(img, lines):
         compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
         A = lines[labels==0]
         B = lines[labels==1]
-        # fig = plt.figure()
-        # plt.xticks(range(-90, 90, 10))
-        # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-        # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-        # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
-        # savefig(img, "kmeans1", fig)
+        fig = plt.figure()
+        plt.xticks(range(-90, 90, 10))
+        plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+        plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+        plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
+        savefig(img, "kmeans1", fig)
+
+    diff = []
+    diff.append((abs(centers[0] - 90), -90))
+    diff.append((abs(centers[0] + 90), +90))
+    diff.append((abs(centers[1] - 90), -90))
+    diff.append((abs(centers[1] + 90), +90))
+    if centers.shape[0] > 2:
+        diff.append((abs(centers[2] - 90), -90))
+        diff.append((abs(centers[2] + 90), +90))
+
+    for d,k in diff:
+        if d < 20:
+            centers = np.append(centers, k)
+            break
 
     lines = np.int32(lines)
     return lines, centers
