@@ -250,23 +250,21 @@ def magic_lines(img):
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
-    while h_angl < (np.pi / 180):
+    while h_angl < (np.pi / 90):
         lines = cv2.HoughLinesP(img.medges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
-        if lines is not None and lines.shape[0] >= 70:
-            print("{} lines @ {}º, {}, {}, {}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
+        if lines is not None and lines.shape[0] >= 100:
+            print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines = filter_angles(img, lines)
-            print("lines before:", lines.shape[0])
             aux = np.copy(img.select_lines)
-            print("appending aux:", aux.shape[0])
             lines = np.append(lines, aux, axis=0)
-            print("lines now:", lines.shape[0])
             inter = find_intersections(img, lines[:,0,:])
             got_hough = True
             break
-        # if h_maxg < 5:
-        #     h_maxg += 1
+
+        if lines is not None:
+            print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         if h_minl > h_minl0 / 3:
             h_minl -= 8
             h_thrv = round(h_minl / 3)
@@ -345,8 +343,6 @@ def lines_kmeans(img, lines):
     B = lines[labels==1]
     C = lines[labels==2]
 
-    print("compactness: ", compactness)
-
     # fig = plt.figure()
     # plt.xticks(range(-90, 91, 10))
     # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
@@ -376,10 +372,3 @@ def lines_kmeans(img, lines):
 
     lines = np.int32(lines)
     return lines, centers
-
-def skelet(edges):
-    img1 = edges.copy()
-    edges = morphology.thin(img1)
-    edges = img_as_ubyte(edges)
-
-    return edges
