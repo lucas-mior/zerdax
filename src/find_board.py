@@ -28,12 +28,12 @@ def find_board(img):
     img.hxoff = limx[0]
     img.hyoff = limy[0]
     img = reduce_hull(img)
-    save(img, "hull", img.hull)
+    # save(img, "hull", img.hull)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
 
     img.canny = find_canny(img)
     img.medges += img.canny
-    save(img, "medges0", img.medges)
+    save(img, "medges", img.medges)
     img.angles, img.select_lines = find_angles(img)
     lines = magic_lines(img)
 
@@ -47,7 +47,7 @@ def find_morph(img):
     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(drawn_contours, contour, -1, (255, 0, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
-    save(img, "convex", drawn_contours)
+    # save(img, "convex", drawn_contours)
 
     return medges, hullxy
 
@@ -70,7 +70,7 @@ def find_best_cont(img):
         cont = contours[max_index]
         hullxy = cv2.convexHull(cont)
         a = cv2.contourArea(hullxy)
-        if kd == 10:
+        if kd == 20:
             medges = edges_opened
         if a > Aok:
             print("{} > {} @ ksize = {}".format(a, Aok, kd))
@@ -89,7 +89,7 @@ def find_best_cont(img):
             kd += 1
             pass
 
-    if kd < 10:
+    if kd < 20:
         medges = edges_opened
 
     return medges,cont,hullxy
@@ -127,7 +127,7 @@ def find_canny(img):
             c_thrl -= 9
         c_thrh -= 9
 
-    save(img, "canny", img.canny)
+    # save(img, "canny", img.canny)
     return img.canny
 
 def find_angles(img):
@@ -177,7 +177,7 @@ def find_angles(img):
         for x1,y1,x2,y2,r,t in line:
             cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
     drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-    save(img, "hough", drawn_lines)
+    # save(img, "hough", drawn_lines)
 
     return angles, lines
 
@@ -244,7 +244,7 @@ def magic_lines(img):
     h_maxg0 = 0
     h_minl0 = round((img.hwidth + img.hheigth)*0.1)
     h_thrv0 = round(h_minl0 / 10)
-    h_angl0 = np.pi / 7200
+    h_angl0 = np.pi / 1440
 
     h_maxg = h_maxg0
     h_minl = h_minl0
@@ -252,7 +252,7 @@ def magic_lines(img):
     h_angl = h_angl0
     while h_angl < (np.pi / 90):
         lines = cv2.HoughLinesP(img.medges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
-        if lines is not None and lines.shape[0] >= 100:
+        if lines is not None and lines.shape[0] >= 70:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
@@ -266,7 +266,7 @@ def magic_lines(img):
         if lines is not None:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         if h_minl > h_minl0 / 3:
-            h_minl -= 10
+            h_minl -= 8
             h_thrv = round(h_minl / 10)
         h_angl += np.pi / 14400
 
@@ -318,10 +318,10 @@ def filter_angles(img, lines):
     i = 0
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
-            if abs(t - img.angles[0]) > 12 and abs(t - img.angles[1]) > 12:
+            if abs(t - img.angles[0]) > 10 and abs(t - img.angles[1]) > 10:
                 if img.angles.shape[0] == 2:
                     rem[i] = 1
-                elif abs(t - img.angles[2]) > 12:
+                elif abs(t - img.angles[2]) > 10:
                     rem[i] = 1
                 else:
                     rem[i] = 0
@@ -343,13 +343,13 @@ def lines_kmeans(img, lines):
     B = lines[labels==1]
     C = lines[labels==2]
 
-    fig = plt.figure()
-    plt.xticks(range(-90, 91, 10))
-    plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-    plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-    plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
-    plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
-    savefig(img, "kmeans0", fig)
+    # fig = plt.figure()
+    # plt.xticks(range(-90, 91, 10))
+    # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+    # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+    # plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
+    # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
+    # savefig(img, "kmeans0", fig)
 
     d1 = abs(centers[0] - centers[1])
     d2 = abs(centers[0] - centers[2])
@@ -363,12 +363,12 @@ def lines_kmeans(img, lines):
         compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
         A = lines[labels==0]
         B = lines[labels==1]
-        fig = plt.figure()
-        plt.xticks(range(-90, 91, 10))
-        plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-        plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-        plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
-        savefig(img, "kmeans1", fig)
+        # fig = plt.figure()
+        # plt.xticks(range(-90, 91, 10))
+        # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+        # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+        # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
+        # savefig(img, "kmeans1", fig)
 
     diff = []
     diff.append((abs(centers[0] - 90), -90))
