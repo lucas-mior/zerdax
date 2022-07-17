@@ -6,6 +6,7 @@ from pathlib import Path
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+from skimage import io,color,morphology,img_as_ubyte
 
 from Image import Image
 from aux import *
@@ -378,15 +379,7 @@ def lines_kmeans(img, lines):
 
 def skelet(edges):
     img1 = edges.copy()
+    edges = morphology.thin(img1)
+    edges = img_as_ubyte(edges)
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
-    thin = np.zeros(img1.shape,dtype='uint8')
-
-    while (cv2.countNonZero(img1)!=0):
-        erode = cv2.erode(img1,kernel)
-        opening = cv2.morphologyEx(erode,cv2.MORPH_OPEN,kernel)
-        subset = erode - opening
-        thin = cv2.bitwise_or(subset,thin)
-        img1 = erode.copy()
-
-    return thin
+    return edges
