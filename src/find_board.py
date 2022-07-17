@@ -26,43 +26,39 @@ def update_hull(img):
     return hullxy
 
 def find_board(img):
-    save(img, "gray", img.sgray)
+    save(img, "sgray", img.sgray)
     img.wang0 = lwang.wang_filter(img.sgray)
+    save(img, "wang0", img.wang0)
 
-    print("clahe 3")
-    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(3, 3))
-    img.clahe = clahe.apply(img.wang0)
-    img.wang = lwang.wang_filter(img.clahe)
-    img.canny = find_canny(img)
-    Amin = 0.3 * img.sarea
-    print("Amin =", Amin)
-    Amax = 0.7 * img.sarea
-    img.medges,img.hullxy,img.got_hull,increasing = find_morph(img, Amax, Amin)
+    c = 3
+    Amin = 0.45 * img.sarea
+    while c < 8:
+        print("Amin =", Amin)
+        print("clahe = ", c)
+        clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
+        img.clahe = clahe.apply(img.wang0)
+        save(img, "clahe{}".format(c), img.clahe)
+        img.wang = lwang.wang_filter(img.clahe)
+        save(img, "wang{}".format(c), img.wang)
+        img.canny = find_canny(img)
+        save(img, "canny{}".format(c), img.canny)
+        img.medges,img.hullxy,img.got_hull,increasing = find_morph(img, Amin)
 
-    if not img.got_hull:
-        if not increasing:
-            Amin -= 0.01 * img.sarea
-            print("Amin =", Amin)
+        if img.got_hull:
+            break
         else:
-            print("clahe 4")
-            clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(4, 4))
-            img.clahe = clahe.apply(img.wang0)
-            img.wang = lwang.wang_filter(img.clahe)
-            img.canny = find_canny(img)
-        img.medges, img.hullxy, img.got_hull ,increasing = find_morph(img, Amax, Amin)
-    if not img.got_hull:
-        if not increasing:
-            Amin -= 0.01 * img.sarea
-            print("Amin =", Amin)
-        else:
-            print("clahe 5")
-            clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(5, 5))
-            img.clahe = clahe.apply(img.wang0)
-            img.wang = lwang.wang_filter(img.clahe)
-            img.canny = find_canny(img)
-        img.medges, img.hullxy, img.got_hull, increasing = find_morph(img, Amax, Amin)
+            if not increasing:
+                Amin -= 0.005 * img.sarea
+                print("Amin =", Amin)
+                continue
+            else:
+                c += 1
 
     save(img, "medges", img.medges)
+    drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+    cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
+    drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
+    save(img, "convex", drawn_contours)
     limx, limy = broad_hull(img)
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
@@ -89,7 +85,7 @@ def find_board(img):
     corners = (10, 300, 110, 310)
     return corners
 
-def find_morph(img, Amax, Amin):
+def find_morph(img, Amin):
     got_hull = False
     alast = 0
     increasing = False
@@ -111,18 +107,18 @@ def find_morph(img, Amax, Amin):
         cont = contours[max_index]
         hullxy = cv2.convexHull(cont)
         a = cv2.contourArea(hullxy)
-        if a > Amin and a < Amax:
-            print("{} < {} < {} @ ksize = {} [GOTHULL]".format(Amin, a, Amax, kd))
+        if a > Amin:
+            print("{} > {} @ ksize = {} [GOTHULL]".format(a, Amin, kd))
             got_hull = True
             break
         else:
-            print("{} ? {} ? {} @ ksize = {}".format(Amin, a, Amax, kd))
+            print("{} < {} @ ksize = {} [GOTHULL]".format(a, Amin, kd))
             kd += 1
 
     if not got_hull:
         diff = a - alast
         mdiff = 0.12 * Amin
-        if (diff > mdiff) and (a > Amin/2.5):
+        if (diff > mdiff) and (a > (img.sarea*0.15)):
             print("diff: {} > {}, increasing".format(diff, mdiff))
             increasing = True
         else:
@@ -327,6 +323,10 @@ def magic_lines(img):
 
         draw_lines = draw_lines[:,:,2]
         img.medges += draw_lines
+
+        ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+        img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
+
         save(img, "medges", img.medges)
         img.shull = update_hull(img)
         inter = find_intersections(img, lines[:,0,:])
