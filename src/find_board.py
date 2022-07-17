@@ -85,8 +85,7 @@ def broad_hull(img, hull):
     Pymax[1] = min(img.sheigth, Pymax[1]+20)
 
     return [Pymin[1],Pymax[1]], [Pxmin[0],Pxmax[0]]
-
-def find_angles(img):
+def find_canny(img):
     wmin = 6
     c_thrl0 = 80
     c_thrh0 = 200
@@ -95,8 +94,8 @@ def find_angles(img):
 
     img_wang = lwang.wang_filter(img.hull)
     while c_thrh > 70:
-        img_canny = cv2.Canny(img_wang, c_thrl, c_thrh)
-        w = img_canny.mean()
+        img.canny = cv2.Canny(img_wang, c_thrl, c_thrh)
+        w = img.canny.mean()
         if w > wmin:
             print("{} > {}, @ {}, {}".format(w, wmin, c_thrl, c_thrh))
             break
@@ -107,8 +106,11 @@ def find_angles(img):
             c_thrl -= 9
         c_thrh -= 9
 
-    save(img, "canny", img_canny)
+    save(img, "canny", img.canny)
+    return img.canny
 
+def find_angles(img):
+    img.canny = find_canny(img)
     h_maxg0 = 2
     h_minl0 = round((img.hwidth + img.hheigth)*0.1)
     h_thrv0 = round(h_minl0 / 6)
@@ -119,8 +121,8 @@ def find_angles(img):
     h_thrv = h_thrv0
     h_angl = h_angl0
     while h_maxg < 10 and h_minl > (h_minl0 / 4) and h_angl < (np.pi / 180):
-        lines = cv2.HoughLinesP(img_canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
-        print("HOUGH @ {}, {}, {}, {}, {}".format(c_thrl, c_thrh, h_thrv, h_minl, h_maxg))
+        lines = cv2.HoughLinesP(img.canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
+        print("HOUGH @ {}º, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         if lines is not None and lines.shape[0] >= 4 + 10:
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
@@ -218,7 +220,7 @@ def try_impossible(img):
     h_angl = h_angl0
     while h_angl < (np.pi / 180):
         lines = cv2.HoughLinesP(img.edges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
-        print("impossible @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
+        print("impossible @ {}º, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         if lines is not None and lines.shape[0] >= 70:
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
