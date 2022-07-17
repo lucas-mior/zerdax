@@ -69,7 +69,7 @@ def find_best_cont(img):
         areas = [cv2.contourArea(hullxy)]
         max_index = np.argmax(areas)
         a = areas[max_index]
-        if kd == 30:
+        if kd == 20:
             medges = edges_opened
         if a > Aok:
             print("{} > {} @ ksize = {}".format(a, Aok, kd))
@@ -100,7 +100,7 @@ def broad_hull(img):
     Pymax = img.hullxy[np.argmax(img.hullxy[:,0,1]),0]
 
     Pxmin[0] = max(0, Pxmin[0]-20)
-    Pymin[1] = max(0, Pymin[1]-70) # peças de trás vao além
+    Pymin[1] = max(0, Pymin[1]-40) # peças de trás vao além
     Pxmax[0] = min(img.swidth, Pxmax[0]+20)
     Pymax[1] = min(img.sheigth, Pymax[1]+20)
 
