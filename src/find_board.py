@@ -12,6 +12,7 @@ from aux import *
 import lwang
 
 def find_board(img):
+    img.wang = lwang.wang_filter(img.sgray)
     edges_opened, hull = find_hull(img)
     limx, limy = broad_hull(img, hull)
 
@@ -26,20 +27,18 @@ def find_board(img):
     img.hyoff = limy[0]
     img = reduce_hull(img)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
+    save(img, "edges", img.edges)
+    exit()
 
-    # save(img, "edges", img.edges)
     img.canny = find_canny(img)
     img.angles, img.select_lines = find_angles(img)
-    exit()
     lines = try_impossible(img)
 
     corners = (10, 300, 110, 310)
     return corners
 
 def find_hull(img):
-    img_wang = lwang.wang_filter(img.sgray)
-
-    edges_opened,contours,max_index = find_best_cont(img, img_wang, 0.25*img.sarea)
+    edges_opened,contours,max_index = find_best_cont(img, 0.25*img.sarea)
 
     cont = contours[max_index]
     hull = cv2.convexHull(cont)
@@ -50,14 +49,14 @@ def find_hull(img):
 
     return edges_opened, hull
 
-def find_best_cont(img, img_wang, amin):
+def find_best_cont(img, amin):
     got = False
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 3
     while kd <= 30:
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd+round(kd/2),kd))
-        dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k_dil)
-        edges_gray = cv2.divide(img_wang, dilate, scale = 255)
+        dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
+        edges_gray = cv2.divide(img.wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
         edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
         contours, _ = cv2.findContours(edges_opened, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -95,9 +94,8 @@ def find_canny(img):
     c_thrl = c_thrl0
     c_thrh = c_thrh0
 
-    img_wang = lwang.wang_filter(img.hull)
     while c_thrh > 70:
-        img.canny = cv2.Canny(img_wang, c_thrl, c_thrh)
+        img.canny = cv2.Canny(img.wang, c_thrl, c_thrh)
         w = img.canny.mean()
         if w > wmin:
             print("{} > {}, @ {}, {}".format(w, wmin, c_thrl, c_thrh))
