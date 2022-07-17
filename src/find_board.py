@@ -6,7 +6,6 @@ from pathlib import Path
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
-from skimage import io,color,morphology,img_as_ubyte
 
 from Image import Image
 from aux import *
@@ -36,9 +35,7 @@ def find_board(img):
     img.medges += img.canny
     save(img, "medges0", img.medges)
     img.angles, img.select_lines = find_angles(img)
-    img.medges = skelet(img.medges)
-    save(img, "medges1", img.medges)
-    # lines = magic_lines(img)
+    lines = magic_lines(img)
 
     corners = (10, 300, 110, 310)
     return corners
@@ -73,7 +70,7 @@ def find_best_cont(img):
         cont = contours[max_index]
         hullxy = cv2.convexHull(cont)
         a = cv2.contourArea(hullxy)
-        if kd == 20:
+        if kd == 10:
             medges = edges_opened
         if a > Aok:
             print("{} > {} @ ksize = {}".format(a, Aok, kd))
@@ -92,7 +89,7 @@ def find_best_cont(img):
             kd += 1
             pass
 
-    if kd < 30:
+    if kd < 10:
         medges = edges_opened
 
     return medges,cont,hullxy
@@ -260,8 +257,11 @@ def magic_lines(img):
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines = filter_angles(img, lines)
+            print("lines before:", lines.shape[0])
             aux = np.copy(img.select_lines)
+            print("appending aux:", aux.shape[0])
             lines = np.append(lines, aux, axis=0)
+            print("lines now:", lines.shape[0])
             inter = find_intersections(img, lines[:,0,:])
             got_hough = True
             break
@@ -321,7 +321,7 @@ def filter_angles(img, lines):
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
             if abs(t - img.angles[0]) > 12 and abs(t - img.angles[1]) > 12:
-                if img.angles.shape == 2:
+                if img.angles.shape[0] == 2:
                     rem[i] = 1
                 elif abs(t - img.angles[2]) > 12:
                     rem[i] = 1
