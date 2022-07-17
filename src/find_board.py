@@ -54,7 +54,7 @@ def find_best_cont(img):
     Aok = 0.4 * img.sarea
     Ami = 0.3 * img.sarea
     alast = 0
-    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (7,7))
+    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))
     kd = 3
     while kd <= 40:
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd+round(kd/2),kd))
@@ -62,8 +62,8 @@ def find_best_cont(img):
         edges_gray = cv2.divide(img.wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
         edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
-        edges_opened += img.canny
-        contours, _ = cv2.findContours(edges_opened, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        edges_wcanny = edges_opened + img.canny
+        contours, _ = cv2.findContours(edges_wcanny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         max_index = np.argmax(areas)
         hullxy = cv2.convexHull(contours[max_index])
