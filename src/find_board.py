@@ -31,9 +31,10 @@ def find_board(img):
     img = reduce_hull(img)
     save(img, "hull", img.hull)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
-    save(img, "edges", img.medges)
 
     img.canny = find_canny(img)
+    img.medges += img.canny
+    save(img, "medges", img.medges)
     img.angles, img.select_lines = find_angles(img)
     # lines = try_impossible(img)
 
