@@ -52,7 +52,7 @@ def find_best_cont(img, img_wang, amin):
     got = False
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 3
-    while kd <= 50:
+    while kd <= 30:
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd+round(kd/2),kd))
         dilate = cv2.morphologyEx(img_wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img_wang, dilate, scale = 255)
@@ -106,7 +106,7 @@ def find_canny(img):
             c_thrl -= 9
         c_thrh -= 9
 
-    # save(img, "canny", img.canny)
+    save(img, "canny", img.canny)
     return img.canny
 
 def find_angles(img):
