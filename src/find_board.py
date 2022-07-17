@@ -33,9 +33,11 @@ def find_board(img):
 
     img.canny = find_canny(img)
     img.medges += img.canny
-    save(img, "medges", img.medges)
+    save(img, "medges0", img.medges)
     img.angles, img.select_lines = find_angles(img)
-    # lines = try_impossible(img)
+    img.medges = skelet(img.medges)
+    save(img, "medges1", img.medges)
+    # lines = magic_lines(img)
 
     corners = (10, 300, 110, 310)
     return corners
@@ -239,7 +241,7 @@ def reduce_hull(img):
     img.harea = img.hwidth * img.hheigth
     return img
 
-def try_impossible(img):
+def magic_lines(img):
     got_hough = False
     h_maxg0 = 0
     h_minl0 = round((img.hwidth + img.hheigth)*0.05)
@@ -373,3 +375,21 @@ def lines_kmeans(img, lines):
 
     lines = np.int32(lines)
     return lines, centers
+
+def skelet(edges):
+    img1 = edges.copy()
+
+    # Structuring Element
+    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
+    # Create an empty output image to hold values
+    thin = np.zeros(img1.shape,dtype='uint8')
+
+    # Loop until erosion leads to an empty set
+    while (cv2.countNonZero(img1)!=0):
+        erode = cv2.erode(img1,kernel)
+        opening = cv2.morphologyEx(erode,cv2.MORPH_OPEN,kernel)
+        subset = erode - opening
+        thin = cv2.bitwise_or(subset,thin)
+        img1 = erode.copy()
+
+    return thin
