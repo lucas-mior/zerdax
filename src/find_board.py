@@ -28,6 +28,7 @@ def find_board(img):
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
 
     # save(img, "edges", img.edges)
+    img.canny = find_canny(img)
     img.angles, img.select_lines = find_angles(img)
     exit()
     lines = try_impossible(img)
@@ -85,6 +86,7 @@ def broad_hull(img, hull):
     Pymax[1] = min(img.sheigth, Pymax[1]+20)
 
     return [Pymin[1],Pymax[1]], [Pxmin[0],Pxmax[0]]
+
 def find_canny(img):
     wmin = 6
     c_thrl0 = 80
@@ -110,7 +112,6 @@ def find_canny(img):
     return img.canny
 
 def find_angles(img):
-    img.canny = find_canny(img)
     h_maxg0 = 2
     h_minl0 = round((img.hwidth + img.hheigth)*0.1)
     h_thrv0 = round(h_minl0 / 6)
