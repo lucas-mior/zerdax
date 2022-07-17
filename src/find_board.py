@@ -27,7 +27,7 @@ def find_board(img):
     img = reduce_hull(img)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
 
-    save(img, "edges", img.edges)
+    # save(img, "edges", img.edges)
     img.angles, img.select_lines = find_angles(img)
     exit()
     lines = try_impossible(img)
@@ -106,7 +106,7 @@ def find_canny(img):
             c_thrl -= 9
         c_thrh -= 9
 
-    save(img, "canny", img.canny)
+    # save(img, "canny", img.canny)
     return img.canny
 
 def find_angles(img):
@@ -128,7 +128,6 @@ def find_angles(img):
             lines = filter_lines(img, lines)
             lines, angles = lines_kmeans(img, lines)
             print("angles: ", angles)
-            inter = find_intersections(img, lines[:,0,:])
             break
         h_maxg += 1
         h_minl -= 10
@@ -141,12 +140,6 @@ def find_angles(img):
             cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
     drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
     save(img, "hough", drawn_lines)
-
-    drawn_circles = np.copy(img.hull3ch) * 0
-    for p in inter:
-        cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
-    drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
-    save(img, "intersections".format(img.basename), drawn_circles)
 
     return angles, lines
 
