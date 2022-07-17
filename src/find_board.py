@@ -32,33 +32,34 @@ def find_board(img):
 
     c = 3
     Amin = 0.45 * img.sarea
+    increasing = True
     while c < 8:
         print("Amin =", Amin)
         print("clahe = ", c)
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
         img.clahe = clahe.apply(img.wang0)
-        save(img, "clahe{}".format(c), img.clahe)
         img.wang = lwang.wang_filter(img.clahe)
-        save(img, "wang{}".format(c), img.wang)
         img.canny = find_canny(img)
-        save(img, "canny{}".format(c), img.canny)
         img.medges,img.hullxy,img.got_hull,increasing = find_morph(img, Amin)
+        if increasing:
+            save(img, "clahe@{}".format(c), img.clahe)
+            save(img, "wang@{}".format(c), img.wang)
+            save(img, "canny@{}".format(c), img.canny)
 
         if img.got_hull:
             break
         else:
             if not increasing:
-                Amin -= 0.005 * img.sarea
-                print("Amin =", Amin)
+                Amin -= 0.008 * img.sarea
                 continue
             else:
                 c += 1
 
-    save(img, "medges", img.medges)
+    save(img, "medges0", img.medges)
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
-    save(img, "convex", drawn_contours)
+    save(img, "convex0", drawn_contours)
     limx, limy = broad_hull(img)
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
@@ -77,7 +78,7 @@ def find_board(img):
 
     img.canny = find_canny(img, wmin = 8)
     img.medges += img.canny
-    save(img, "medgescanny", img.medges)
+    save(img, "medges+canny", img.medges)
     img.angles, img.select_lines = find_angles(img)
 
     lines = magic_lines(img)
@@ -112,12 +113,12 @@ def find_morph(img, Amin):
             got_hull = True
             break
         else:
-            print("{} < {} @ ksize = {} [GOTHULL]".format(a, Amin, kd))
+            print("{} < {} @ ksize = {}".format(a, Amin, kd))
             kd += 1
 
     if not got_hull:
         diff = a - alast
-        mdiff = 0.12 * Amin
+        mdiff = 0.1 * Amin
         if (diff > mdiff) and (a > (img.sarea*0.15)):
             print("diff: {} > {}, increasing".format(diff, mdiff))
             increasing = True
@@ -161,7 +162,6 @@ def find_canny(img, wmin = 6):
             c_thrl -= 9
         c_thrh -= 9
 
-    # save(img, "canny", img.canny)
     return img.canny
 
 def find_angles(img):
@@ -211,7 +211,7 @@ def find_angles(img):
         for x1,y1,x2,y2,r,t in line:
             cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
     drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-    # save(img, "hough_select", drawn_lines)
+    save(img, "hough_select", drawn_lines)
 
     return angles, lines
 
@@ -319,7 +319,7 @@ def magic_lines(img):
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
-        # save(img, "hough", drawn_lines)
+        save(img, "hough", drawn_lines)
 
         draw_lines = draw_lines[:,:,2]
         img.medges += draw_lines
@@ -327,7 +327,7 @@ def magic_lines(img):
         ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
         img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
 
-        save(img, "medges", img.medges)
+        save(img, "medgesCLOSED", img.medges)
         img.shull = update_hull(img)
         inter = find_intersections(img, lines[:,0,:])
 
