@@ -33,7 +33,7 @@ def find_board(img):
 
     img.canny = find_canny(img)
     img.medges += img.canny
-    # save(img, "medges", img.medges)
+    save(img, "medges", img.medges)
     img.angles, img.select_lines = find_angles(img)
     lines = magic_lines(img)
 
@@ -244,24 +244,24 @@ def magic_lines(img):
     h_maxg0 = 0
     h_minl0 = round((img.hwidth + img.hheigth)*0.1)
     h_thrv0 = round(h_minl0 / 3)
-    h_angl0 = np.pi / 360
+    h_angl0 = np.pi / 1440
 
     h_maxg = h_maxg0
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
     while h_angl < (np.pi / 90):
-        lines = cv2.HoughLinesP(img.canny, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
-        if lines is not None and lines.shape[0] >= 30:
+        lines = cv2.HoughLinesP(img.medges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
+        if lines is not None:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines = filter_angles(img, lines)
             aux = np.copy(img.select_lines)
             lines = np.append(lines, aux, axis=0)
-            inter = find_intersections(img, lines[:,0,:])
-            got_hough = True
-            break
+            if lines.shape[0] >= 30:
+                got_hough = True
+                break
 
         if lines is not None:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
@@ -281,6 +281,7 @@ def magic_lines(img):
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
         save(img, "hough", drawn_lines)
 
+        inter = find_intersections(img, lines[:,0,:])
         drawn_circles = np.copy(img.hull3ch) * 0
         for p in inter:
             cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
