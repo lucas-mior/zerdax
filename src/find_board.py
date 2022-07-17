@@ -12,11 +12,14 @@ from aux import *
 import lwang
 
 def find_board(img):
+    save(img, "sgray", img.sgray)
     img.wang = lwang.wang_filter(img.sgray)
+    # img.canny = find_canny(img)
     img.medges, img.hullxy = find_morph(img)
     limx, limy = broad_hull(img)
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
+    img.wang = img.wang[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     limx[0] = round(limx[0] / img.sfact)
     limx[1] = round(limx[1] / img.sfact)
     limy[0] = round(limy[0] / img.sfact)
@@ -53,9 +56,9 @@ def find_best_cont(img):
     Aok = 0.25 * img.sarea
     Ami = 0.2 * img.sarea
     alast = 0
-    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (7,7))
     kd = 3
-    while kd <= 100:
+    while kd <= 60:
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd+round(kd/2),kd))
         dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img.wang, dilate, scale = 255)
@@ -79,6 +82,7 @@ def find_best_cont(img):
             elif a > aok:
                 break
         else:
+            print("{} < {} @ ksize = {}".format(a, Aok, kd))
             alast = a
             kd += 1
             pass
@@ -112,11 +116,11 @@ def find_canny(img):
         img.canny = cv2.Canny(img.wang, c_thrl, c_thrh)
         w = img.canny.mean()
         if w > wmin:
-            print("{} > {}, @ {}, {}".format(w, wmin, c_thrl, c_thrh))
+            print("{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
             break
         else:
             if wmin - w < wmin:
-                print("{} < {}, @ {}, {}".format(w, wmin, c_thrl, c_thrh))
+                print("{0:0=.2f} > {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
         if c_thrl > 10:
             c_thrl -= 9
         c_thrh -= 9
@@ -224,6 +228,7 @@ def reduce_hull(img):
 
     img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
     img.medges = cv2.resize(img.medges, (img.hwidth, img.hheigth))
+    img.wang = cv2.resize(img.wang, (img.hwidth, img.hheigth))
     img.harea = img.hwidth * img.hheigth
     return img
 
