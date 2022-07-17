@@ -11,12 +11,15 @@ from Image import Image
 from aux import *
 import lwang
 
+def find_morph(img):
+
 def find_board(img):
     img.wang = lwang.wang_filter(img.sgray)
+    img.medges, hull = find_morph(img)
     edges_opened, hull = find_hull(img)
     limx, limy = broad_hull(img, hull)
 
-    img.edges = edges_opened[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
+    img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     limx[0] = round(limx[0] / img.sfact)
     limx[1] = round(limx[1] / img.sfact)
     limy[0] = round(limy[0] / img.sfact)
@@ -27,7 +30,7 @@ def find_board(img):
     img.hyoff = limy[0]
     img = reduce_hull(img)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
-    save(img, "edges", img.edges)
+    save(img, "edges", img.medges)
     exit()
 
     img.canny = find_canny(img)
@@ -209,7 +212,7 @@ def reduce_hull(img):
     img.hheigth = round(img.hfact * img.hull.shape[0])
 
     img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
-    img.edges = cv2.resize(img.edges, (img.hwidth, img.hheigth))
+    img.medges = cv2.resize(img.medges, (img.hwidth, img.hheigth))
     img.harea = img.hwidth * img.hheigth
     return img
 
@@ -225,7 +228,7 @@ def try_impossible(img):
     h_thrv = h_thrv0
     h_angl = h_angl0
     while h_angl < (np.pi / 180):
-        lines = cv2.HoughLinesP(img.edges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
+        lines = cv2.HoughLinesP(img.medges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
         print("impossible @ {}º, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         if lines is not None and lines.shape[0] >= 70:
             lines = radius_theta(lines)
