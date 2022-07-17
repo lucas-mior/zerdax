@@ -14,7 +14,7 @@ import lwang
 def find_board(img):
     save(img, "sgray", img.sgray)
     img.wang = lwang.wang_filter(img.sgray)
-    # img.canny = find_canny(img)
+    img.canny = find_canny(img)
     img.medges, img.hullxy = find_morph(img)
     limx, limy = broad_hull(img)
 
@@ -62,6 +62,7 @@ def find_best_cont(img):
         edges_gray = cv2.divide(img.wang, dilate, scale = 255)
         edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
         edges_opened = cv2.morphologyEx(edges_bin, cv2.MORPH_OPEN, ko, iterations = 1)
+        edges_opened += img.canny
         contours, _ = cv2.findContours(edges_opened, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         max_index = np.argmax(areas)
@@ -140,9 +141,10 @@ def find_angles(img):
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
-    while h_angl < (np.pi / 22.5):
+    minlines = 24
+    while h_angl < (np.pi / 30):
         lines = cv2.HoughLinesP(img.canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
-        if lines is not None and lines.shape[0] >= 4 + 20:
+        if lines is not None and lines.shape[0] >= minlines:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
@@ -156,6 +158,10 @@ def find_angles(img):
             h_maxg += 1
         if h_minl > h_minl0 / 2:
             h_minl -= 10
+        if h_angl > (np.pi / 40):
+            h_minl = 32
+            h_maxg = 2
+            minlines = 60
 
         h_thrv = round(h_minl / 10)
         h_angl += np.pi/14400
