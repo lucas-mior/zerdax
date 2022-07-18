@@ -42,9 +42,10 @@ def find_board(img):
         img.canny = find_canny(img)
         img.medges,img.hullxy,img.got_hull,increasing = find_morph(img, Amin)
         if increasing:
-            save(img, "clahe@{}".format(c), img.clahe)
-            save(img, "wang@{}".format(c), img.wang)
-            save(img, "canny@{}".format(c), img.canny)
+            pass
+            # save(img, "clahe@{}".format(c), img.clahe)
+            # save(img, "wang@{}".format(c), img.wang)
+            # save(img, "canny@{}".format(c), img.canny)
 
         if img.got_hull:
             break
