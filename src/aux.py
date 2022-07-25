@@ -1,4 +1,3 @@
-from os.path import exists
 import cv2
 import matplotlib as mpl
 mpl.use('Agg')
@@ -9,8 +8,7 @@ import numpy as np
 i = 0
 def save(img, filename, image):
     global i
-    if img.save and not exists(filename):
-        cv2.imwrite("{}{:02d}_{}.png".format(img.basename, i, filename), image)
+    cv2.imwrite("{}{:02d}_{}.png".format(img.basename, i, filename), image)
     i += 1
 
 def savefig(img, filename, fig):

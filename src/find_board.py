@@ -82,9 +82,10 @@ def find_board(img):
     save(img, "medges+canny", img.medges)
     img.angles, img.select_lines = find_angles(img)
 
-    lines = magic_lines(img)
+    lines,inter = magic_lines(img)
 
-    corners = (10, 300, 110, 310)
+    corners = find_corners(img, inter)
+
     return corners
 
 def find_morph(img, Amin):
@@ -340,7 +341,7 @@ def magic_lines(img):
     else:
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
 
-    return lines
+    return lines,inter
 
 def filter_lines(img, lines):
     rem = np.empty(lines.shape[0])
@@ -440,3 +441,8 @@ def lines_kmeans(img, lines):
 
     lines = np.int32(lines)
     return lines, centers
+
+def find_corners(img, inter):
+
+    corners = (10, 300, 110, 310)
+    return corners
