@@ -445,70 +445,32 @@ def lines_kmeans(img, lines):
 def find_corners(img, inter):
     print("inter:", inter.shape)
 
-    xs = inter[inter[:,0].argsort()]
-    ys = inter[inter[:,0].argsort()]
-    xmin = inter[np.argmin(inter[:,0])]
-    xmax = inter[np.argmax(inter[:,0])]
-    ymin = inter[np.argmin(inter[:,1])]
-    ymax = inter[np.argmax(inter[:,1])]
+    psum = np.empty((inter.shape[0], 3), dtype='int32')
+    psub = np.empty((inter.shape[0], 3), dtype='int32')
 
-    xmin = xmin[0]
-    xmax = xmax[0]
-    ymin = ymin[1]
-    ymax = ymax[1]
+    psum[:,0] = inter[:,0]
+    psum[:,1] = inter[:,1]
+    psum[:,2] = inter[:,0] + inter[:,1]
+    psub[:,0] = inter[:,0]
+    psub[:,1] = inter[:,1]
+    psub[:,2] = inter[:,0] - inter[:,1]
 
-    P1 = []
-    P2 = []
-    P3 = []
-    P4 = []
+    BR = psum[np.argmax(psum[:,2])]
+    BL = psub[np.argmax(psub[:,2])]
+    TR = psub[np.argmin(psub[:,2])]
+    TL = psum[np.argmin(psum[:,2])]
 
-    for i in range(0, xs.shape[0]):
-        if xs[i, 1] == ymin:
-            P1 = xs[i]
-            break
-        if xs[i, 1] == ymax:
-            P1 = xs[i]
-            break
-    for i in range(xs.shape[0]-1, -1, -1):
-        if xs[i, 1] == ymax:
-            P2 = xs[i]
-            if radius(P2[0],P2[1], P1[0],P1[1]) > 50:
-                break
-            print("skiped 3")
-        if xs[i, 1] == ymin:
-            P2 = xs[i]
-            if radius(P2[0],P2[1], P1[0],P1[1]) > 50:
-                break
-            print("skiped 3")
-    for i in range(0, ys.shape[0]):
-        if ys[i, 0] == xmin:
-            P3 = ys[i]
-            if radius(P3[0],P3[1], P2[0],P2[1]) > 50 and radius(P3[0],P3[1], P1[0],P1[1]) > 50:
-                break
-            print("skiped 3")
-        if ys[i, 0] == xmax:
-            P3 = ys[i]
-            if radius(P3[0],P3[1], P2[0],P2[1]) > 50 and radius(P3[0],P3[1], P1[0],P1[1]) > 50:
-                break
-            print("skiped 3")
-    for i in range(ys.shape[0]-1, -1, -1):
-        if ys[i, 0] == xmax:
-            P4 = ys[i]
-            if radius(P4[0],P4[1], P3[0],P3[1]) > 50 and radius(P4[0],P4[1], P2[0],P2[1]) > 50 and radius(P4[0],P4[1], P1[0],P1[1]) > 50:
-                break
-            print("skiped 4")
-        if ys[i, 0] == xmin:
-            P4 = ys[i]
-            if radius(P4[0],P4[1], P3[0],P3[1]) > 50 and radius(P4[0],P4[1], P2[0],P2[1]) > 50 and radius(P4[0],P4[1], P1[0],P1[1]) > 50:
-                break
-            print("skiped 4")
+    BR = BR[0:2]
+    BL = BL[0:2]
+    TR = TR[0:2]
+    TL = TL[0:2]
 
-    print("P: ", P1, P2, P3, P4)
+    print("points:", BR, BL, TR, TL)
 
     drawn_circles = np.copy(img.hull3ch) * 0
-    for p in P1, P2, P3, P4:
+    for p in BR, BL, TR, TL:
         cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
     drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
     save(img, "corners".format(img.basename), drawn_circles)
 
-    return P1, P2, P3, P4
+    return BR, BL, TR, TL
