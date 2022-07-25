@@ -22,13 +22,13 @@ def update_hull(img):
     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.hull3ch, 0.5, drawn_contours, 0.8, 0)
-    save(img, "convex", drawn_contours)
+    # save(img, "convex", drawn_contours)
     return hullxy
 
 def find_board(img):
-    save(img, "sgray", img.sgray)
+    # save(img, "sgray", img.sgray)
     img.wang0 = lwang.wang_filter(img.sgray)
-    save(img, "wang0", img.wang0)
+    # save(img, "wang0", img.wang0)
 
     c = 3
     Amin = 0.45 * img.sarea
@@ -56,11 +56,11 @@ def find_board(img):
             else:
                 c += 1
 
-    save(img, "medges0", img.medges)
+    # save(img, "medges0", img.medges)
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
-    save(img, "convex0", drawn_contours)
+    # save(img, "convex0", drawn_contours)
     limx, limy = broad_hull(img)
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
@@ -79,7 +79,7 @@ def find_board(img):
 
     img.canny = find_canny(img, wmin = 8)
     img.medges += img.canny
-    save(img, "medges+canny", img.medges)
+    # save(img, "medges+canny", img.medges)
     img.angles, img.select_lines = find_angles(img)
 
     lines,inter = magic_lines(img)
@@ -213,7 +213,7 @@ def find_angles(img):
         for x1,y1,x2,y2,r,t in line:
             cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
     drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-    save(img, "hough_select", drawn_lines)
+    # save(img, "hough_select", drawn_lines)
 
     return angles, lines
 
@@ -321,7 +321,7 @@ def magic_lines(img):
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
-        save(img, "hough", drawn_lines)
+        # save(img, "hough", drawn_lines)
 
         draw_lines = draw_lines[:,:,2]
         img.medges += draw_lines
@@ -329,7 +329,7 @@ def magic_lines(img):
         ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
         img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
 
-        save(img, "medgesCLOSED", img.medges)
+        # save(img, "medgesCLOSED", img.medges)
         img.shull = update_hull(img)
         inter = find_intersections(img, lines[:,0,:])
 
@@ -443,6 +443,72 @@ def lines_kmeans(img, lines):
     return lines, centers
 
 def find_corners(img, inter):
+    print("inter:", inter.shape)
 
-    corners = (10, 300, 110, 310)
-    return corners
+    xs = inter[inter[:,0].argsort()]
+    ys = inter[inter[:,0].argsort()]
+    xmin = inter[np.argmin(inter[:,0])]
+    xmax = inter[np.argmax(inter[:,0])]
+    ymin = inter[np.argmin(inter[:,1])]
+    ymax = inter[np.argmax(inter[:,1])]
+
+    xmin = xmin[0]
+    xmax = xmax[0]
+    ymin = ymin[1]
+    ymax = ymax[1]
+
+    P1 = []
+    P2 = []
+    P3 = []
+    P4 = []
+
+    for i in range(0, xs.shape[0]):
+        if xs[i, 1] == ymin:
+            P1 = xs[i]
+            break
+        if xs[i, 1] == ymax:
+            P1 = xs[i]
+            break
+    for i in range(xs.shape[0]-1, -1, -1):
+        if xs[i, 1] == ymax:
+            P2 = xs[i]
+            if radius(P2[0],P2[1], P1[0],P1[1]) > 50:
+                break
+            print("skiped 3")
+        if xs[i, 1] == ymin:
+            P2 = xs[i]
+            if radius(P2[0],P2[1], P1[0],P1[1]) > 50:
+                break
+            print("skiped 3")
+    for i in range(0, ys.shape[0]):
+        if ys[i, 0] == xmin:
+            P3 = ys[i]
+            if radius(P3[0],P3[1], P2[0],P2[1]) > 50 and radius(P3[0],P3[1], P1[0],P1[1]) > 50:
+                break
+            print("skiped 3")
+        if ys[i, 0] == xmax:
+            P3 = ys[i]
+            if radius(P3[0],P3[1], P2[0],P2[1]) > 50 and radius(P3[0],P3[1], P1[0],P1[1]) > 50:
+                break
+            print("skiped 3")
+    for i in range(ys.shape[0]-1, -1, -1):
+        if ys[i, 0] == xmax:
+            P4 = ys[i]
+            if radius(P4[0],P4[1], P3[0],P3[1]) > 50 and radius(P4[0],P4[1], P2[0],P2[1]) > 50 and radius(P4[0],P4[1], P1[0],P1[1]) > 50:
+                break
+            print("skiped 4")
+        if ys[i, 0] == xmin:
+            P4 = ys[i]
+            if radius(P4[0],P4[1], P3[0],P3[1]) > 50 and radius(P4[0],P4[1], P2[0],P2[1]) > 50 and radius(P4[0],P4[1], P1[0],P1[1]) > 50:
+                break
+            print("skiped 4")
+
+    print("P: ", P1, P2, P3, P4)
+
+    drawn_circles = np.copy(img.hull3ch) * 0
+    for p in P1, P2, P3, P4:
+        cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
+    drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
+    save(img, "corners".format(img.basename), drawn_circles)
+
+    return P1, P2, P3, P4
