@@ -110,10 +110,6 @@ def find_morph(img, Amin):
 
         edges_bin = cv2.morphologyEx(edges_bin, cv2.MORPH_ERODE, ko, iterations = 1)
         edges_wcanny = cv2.bitwise_or(img.canny, edges_bin)
-
-        ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-        edges_wcanny = cv2.morphologyEx(edges_wcanny, cv2.MORPH_CLOSE, ko, iterations = 1)
-
         contours, _ = cv2.findContours(edges_wcanny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         max_index = np.argmax(areas)
