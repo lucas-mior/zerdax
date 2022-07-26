@@ -51,7 +51,7 @@ def find_wcanny(img, wmin = 12):
     c_thrh = c_thrh0
 
     while c_thrh > 20:
-        img.wcanny = cv2.Canny(img.wwang, c_thrl, c_thrh)
+        img.wcanny = cv2.Canny(img.warped, c_thrl, c_thrh)
         w = img.wcanny.mean()
         if w > wmin:
             print("{0:0=.2f} > {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
