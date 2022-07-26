@@ -68,10 +68,10 @@ def find_board(img):
     x,y,w,h = cv2.boundingRect(img.poly)
     limx = np.zeros((2), dtype='int32')
     limy = np.zeros((2), dtype='int32')
-    limx[0] = y-15
-    limx[1] = y+h+15
-    limy[0] = x-15
-    limy[1] = x+w+15
+    limx[0] = max(y-15, 0)
+    limx[1] = min(y+h+15, img.swidth)
+    limy[0] = max(x-15, 0)
+    limy[1] = max(x+w+15, img.sheigth)
 
     if (c > cmax) and not img.got_hull:
         print("finding board region failed [find_morph()]")
