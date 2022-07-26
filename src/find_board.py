@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 from Image import Image
 from aux import *
+from lines import HoughBundler
 import lwang
 
 def update_hull(img):
@@ -79,7 +80,7 @@ def find_board(img):
 
     img.canny = find_canny(img, wmin = 8)
     img.medges += img.canny
-    # save(img, "medges+canny", img.medges)
+    save(img, "medges+canny", img.medges)
     img.angles, img.select_lines = find_angles(img)
 
     lines,inter = magic_lines(img)
@@ -213,7 +214,7 @@ def find_angles(img):
         for x1,y1,x2,y2,r,t in line:
             cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
     drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-    # save(img, "hough_select", drawn_lines)
+    save(img, "hough_select", drawn_lines)
 
     return angles, lines
 
@@ -281,9 +282,9 @@ def reduce_hull(img):
 
 def magic_lines(img):
     got_hough = False
-    h_minl0 = round((img.hwidth + img.hheigth)*0.3)
-    h_thrv0 = round(h_minl0 / 3)
-    h_maxg0 = round(h_minl0 / 20)
+    h_minl0 = round((img.hwidth + img.hheigth)*0.2)
+    h_thrv0 = round(h_minl0 / 1.5)
+    h_maxg0 = round(h_minl0 / 50) + 5
     h_angl0 = np.pi / 1440
 
     h_maxg = h_maxg0
@@ -294,12 +295,17 @@ def magic_lines(img):
     while h_angl < (np.pi / 90):
         lines = cv2.HoughLinesP(img.medges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
         if lines is not None:
-            print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
+            bundler = HoughBundler()
+            lines = bundler.process_lines(lines)
+            print("linesbundler: ", lines.shape)
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines = filter_angles(img, lines)
-            if lines.shape[0] >= 30:
-                aux = np.copy(img.select_lines)
+            linesbef = np.copy(lines)
+            print("linesbef: ", linesbef.shape)
+            if lines.shape[0] >= 10:
+                print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
+                aux = np.copy(img.select_lines[:,:,0:6])
                 lines = np.append(lines, aux, axis=0)
                 got_hough = True
                 break
@@ -307,20 +313,28 @@ def magic_lines(img):
         if lines is not None:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         if h_minl > h_minl0 / 5:
-            h_minl -= 5
-            h_thrv = round(h_minl / 2)
-            h_maxg = round(h_minl / 20)
+            h_minl -= 3
+            h_thrv = round(h_minl / 1.5)
+            h_maxg = round(h_minl / 50) + 5
         j += 1
         h_angl += np.pi / 14400
 
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
         draw_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+        for line in linesbef:
+            for x1,y1,x2,y2,r,t in line:
+                cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
+        drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
+        save(img, "hough_bef_mer", drawn_lines)
+
+        drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+        draw_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
         for line in lines:
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
-        save(img, "hough", drawn_lines)
+        save(img, "hough_aft_mer", drawn_lines)
 
         draw_lines = draw_lines[:,:,2]
         img.medges += draw_lines
@@ -343,6 +357,9 @@ def magic_lines(img):
     return lines,inter
 
 def filter_lines(img, lines):
+    """
+    remove lines that are on the border of the image and are horizontal or vertical
+    """
     rem = np.empty(lines.shape[0])
     rem = np.int32(rem)
 
