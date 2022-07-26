@@ -4,6 +4,7 @@ import numpy as np
 from Image import Image
 
 from find_board import find_board
+from find_squares import find_squares
 
 def reduce(img):
     img.swidth = 1000
@@ -25,9 +26,10 @@ def full(filename, save):
     img.gray3ch = cv2.cvtColor(img.sgray, cv2.COLOR_GRAY2BGR)
 
     img.save = save
-    img.board = find_board(img)
+    img = find_board(img)
+    img = find_squares(img)
 
-    print("\033[37;1;1mboard: \033[0;m", img.board)
+    print("\033[37;1;1mboard: \033[0;m", img.corners)
 
     predicted_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
     return predicted_fen

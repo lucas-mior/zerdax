@@ -12,20 +12,6 @@ from aux import *
 from lines import HoughBundler
 import lwang
 
-def update_hull(img):
-    contours, _ = cv2.findContours(img.medges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    areas = [cv2.contourArea(c) for c in contours]
-    max_index = np.argmax(areas)
-    cont = contours[max_index]
-    hullxy = cv2.convexHull(cont)
-
-    drawn_contours = np.empty(img.hull3ch.shape, dtype='uint8') * 0
-    cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
-    cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
-    drawn_contours = cv2.addWeighted(img.hull3ch, 0.5, drawn_contours, 0.8, 0)
-    save(img, "updatehull", drawn_contours)
-    return hullxy
-
 def find_board(img):
     # save(img, "sgray", img.sgray)
     img.wang0 = lwang.wang_filter(img.sgray)
@@ -89,9 +75,9 @@ def find_board(img):
 
     lines,inter = magic_lines(img)
 
-    corners = find_corners(img, inter)
+    img.corners = find_corners(img, inter)
 
-    return corners
+    return img
 
 def find_morph(img, Amin):
     got_hull = False
@@ -285,6 +271,20 @@ def reduce_hull(img):
     img.harea = img.hwidth * img.hheigth
     return img
 
+def update_hull(img):
+    contours, _ = cv2.findContours(img.medges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    areas = [cv2.contourArea(c) for c in contours]
+    max_index = np.argmax(areas)
+    cont = contours[max_index]
+    hullxy = cv2.convexHull(cont)
+
+    drawn_contours = np.empty(img.hull3ch.shape, dtype='uint8') * 0
+    cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
+    cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
+    drawn_contours = cv2.addWeighted(img.hull3ch, 0.5, drawn_contours, 0.8, 0)
+    save(img, "updatehull", drawn_contours)
+    return hullxy
+
 def magic_lines(img):
     got_hough = False
     h_minl0 = round((img.hwidth + img.hheigth)*0.2)
@@ -340,7 +340,7 @@ def magic_lines(img):
         ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
         img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
 
-        # save(img, "medgesCLOSED", img.medges)
+        save(img, "medgesCLOSED", img.medges)
         img.shull = update_hull(img)
         inter = find_intersections(img, lines[:,0,:])
 
