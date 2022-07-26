@@ -295,14 +295,12 @@ def magic_lines(img):
     while h_angl < (np.pi / 90):
         lines = cv2.HoughLinesP(img.medges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
         if lines is not None:
-            bundler = HoughBundler()
-            lines = bundler.process_lines(lines)
-            print("linesbundler: ", lines.shape)
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines = filter_angles(img, lines)
             linesbef = np.copy(lines)
-            print("linesbef: ", linesbef.shape)
+            bundler = HoughBundler()
+            lines = bundler.process_lines(lines[:,:,0:4])
             if lines.shape[0] >= 10:
                 print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
                 aux = np.copy(img.select_lines[:,:,0:6])
