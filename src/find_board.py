@@ -53,9 +53,9 @@ def find_board(img):
 
     img.medges = fmedges
 
-    save(img, "clahe@{}".format(c), img.clahe)
-    save(img, "wang@{}".format(c), img.wang)
-    save(img, "canny@{}".format(c), img.canny)
+    # save(img, "clahe@{}".format(c), img.clahe)
+    # save(img, "wang@{}".format(c), img.wang)
+    # save(img, "canny@{}".format(c), img.canny)
     save(img, "medges_hull", img.medges)
 
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
@@ -83,7 +83,7 @@ def find_board(img):
     img = reduce_hull(img)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
 
-    save(img, "hull", img.hull)
+    # save(img, "hull", img.hull)
 
     img.canny = find_canny(img, wmin = 8)
     img.medges += img.canny
@@ -259,7 +259,9 @@ def find_intersections(img, lines):
             x = round(determinant(d, xdiff) / div)
             y = round(determinant(d, ydiff) / div)
 
-            if img.got_hull and cv2.pointPolygonTest(img.shull, (x,y), True) < -20:
+            dist = cv2.pointPolygonTest(img.shull, (x, y), True)
+            print("dist = ", dist)
+            if dist < -20:
                 j += 1
                 continue
             elif x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
@@ -306,71 +308,62 @@ def update_hull(img):
 
 def magic_lines(img):
     got_hough = False
-    h_minl0 = round((img.hwidth + img.hheigth)*0.2)
-    h_thrv0 = round(h_minl0 / 1.5)
-    h_maxg0 = round(h_minl0 / 50) + 5
-    h_angl0 = np.pi / 1440
+    h_minl0 = round((img.hwidth + img.hheigth)*0.05)
+    h_thrv0 = round(h_minl0 - 10)
+    h_maxg0 = round(h_minl0 / 60) + 0
+    h_angl0 = np.pi / 120
 
+    tuned = 0
     h_maxg = h_maxg0
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
     j = 0
-    while h_angl < (np.pi / 90):
-        lines = cv2.HoughLinesP(img.medges, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
+    while h_angl < (np.pi / 10):
+        lines = cv2.HoughLinesP(img.canny, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
         if lines is not None:
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines = filter_angles(img, lines)
-            bundler = HoughBundler()
-            lines = bundler.process_lines(lines)
-            lines = radius_theta(lines)
-            if lines.shape[0] >= 10:
+            if lines.shape[0] >= 20:
                 print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
-                aux = np.copy(img.select_lines[:,:,0:6])
-                lines = np.append(lines, aux, axis=0)
                 got_hough = True
+                aux = np.copy(img.select_lines[:,:,0:6]) 
+                lines = np.append(lines, aux, axis=0) 
                 break
 
         if lines is not None:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
-        if h_minl > h_minl0 / 5:
-            h_minl -= 3
-            h_thrv = round(h_minl / 1.5)
-            h_maxg = round(h_minl / 50) + 5
         j += 1
-        h_angl += np.pi / 14400
+        h_angl += np.pi / 3600
+        if h_angl > (np.pi / 20) and tuned < 5:
+            h_angl = h_angl0
+            h_minl -= 5
+            h_thrv -= 5
+            h_maxg += 1
+            tuned += 1
 
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
         draw_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
 
-        drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-        draw_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
         for line in lines:
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
-        save(img, "hough_after_merge", drawn_lines)
+        save(img, "hough_magic", drawn_lines)
 
-        draw_lines = draw_lines[:,:,2]
-        img.medges += draw_lines
-
-        ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-        img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
-
-        save(img, "medgesCLOSED", img.medges)
         img.shull = update_hull(img)
         inter = find_intersections(img, lines[:,0,:])
 
-        drawn_circles = np.copy(img.hull3ch) * 0
+        drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
         for p in inter:
             cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
         drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
         save(img, "intersections".format(img.basename), drawn_circles)
     else:
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
-
+        exit()
     return lines,inter
 
 def filter_lines(img, lines):
