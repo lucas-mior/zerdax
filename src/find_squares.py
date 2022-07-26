@@ -17,12 +17,13 @@ def find_squares(img):
     img.warped3ch = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR)
 
     img.wwang = lwang.wang_filter(img.warped)
-    save(img, "wwang", img.wwang)
+    # save(img, "wwang", img.wwang)
 
     img.wcanny = find_wcanny(img, wmin = 12)
     save(img, "wcanny", img.wcanny)
 
     lines = w_lines(img)
+    lines = geo_lines(img, lines)
     return img
 
 def perspective_transform(img):
@@ -41,7 +42,7 @@ def perspective_transform(img):
     M = cv2.getPerspectiveTransform(rect,dst)
     img.warped = cv2.warpPerspective(img.hull, M, (width, height))
 
-    save(img, "warped", img.warped)
+    # save(img, "warped", img.warped)
     return img
 
 def find_wcanny(img, wmin = 12):
@@ -112,19 +113,11 @@ def w_lines(img):
         drawn_lines = cv2.addWeighted(img.warped3ch, 0.5, draw_lines, 0.8, 0)
         save(img, "hough_warped", drawn_lines)
 
-        # inter = find_intersections(img, lines[:,0,:])
-
-        # drawn_circles = np.copy(img.warped) * 0
-        # for p in inter:
-        #     cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
-        # drawn_circles = cv2.addWeighted(img.warped, 0.5, drawn_circles, 0.8, 0)
-        # save(img, "intersections".format(img.basename), drawn_circles)
-        inter = [100, 100]
     else:
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         exit()
 
-    return lines,inter
+    return lines
 
 def filter_90(img, lines):
     rem = np.empty(lines.shape[0])
@@ -141,4 +134,8 @@ def filter_90(img, lines):
 
     A = lines[rem==0]
     lines = A
+    return lines
+
+def geo_lines(img, lines):
+    print("dummy geo_lines")
     return lines
