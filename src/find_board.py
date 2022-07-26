@@ -18,15 +18,17 @@ def find_board(img):
     # save(img, "wang0", img.wang0)
 
     c = 3
+    cmax = 12
+    wc = 6
     Amin = 0.45 * img.sarea
     increasing = True
-    while c < 8:
+    while c <= cmax and wc < 10:
         print("Amin =", Amin)
         print("clahe = ", c)
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
         img.clahe = clahe.apply(img.wang0)
         img.wang = lwang.wang_filter(img.clahe)
-        img.canny = find_canny(img)
+        img.canny = find_canny(img, wmin=wc)
         img.medges,img.hullxy,img.got_hull,increasing,a = find_morph(img, Amin)
         if increasing:
             pass
@@ -38,11 +40,12 @@ def find_board(img):
             break
         else:
             if not increasing:
-                while a < Amin:
-                    Amin -= 0.008 * img.sarea
-                continue
-            else:
-                c += 1
+                while a < Amin and Amin > (img.sarea * 0.1):
+                    Amin -= 0.002 * img.sarea
+                if Amin > (img.sarea * 0.1):
+                    continue
+            c += 1
+            wc += 1
 
     # save(img, "clahe@{}".format(c), img.clahe)
     # save(img, "wang@{}".format(c), img.wang)
@@ -51,8 +54,12 @@ def find_board(img):
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
-    # save(img, "convex0", drawn_contours)
+    save(img, "convex0", drawn_contours)
     limx, limy = broad_hull(img)
+
+    if c > cmax and not img.got_hull:
+        print("finding board region failed [find_morph()]")
+        exit()
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.wang = img.wang[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
@@ -67,6 +74,8 @@ def find_board(img):
     img.hyoff = limy[0]
     img = reduce_hull(img)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
+
+    save(img, "hull", img.hull)
 
     img.canny = find_canny(img, wmin = 8)
     img.medges += img.canny
@@ -112,7 +121,7 @@ def find_morph(img, Amin):
 
     if not got_hull:
         diff = a - alast
-        mdiff = 0.1 * Amin
+        mdiff = 0.05 * Amin
         if (diff > mdiff) and (a > (img.sarea*0.15)):
             print("diff: {} > {}, increasing".format(diff, mdiff))
             increasing = True
