@@ -41,7 +41,7 @@ def find_board(img):
         img.clahe = clahe.apply(img.wang0)
         img.wang = lwang.wang_filter(img.clahe)
         img.canny = find_canny(img)
-        img.medges,img.hullxy,img.got_hull,increasing = find_morph(img, Amin)
+        img.medges,img.hullxy,img.got_hull,increasing,a = find_morph(img, Amin)
         if increasing:
             pass
             # save(img, "clahe@{}".format(c), img.clahe)
@@ -52,16 +52,17 @@ def find_board(img):
             break
         else:
             if not increasing:
-                Amin -= 0.008 * img.sarea
+                while a < Amin:
+                    Amin -= 0.008 * img.sarea
                 continue
             else:
                 c += 1
 
-    # save(img, "medges0", img.medges)
+    save(img, "medges0", img.medges)
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
-    # save(img, "convex0", drawn_contours)
+    save(img, "convex0", drawn_contours)
     limx, limy = broad_hull(img)
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
@@ -131,7 +132,7 @@ def find_morph(img, Amin):
 
     medges = edges_bin
 
-    return medges, hullxy, got_hull, increasing
+    return medges, hullxy, got_hull, increasing, a
 
 def broad_hull(img):
     Pxmin = img.hullxy[np.argmin(img.hullxy[:,0,0]),0]
@@ -234,7 +235,7 @@ def find_intersections(img, lines):
             if (x1,y1) == (xx1,yy1) and (x2,y2) == (xx2,yy2):
                 continue
 
-            if abs(t - tt) < 30 or abs(t - tt) > 150:
+            if abs(t - tt) < 20 or abs(t - tt) > 160:
                 continue
 
             xdiff = (l1[0][0] - l1[1][0], l2[0][0] - l2[1][0])
@@ -298,7 +299,6 @@ def magic_lines(img):
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines = filter_angles(img, lines)
-            linesbef = np.copy(lines)
             bundler = HoughBundler()
             lines = bundler.process_lines(lines)
             lines = radius_theta(lines)
@@ -321,11 +321,6 @@ def magic_lines(img):
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
         draw_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-        for line in linesbef:
-            for x1,y1,x2,y2,r,t in line:
-                cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
-        drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
-        save(img, "hough_bef_mer", drawn_lines)
 
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
         draw_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
@@ -333,7 +328,7 @@ def magic_lines(img):
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
-        save(img, "hough_aft_mer", drawn_lines)
+        save(img, "hough_after_merge", drawn_lines)
 
         draw_lines = draw_lines[:,:,2]
         img.medges += draw_lines
@@ -413,13 +408,13 @@ def lines_kmeans(img, lines):
     B = lines[labels==1]
     C = lines[labels==2]
 
-    fig = plt.figure()
-    plt.xticks(range(-90, 91, 10))
-    plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-    plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-    plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
-    plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
-    savefig(img, "kmeans0", fig)
+    # fig = plt.figure()
+    # plt.xticks(range(-90, 91, 10))
+    # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+    # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+    # plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
+    # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
+    # savefig(img, "kmeans0", fig)
 
     d1 = abs(centers[0] - centers[1])
     d2 = abs(centers[0] - centers[2])
@@ -433,12 +428,12 @@ def lines_kmeans(img, lines):
         compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
         A = lines[labels==0]
         B = lines[labels==1]
-        fig = plt.figure()
-        plt.xticks(range(-90, 91, 10))
-        plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-        plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-        plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
-        savefig(img, "kmeans1", fig)
+        # fig = plt.figure()
+        # plt.xticks(range(-90, 91, 10))
+        # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+        # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+        # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
+        # savefig(img, "kmeans1", fig)
 
     diff = []
     diff.append((abs(centers[0] - 90), -90))
@@ -451,7 +446,11 @@ def lines_kmeans(img, lines):
 
     for d,k in diff:
         if d < 20:
-            centers = np.append(centers, k)
+            if abs(centers[0] - k) > 20 and abs(centers[1] - k):
+                centers = np.append(centers, k)
+            elif len(centers) > 2:
+                if abs(centers[2] - k) > 20:
+                    centers = np.append(centers, k)
             break
 
     lines = np.int32(lines)
@@ -486,6 +485,6 @@ def find_corners(img, inter):
     for p in BR, BL, TR, TL:
         cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
     drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
-    save(img, "corners".format(img.basename), drawn_circles)
+    save(img, "corners", drawn_circles)
 
     return BR, BL, TR, TL
