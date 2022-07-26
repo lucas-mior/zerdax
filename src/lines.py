@@ -75,23 +75,40 @@ class HoughBundler:
         return groups
 
     def merge_line_segments(self, lines):
-        orientation = self.get_orientation(lines[0])
-      
         if(len(lines) == 1):
             return np.block([[lines[0][:2], lines[0][2:4]]])
 
-        points = []
+        lines = np.copy(lines)
+        aux = np.zeros((lines.shape[0], 5), dtype='int32')
+        aux[:,0:4] = np.copy(lines[:,0:4])
+        lines = aux
+        i = 0
         for line in lines:
-            points.append(line[:2])
-            points.append(line[2:4])
-        if 45 < orientation <= 90:
-            #sort by y
-            points = sorted(points, key=lambda point: point[1])
-        else:
-            #sort by x
-            points = sorted(points, key=lambda point: point[0])
+            lines[i,4] = self.get_orientation(line)
+            i += 1
 
-        return np.block([[points[0],points[-1]]])
+        orien = np.median(lines[:,4])
+        print("orien:", orien)
+        print("lines:", lines)
+        for line in lines:
+            if abs(line[4] - orien) <= 1:
+                a = np.block([[line[:2], line[2:4]]])
+                break
+
+        return a
+
+        #points = []
+        #for line in lines:
+        #    points.append(line[:2])
+        #    points.append(line[2:4])
+        #if 45 < orientation <= 90:
+        #    #sort by y
+        #    points = sorted(points, key=lambda point: point[1])
+        #else:
+        #    #sort by x
+        #    points = sorted(points, key=lambda point: point[0])
+
+        #return np.block([[points[0],points[-1]]])
 
     def process_lines(self, lines):
         lines_horizontal  = []
