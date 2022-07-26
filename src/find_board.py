@@ -58,6 +58,9 @@ def find_board(img):
             else:
                 c += 1
 
+    save(img, "clahe@{}".format(c), img.clahe)
+    save(img, "wang@{}".format(c), img.wang)
+    save(img, "canny@{}".format(c), img.canny)
     save(img, "medges0", img.medges)
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
@@ -106,7 +109,11 @@ def find_morph(img, Amin):
         edges_bin = cv2.bitwise_not(edges_thr)
 
         edges_bin = cv2.morphologyEx(edges_bin, cv2.MORPH_ERODE, ko, iterations = 1)
-        edges_wcanny = edges_bin + img.canny
+        edges_wcanny = cv2.bitwise_or(img.canny, edges_bin)
+
+        ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+        edges_wcanny = cv2.morphologyEx(edges_wcanny, cv2.MORPH_CLOSE, ko, iterations = 1)
+
         contours, _ = cv2.findContours(edges_wcanny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         max_index = np.argmax(areas)

@@ -2,18 +2,18 @@ import math
 import numpy as np
 
 class HoughBundler:     
-    def __init__(self,min_distance=6,min_angle=20):
-        self.min_distance = min_distance
+    def __init__(self,min_dist=6,min_angle=20):
+        self.min_dist = min_dist
         self.min_angle = min_angle
     
     def get_orientation(self, line):
         orientation = math.atan2(abs((line[3] - line[1])), abs((line[2] - line[0])))
         return math.degrees(orientation)
 
-    def check_is_line_different(self, line_1, groups, min_distance_to_merge, min_angle_to_merge):
+    def check_is_line_different(self, line_1, groups, min_dist_to_merge, min_angle_to_merge):
         for group in groups:
             for line_2 in group:
-                if self.get_distance(line_2, line_1) < min_distance_to_merge:
+                if self.get_dist(line_2, line_1) < min_dist_to_merge:
                     orientation_1 = self.get_orientation(line_1)
                     orientation_2 = self.get_orientation(line_2)
                     if abs(orientation_1 - orientation_2) < min_angle_to_merge:
@@ -21,7 +21,7 @@ class HoughBundler:
                         return False
         return True
 
-    def distance_point_to_line(self, point, line):
+    def dist_point_to_line(self, point, line):
         px, py = point
         x1, y1, x2, y2 = line[0:4]
 
@@ -31,34 +31,34 @@ class HoughBundler:
 
         lmag = line_magnitude(x1, y1, x2, y2)
         if lmag < 0.00000001:
-            distance_point_to_line = 9999
-            return distance_point_to_line
+            dist_point_to_line = 9999
+            return dist_point_to_line
 
         u1 = (((px - x1) * (x2 - x1)) + ((py - y1) * (y2 - y1)))
         u = u1 / (lmag * lmag)
 
         if (u < 0.00001) or (u > 1):
-            #// closest point does not fall within the line segment, take the shorter distance
+            #// closest point does not fall within the line segment, take the shorter dist
             #// to an endpoint
             ix = line_magnitude(px, py, x1, y1)
             iy = line_magnitude(px, py, x2, y2)
             if ix > iy:
-                distance_point_to_line = iy
+                dist_point_to_line = iy
             else:
-                distance_point_to_line = ix
+                dist_point_to_line = ix
         else:
             # Intersecting point is on the line, use the formula
             ix = x1 + u * (x2 - x1)
             iy = y1 + u * (y2 - y1)
-            distance_point_to_line = line_magnitude(px, py, ix, iy)
+            dist_point_to_line = line_magnitude(px, py, ix, iy)
 
-        return distance_point_to_line
+        return dist_point_to_line
 
-    def get_distance(self, a_line, b_line):
-        dist1 = self.distance_point_to_line(a_line[0:2], b_line)
-        dist2 = self.distance_point_to_line(a_line[2:4], b_line)
-        dist3 = self.distance_point_to_line(b_line[0:2], a_line)
-        dist4 = self.distance_point_to_line(b_line[2:4], a_line)
+    def get_dist(self, a_line, b_line):
+        dist1 = self.dist_point_to_line(a_line[0:2], b_line)
+        dist2 = self.dist_point_to_line(a_line[2:4], b_line)
+        dist3 = self.dist_point_to_line(b_line[0:2], a_line)
+        dist4 = self.dist_point_to_line(b_line[2:4], a_line)
 
 
         return min(dist1, dist2, dist3, dist4)
@@ -69,7 +69,7 @@ class HoughBundler:
         groups.append([lines[0]])
         # if line is different from existing gropus, create a new group
         for line_new in lines[1:]:
-            if self.check_is_line_different(line_new, groups, self.min_distance, self.min_angle):
+            if self.check_is_line_different(line_new, groups, self.min_dist, self.min_angle):
                 groups.append([line_new])
 
         return groups
