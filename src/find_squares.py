@@ -42,7 +42,7 @@ def perspective_transform(img):
     M = cv2.getPerspectiveTransform(rect,dst)
     img.warped = cv2.warpPerspective(img.hull, M, (width, height))
 
-    # save(img, "warped", img.warped)
+    save(img, "warped", img.warped)
     return img
 
 def find_wcanny(img, wmin = 12):

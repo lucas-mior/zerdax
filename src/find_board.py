@@ -56,22 +56,22 @@ def find_board(img):
     # save(img, "clahe@{}".format(c), img.clahe)
     # save(img, "wang@{}".format(c), img.wang)
     # save(img, "canny@{}".format(c), img.canny)
-    # save(img, "medges_hull", img.medges)
+    save(img, "medges_hull", img.medges)
 
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(drawn_contours, [img.poly], -1, (0, 0, 255), thickness=3)
-    drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.8, 0)
+    drawn_contours = cv2.addWeighted(img.gray3ch, 0.3, drawn_contours, 0.8, 0)
     save(img, "convex_hull_poly", drawn_contours)
 
     # limx, limy = broad_hull(img)
     x,y,w,h = cv2.boundingRect(img.poly)
     limx = np.zeros((2), dtype='int32')
     limy = np.zeros((2), dtype='int32')
-    limx[0] = y-10
-    limx[1] = y+h+10
-    limy[0] = x-10
-    limy[1] = x+w+10
+    limx[0] = y-15
+    limx[1] = y+h+15
+    limy[0] = x-15
+    limy[1] = x+w+15
 
     if (c > cmax) and not img.got_hull:
         print("finding board region failed [find_morph()]")
@@ -93,9 +93,9 @@ def find_board(img):
 
     # save(img, "hull", img.hull)
 
-    img.canny = find_canny(img, wmin = 8)
+    img.canny = find_canny(img, wmin = 7)
     img.medges += img.canny
-    # save(img, "medges{}+canny".format(c), img.medges)
+    save(img, "medges{}+canny".format(c), img.medges)
     img.angles, img.select_lines = find_angles(img)
 
     lines,inter = magic_lines(img)
@@ -138,8 +138,8 @@ def find_morph(img, Amin):
 
     if not got_hull:
         diff = a - alast
-        mdiff = 0.05 * Amin
-        if (diff > mdiff) and (a > (img.sarea*0.15)):
+        mdiff = 0.02 * Amin
+        if (diff > mdiff) and (a > (img.sarea*0.10)):
             print("diff: {} > {}, increasing".format(diff, mdiff))
             increasing = True
         else:
@@ -233,7 +233,7 @@ def find_angles(img):
         for x1,y1,x2,y2,r,t in line:
             cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
     drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-    # save(img, "hough_select", drawn_lines)
+    save(img, "hough_select", drawn_lines)
 
     return angles, lines
 
@@ -362,7 +362,7 @@ def magic_lines(img):
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
-        # save(img, "hough_magic", drawn_lines)
+        save(img, "hough_magic", drawn_lines)
 
         # img.shull = update_hull(img)
         inter = find_intersections(img, lines[:,0,:])
@@ -371,7 +371,7 @@ def magic_lines(img):
         for p in inter:
             cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
         drawn_circles = cv2.addWeighted(img.hull3ch, 0.5, drawn_circles, 0.8, 0)
-        # save(img, "intersections".format(img.basename), drawn_circles)
+        save(img, "intersections".format(img.basename), drawn_circles)
     else:
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         exit()
