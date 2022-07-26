@@ -83,7 +83,10 @@ def w_lines(img):
         if lines is not None:
             lines = radius_theta(lines)
             lines = filter_90(img, lines)
-            if lines.shape[0] >= 20:
+            bundler = HoughBundler() 
+            lines = bundler.process_lines(lines) 
+            lines = radius_theta(lines)
+            if lines.shape[0] >= 18:
                 print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
                 got_hough = True
                 break
@@ -91,7 +94,7 @@ def w_lines(img):
         if lines is not None:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         j += 1
-        h_angl += np.pi / 3600
+        h_angl += np.pi / 1800
         if h_angl > (np.pi / 20) and tuned < 5:
             h_angl = h_angl0
             h_minl -= 5

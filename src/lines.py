@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 class HoughBundler:     
-    def __init__(self,min_dist=6,min_angle=20):
+    def __init__(self,min_dist=10,min_angle=20):
         self.min_dist = min_dist
         self.min_angle = min_angle
     
