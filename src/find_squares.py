@@ -16,8 +16,8 @@ def find_squares(img):
     img = perspective_transform(img)
     img.warped3ch = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR)
 
-    # img.wwang = lwang.wang_filter(img.warped)
-    # save(img, "wwang", img.wwang)
+    img.wwang = lwang.wang_filter(img.warped)
+    save(img, "wwang", img.wwang)
 
     img.wcanny = find_wcanny(img, wmin = 12)
     save(img, "wcanny", img.wcanny)
@@ -67,9 +67,9 @@ def find_wcanny(img, wmin = 12):
 
 def w_lines(img):
     got_hough = False
-    h_minl0 = round((img.wwidth)*0.9)
-    h_thrv0 = round(h_minl0 / 5)
-    h_maxg0 = round(h_minl0 / 50) + 20
+    h_minl0 = round((img.wwidth)*0.7)
+    h_thrv0 = round(h_minl0 / 2)
+    h_maxg0 = round(h_minl0 / 50) + 50
     h_angl0 = np.pi / 120
 
     h_maxg = h_maxg0
@@ -77,24 +77,20 @@ def w_lines(img):
     h_thrv = h_thrv0
     h_angl = h_angl0
     j = 0
-    while h_angl < (np.pi / 30):
+    while h_angl < (np.pi / 10):
         lines = cv2.HoughLinesP(img.wcanny, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
         if lines is not None:
             lines = radius_theta(lines)
             lines = filter_90(img, lines)
-            if lines.shape[0] >= 18:
+            if lines.shape[0] >= 20:
                 print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
                 got_hough = True
                 break
 
         if lines is not None:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
-        if h_minl > h_minl0 / 5:
-            h_minl -= 1
-            h_thrv = round(h_minl / 5)
-            h_maxg = round(h_minl / 50) + 20
         j += 1
-        h_angl += np.pi / 14400
+        h_angl += np.pi / 3600
 
     if got_hough:
         drawn_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
@@ -116,6 +112,7 @@ def w_lines(img):
         inter = [100, 100]
     else:
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
+        exit()
 
     return lines,inter
 
