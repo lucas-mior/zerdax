@@ -234,7 +234,7 @@ def find_intersections(img, lines):
             if (x1,y1) == (xx1,yy1) and (x2,y2) == (xx2,yy2):
                 continue
 
-            if abs(t - tt) < 40:
+            if abs(t - tt) < 30 or abs(t - tt) > 150:
                 continue
 
             xdiff = (l1[0][0] - l1[1][0], l2[0][0] - l2[1][0])
@@ -300,7 +300,8 @@ def magic_lines(img):
             lines = filter_angles(img, lines)
             linesbef = np.copy(lines)
             bundler = HoughBundler()
-            lines = bundler.process_lines(lines[:,:,0:4])
+            lines = bundler.process_lines(lines)
+            lines = radius_theta(lines)
             if lines.shape[0] >= 10:
                 print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
                 aux = np.copy(img.select_lines[:,:,0:6])
@@ -412,13 +413,13 @@ def lines_kmeans(img, lines):
     B = lines[labels==1]
     C = lines[labels==2]
 
-    # fig = plt.figure()
-    # plt.xticks(range(-90, 91, 10))
-    # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-    # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-    # plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
-    # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
-    # savefig(img, "kmeans0", fig)
+    fig = plt.figure()
+    plt.xticks(range(-90, 91, 10))
+    plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+    plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+    plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
+    plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
+    savefig(img, "kmeans0", fig)
 
     d1 = abs(centers[0] - centers[1])
     d2 = abs(centers[0] - centers[2])
@@ -432,12 +433,12 @@ def lines_kmeans(img, lines):
         compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
         A = lines[labels==0]
         B = lines[labels==1]
-        # fig = plt.figure()
-        # plt.xticks(range(-90, 91, 10))
-        # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-        # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-        # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
-        # savefig(img, "kmeans1", fig)
+        fig = plt.figure()
+        plt.xticks(range(-90, 91, 10))
+        plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
+        plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
+        plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
+        savefig(img, "kmeans1", fig)
 
     diff = []
     diff.append((abs(centers[0] - 90), -90))

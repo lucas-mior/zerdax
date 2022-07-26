@@ -23,7 +23,7 @@ class HoughBundler:
 
     def distance_point_to_line(self, point, line):
         px, py = point
-        x1, y1, x2, y2 = line
+        x1, y1, x2, y2 = line[:4]
 
         def line_magnitude(x1, y1, x2, y2):
             line_magnitude = math.sqrt(math.pow((x2 - x1), 2) + math.pow((y2 - y1), 2))
@@ -41,9 +41,7 @@ class HoughBundler:
             #// closest point does not fall within the line segment, take the shorter distance
             #// to an endpoint
             ix = line_magnitude(px, py, x1, y1)
-            # print("ix:", ix)
             iy = line_magnitude(px, py, x2, y2)
-            # print("iy:", iy)
             if ix > iy:
                 distance_point_to_line = iy
             else:
@@ -57,10 +55,7 @@ class HoughBundler:
         return distance_point_to_line
 
     def get_distance(self, a_line, b_line):
-        # print("a_line[:2]:", a_line[:2])
-        # print("b_line:", b_line)
         dist1 = self.distance_point_to_line(a_line[:2], b_line)
-        # print("distance:", dist1)
         dist2 = self.distance_point_to_line(a_line[2:4], b_line)
         dist3 = self.distance_point_to_line(b_line[:2], a_line)
         dist4 = self.distance_point_to_line(b_line[2:4], a_line)
@@ -83,12 +78,12 @@ class HoughBundler:
         orientation = self.get_orientation(lines[0])
       
         if(len(lines) == 1):
-            return np.block([[lines[0][:2], lines[0][2:]]])
+            return np.block([[lines[0][:2], lines[0][2:4]]])
 
         points = []
         for line in lines:
             points.append(line[:2])
-            points.append(line[2:])
+            points.append(line[2:4])
         if 45 < orientation <= 90:
             #sort by y
             points = sorted(points, key=lambda point: point[1])

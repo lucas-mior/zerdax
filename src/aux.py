@@ -20,7 +20,11 @@ def radius(x1,y1,x2,y2):
     return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
 
 def theta(x1,y1,x2,y2):
-    return math.degrees(math.atan2((y1-y2),(x2-x1)))
+    orientation = math.atan2(y1-y2, x2-x1)
+    orientation = math.degrees(orientation)
+    # if orientation < 0:
+    #     orientation += 180
+    return orientation
 
 def radius_theta(lines):
     aux = np.zeros((lines.shape[0], 1, 6), dtype='int32')
