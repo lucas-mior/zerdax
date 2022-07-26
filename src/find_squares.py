@@ -72,6 +72,7 @@ def w_lines(img):
     h_maxg0 = round(h_minl0 / 50) + 50
     h_angl0 = np.pi / 120
 
+    tuned = 0
     h_maxg = h_maxg0
     h_minl = h_minl0
     h_thrv = h_thrv0
@@ -91,10 +92,12 @@ def w_lines(img):
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         j += 1
         h_angl += np.pi / 3600
-        if h_angl > (np.pi / 20):
-            h_minl -= 1
-            h_thrv -= 1
-            h_maxg += 1
+        if h_angl > (np.pi / 20) and tuned < 5:
+            h_angl = h_angl0
+            h_minl -= 5
+            h_thrv -= 10
+            h_maxg += 5
+            tuned += 1
 
     if got_hough:
         drawn_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
