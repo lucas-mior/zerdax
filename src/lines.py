@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 class HoughBundler:     
-    def __init__(self,min_distance=6,min_angle=8):
+    def __init__(self,min_distance=6,min_angle=20):
         self.min_distance = min_distance
         self.min_angle = min_angle
     
@@ -88,8 +88,6 @@ class HoughBundler:
             i += 1
 
         orien = np.median(lines[:,4])
-        print("orien:", orien)
-        print("lines:", lines)
         for line in lines:
             if abs(line[4] - orien) <= 1:
                 a = np.block([[line[0:2], line[2:4]]])

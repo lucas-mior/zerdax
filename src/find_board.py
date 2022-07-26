@@ -23,7 +23,7 @@ def update_hull(img):
     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.hull3ch, 0.5, drawn_contours, 0.8, 0)
-    # save(img, "convex", drawn_contours)
+    save(img, "updatehull", drawn_contours)
     return hullxy
 
 def find_board(img):
@@ -102,7 +102,8 @@ def find_morph(img, Amin):
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kd+round(kd/3)))
         dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img.wang, dilate, scale = 255)
-        edges_bin = cv2.bitwise_not(cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1])
+        edges_thr = cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1]
+        edges_bin = cv2.bitwise_not(edges_thr)
 
         edges_bin = cv2.morphologyEx(edges_bin, cv2.MORPH_ERODE, ko, iterations = 1)
         edges_wcanny = edges_bin + img.canny
