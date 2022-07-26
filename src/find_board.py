@@ -49,7 +49,7 @@ def find_board(img):
                 if Amin > (img.sarea * 0.1):
                     continue
             c += 1
-            wc += 0.5
+            wc += 1
 
     img.medges = fmedges
 
