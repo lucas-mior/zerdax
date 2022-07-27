@@ -16,19 +16,21 @@ def find_board(img):
     # save(img, "sgray", img.sgray)
     img.wang0 = lwang.wang_filter(img.sgray)
     # save(img, "wang0", img.wang0)
-    img, a, apoly = region(img)
+    img, a, apoly,cont = region(img)
     img.ext = False
 
-    if img.poly.shape[0] <= 2 or (abs(apoly - a) > 0.04*img.sarea) or not img.got_hull:
+    if img.poly.shape[0] <= 2 or (abs(apoly - a) > 0.04*img.sarea) or (not img.got_hull and abs(a) < (0.2 * img.sarea)):
         print("\033[31;1;1m========== CASO EXTREMO ===========\033[0;m")
         img.ext = True
         drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-        cv2.drawContours(drawn_contours, [img.hullxy], -1, (255, 0, 0), thickness=3)
+        cv2.drawContours(drawn_contours, [img.hullxy], -1, (255, 255, 0), thickness=3)
         img.help = drawn_contours[:,:,0]
-        img, a, apoly = region(img, maxkd = 20, cmax = 20, nymax = 12, skip=True)
+        img, a, apoly, _ = region(img, maxkd = 20, cmax = 20, nymax = 12, skip=True)
 
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+    cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
     cv2.drawContours(drawn_contours, [img.poly], -1, (0, 0, 255), thickness=3)
+    img.medges = cv2.bitwise_or(img.medges, drawn_contours[:,:,2])
     cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
     save(img, "convex_poly", drawn_contours)
@@ -96,7 +98,7 @@ def find_morph(img, Amin, maxkd=12, skip=False):
         areas = [cv2.contourArea(c) for c in contours]
         max_index = np.argmax(areas)
         cont = contours[max_index]
-        poly = cv2.approxPolyDP(cont,0.04*cv2.arcLength(cont,True),True)
+        poly = cv2.approxPolyDP(cont,0.035*cv2.arcLength(cont,True),True)
         hullxy = cv2.convexHull(poly)
         a = cv2.contourArea(hullxy)
         apoly = cv2.contourArea(poly)
@@ -105,17 +107,16 @@ def find_morph(img, Amin, maxkd=12, skip=False):
                 kd += 1
                 continue
             else:
-                # print("{} > {} @ ksize = {} [GOTHULL]".format(a, Amin, kd))
+                print("{} > {} @ ksize = {} [GOTHULL]".format(a, Amin, kd))
                 got_hull = True
                 break
         else:
-            # print("{} < {} @ ksize = {}".format(a, Amin, kd))
+            print("{} < {} @ ksize = {}".format(a, Amin, kd))
             kd += 1
 
-    # save(img, "tentand:", edges_wcanny)
     medges = edges_bin
 
-    return medges, hullxy, got_hull, a, kd, poly, apoly
+    return medges, hullxy, got_hull, a, kd, poly, apoly, cont
 
 def broad_hull(img):
     Pxmin = img.hullxy[np.argmin(img.hullxy[:,0,0]),0]
@@ -516,30 +517,33 @@ def region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):
     c = 3
     wc = 6
     a = 0
-    c0 = 11
+    c0 = 12
     c5 = 0
     Amin = (c0-c5)*0.05 * img.sarea
     while c <= cmax:
+        print("Amin = ", Amin)
+        print("Clahe = ", c)
         alast = a
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
         img.clahe = clahe.apply(img.wang0)
         img.wang = lwang.wang_filter(img.clahe)
         img.canny = find_canny(img, wmin=wc)
-        img.medges,img.hullxy,img.got_hull,a,img.kd,img.poly, apoly = find_morph(img, Amin, maxkd, skip)
-        if c <= 10:
+        img.medges,img.hullxy,img.got_hull,a,img.kd,img.poly,apoly,cont = find_morph(img, Amin, maxkd, skip)
+        if c <= 12:
             fmedges = img.medges
 
         if img.got_hull:
             break
         else:
-            if abs(a - alast) < img.sarea*0.01:
-                c0 += 1
-                A0 = (c0-c5)*0.05 * img.sarea
-                if a > A0:
-                    Amin = A0
-            c += 1
-            if wc < nymax:
-                wc += 1
+            if abs(a - alast) < img.sarea*0.02:
+                if c5 <= 7:
+                    c5 += 1
+                print("c5 = ",c5, "NOT increasing")
+                Amin = (c0-c5)*0.05 * img.sarea
+            else:
+                c += 1
+                if wc < nymax:
+                    wc += 1
 
     img.medges = fmedges
-    return img, a, apoly
+    return img, a, apoly, cont
