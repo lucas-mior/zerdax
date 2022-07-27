@@ -142,4 +142,19 @@ def filter_90(img, lines):
 
 def geo_lines(img, lines):
     print("dummy geo_lines")
+    lines = radius_theta(lines)
+    vert = lines[abs(lines[:,0,5]) > 45]
+    hori = lines[abs(lines[:,0,5]) < 45]
+
+    drawn_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
+    draw_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
+
+    for line in vert:
+        for x1,y1,x2,y2,r,t in line:
+            cv2.line(draw_lines,(x1,y1),(x2,y2),(255,0,255),round(2/img.sfact))
+    for line in hori:
+        for x1,y1,x2,y2,r,t in line:
+            cv2.line(draw_lines,(x1,y1),(x2,y2),(0,255,0),round(2/img.sfact))
+    drawn_lines = cv2.addWeighted(img.warped3ch, 0.5, draw_lines, 0.7, 0)
+    save(img, "vert_hori", drawn_lines)
     return lines
