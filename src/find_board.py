@@ -13,9 +13,9 @@ from lines import HoughBundler
 import lwang
 
 def find_board(img):
-    save(img, "sgray", img.sgray)
+    # save(img, "sgray", img.sgray)
     img.wang0 = lwang.wang_filter(img.sgray)
-    save(img, "wang0", img.wang0)
+    # save(img, "wang0", img.wang0)
     img, a, apoly = region(img)
     img.ext = False
 
@@ -41,10 +41,10 @@ def find_board(img):
     # save(img, "medges_hull", img.medges)
 
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-    cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(drawn_contours, [img.poly], -1, (0, 0, 255), thickness=3)
+    img.medges = cv2.bitwise_or(img.medges, drawn_contours[:,:,2])
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.3, drawn_contours, 0.7, 0)
-    save(img, "convex_hull_poly", drawn_contours)
+    save(img, "convex_poly", drawn_contours)
 
     # limx, limy = broad_hull(img)
     x,y,w,h = cv2.boundingRect(img.poly)
@@ -72,12 +72,12 @@ def find_board(img):
     img = reduce_hull(img)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
 
-    save(img, "hull", img.hull)
+    # save(img, "hull", img.hull)
 
     img.canny = find_canny(img, wmin = 8)
     save(img, "canny_find_magic_angles", img.canny)
     img.medges += img.canny
-    save(img, "medges+canny", img.medges)
+    # save(img, "medges+canny", img.medges)
     img.angles, img.select_lines = find_angles(img)
 
     lines,inter = magic_lines(img)
@@ -137,7 +137,7 @@ def find_morph(img, Amin, maxkd=12):
             print("diff: {} < {}, NOT increasing".format(diff, mdiff))
             increasing = False
 
-    save(img, "tentando com:", edges_wcanny)
+    # save(img, "tentand:", edges_wcanny)
     medges = edges_bin
 
     return medges, hullxy, got_hull, increasing, a, kd, poly, apoly
@@ -551,7 +551,7 @@ def region(img, maxkd = 12, cmax = 12, nymax = 10):
         img.wang = lwang.wang_filter(img.clahe)
         img.canny = find_canny(img, wmin=wc)
         img.medges,img.hullxy,img.got_hull,increasing,a,img.kd,img.poly, apoly = find_morph(img, Amin, maxkd)
-        if c <= 7:
+        if c <= 10:
             fmedges = img.medges
         if increasing:
             pass
