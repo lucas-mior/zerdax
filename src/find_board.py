@@ -80,7 +80,6 @@ def find_board(img):
 def find_morph(img, Amin, maxkd=12, skip=False):
     got_hull = False
     alast = 0
-    increasing = False
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 5
     while kd <= maxkd:
@@ -120,20 +119,10 @@ def find_morph(img, Amin, maxkd=12, skip=False):
             print("{} < {} @ ksize = {}".format(a, Amin, kd))
             kd += 1
 
-    if not got_hull:
-        diff = a - alast
-        mdiff = 0.02 * Amin
-        if (diff > mdiff) and (a > (img.sarea*0.10)):
-            print("diff: {} > {}, increasing".format(diff, mdiff))
-            increasing = True
-        else:
-            print("diff: {} < {}, NOT increasing".format(diff, mdiff))
-            increasing = False
-
     save(img, "tentand:", edges_wcanny)
     medges = edges_bin
 
-    return medges, hullxy, got_hull, increasing, a, kd, poly, apoly
+    return medges, hullxy, got_hull, a, kd, poly, apoly
 
 def broad_hull(img):
     Pxmin = img.hullxy[np.argmin(img.hullxy[:,0,0]),0]
@@ -533,29 +522,26 @@ def find_corners(img, inter):
 def region(img, maxkd = 12, cmax = 12, nymax = 10, skip=False):
     c = 3
     wc = 6
+    a = 0
 
     Amin = 0.45 * img.sarea
     increasing = True
     while c <= cmax and wc <= nymax:
+        alast = a
         print("Amin =", Amin)
         print("clahe = ", c)
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
         img.clahe = clahe.apply(img.wang0)
         img.wang = lwang.wang_filter(img.clahe)
         img.canny = find_canny(img, wmin=wc)
-        img.medges,img.hullxy,img.got_hull,increasing,a,img.kd,img.poly, apoly = find_morph(img, Amin, maxkd, skip)
+        img.medges,img.hullxy,img.got_hull,a,img.kd,img.poly, apoly = find_morph(img, Amin, maxkd, skip)
         if c <= 10:
             fmedges = img.medges
-        if increasing:
-            pass
-            # save(img, "clahe@{}".format(c), img.clahe)
-            # save(img, "wang@{}".format(c), img.wang)
-            # save(img, "canny@{}".format(c), img.canny)
 
         if img.got_hull:
             break
         else:
-            if not increasing:
+            if abs(a - alast) < img.sarea*0.02:
                 while a < Amin and Amin > (img.sarea * 0.1):
                     Amin -= 0.002 * img.sarea
                 if Amin > (img.sarea * 0.1):
