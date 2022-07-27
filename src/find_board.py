@@ -16,19 +16,24 @@ def find_board(img):
     save(img, "sgray", img.sgray)
     img.wang0 = lwang.wang_filter(img.sgray)
     save(img, "wang0", img.wang0)
-    img, a = region(img)
+    img, a, apoly = region(img)
+    img.ext = False
 
     if img.poly.shape[0] <= 2 or (a < img.sarea * 0.15):
         print("\033[31;1;1m========== CASO EXTREMO ===========\033[0;m")
+        img.ext = True
         _, lines = find_angles(img, getangles=False)
         draw_lines = cv2.cvtColor(img.sgray, cv2.COLOR_GRAY2BGR) * 0
         for line in lines:
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         img.medges = cv2.bitwise_or(img.medges, draw_lines[:,:,0])
-        img, a = region(img, maxkd = 20, cmax = 20, nymax = 12)
-    else:
-        print("poly.shape:", img.poly.shape)
+        img, a, apoly = region(img, maxkd = 20, cmax = 20, nymax = 12)
+
+    print("poly:", img.poly.shape)
+    if img.poly.shape[0] == 3 or (abs(apoly - a) > 0.04*img.sarea):
+        img.ext = True
+        img.got_hull = False
 
     # save(img, "clahe@", img.clahe)
     # save(img, "wang@", img.wang)
@@ -109,6 +114,7 @@ def find_morph(img, Amin, maxkd=12):
         poly = cv2.approxPolyDP(cont,0.04*cv2.arcLength(cont,True),True)
         hullxy = cv2.convexHull(poly)
         a = cv2.contourArea(hullxy)
+        apoly = cv2.contourArea(poly)
         if a > Amin:
             if poly.shape[0] < 4:
                 kd += 1
@@ -134,7 +140,7 @@ def find_morph(img, Amin, maxkd=12):
     save(img, "tentando com:", edges_wcanny)
     medges = edges_bin
 
-    return medges, hullxy, got_hull, increasing, a, kd, poly
+    return medges, hullxy, got_hull, increasing, a, kd, poly, apoly
 
 def broad_hull(img):
     Pxmin = img.hullxy[np.argmin(img.hullxy[:,0,0]),0]
@@ -180,7 +186,7 @@ def find_angles(img, getangles=True):
         h_minl0 = round((img.hwidth + img.hheigth)*0.2)
     else:
         h_minl0 = round((img.swidth + img.sheigth)*0.2)
-    h_thrv0 = round(h_minl0 / 10)
+    h_thrv0 = round(h_minl0 / 8)
     h_angl0 = np.pi / 360
 
     h_maxg = h_maxg0
@@ -212,7 +218,7 @@ def find_angles(img, getangles=True):
             h_maxg = 2
             minlines = 60
 
-        h_thrv = round(h_minl / 10)
+        h_thrv = round(h_minl / 8)
         h_angl += np.pi / 14400
 
     if not got_hough:
@@ -315,6 +321,15 @@ def magic_lines(img):
     h_angl0 = np.pi / 120
 
     tuned = 0
+    if img.ext:
+        maxtun = 30
+        minlines = 50
+        tol = 10
+        print("============================extremo-================")
+    else:
+        maxtun = 10
+        minlines = 25
+        tol = 15
     h_maxg = h_maxg0
     h_minl = h_minl0
     h_thrv = h_thrv0
@@ -326,19 +341,19 @@ def magic_lines(img):
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines = filter_angles(img, lines)
-            if lines.shape[0] >= 25:
+            if lines.shape[0] >= minlines:
                 print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
                 got_hough = True
                 aux = np.copy(img.select_lines[:,:,0:6])
                 lines = np.append(lines, aux, axis=0)
-                lines = filter_angles(img, lines)
+                lines = filter_angles(img, lines, tol)
                 break
 
         if lines is not None:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         j += 1
         h_angl += np.pi / 1800
-        if h_angl > (np.pi / 20) and tuned < 10:
+        if h_angl > (np.pi / 20) and tuned < maxtun:
             h_angl = h_angl0
             h_minl -= 5
             h_thrv -= 5
@@ -399,17 +414,17 @@ def filter_lines(img, lines):
     lines = A
     return lines
 
-def filter_angles(img, lines):
+def filter_angles(img, lines, tol = 15):
     rem = np.empty(lines.shape[0])
     rem = np.int32(rem)
 
     i = 0
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
-            if abs(t - img.angles[0]) > 15 and abs(t - img.angles[1]) > 15:
+            if abs(t - img.angles[0]) > tol and abs(t - img.angles[1]) > tol:
                 if img.angles.shape[0] == 2:
                     rem[i] = 1
-                elif abs(t - img.angles[2]) > 15:
+                elif abs(t - img.angles[2]) > tol:
                     rem[i] = 1
                 else:
                     rem[i] = 0
@@ -535,7 +550,7 @@ def region(img, maxkd = 12, cmax = 12, nymax = 10):
         img.clahe = clahe.apply(img.wang0)
         img.wang = lwang.wang_filter(img.clahe)
         img.canny = find_canny(img, wmin=wc)
-        img.medges,img.hullxy,img.got_hull,increasing,a,img.kd,img.poly = find_morph(img, Amin, maxkd)
+        img.medges,img.hullxy,img.got_hull,increasing,a,img.kd,img.poly, apoly = find_morph(img, Amin, maxkd)
         if c <= 7:
             fmedges = img.medges
         if increasing:
@@ -556,4 +571,4 @@ def region(img, maxkd = 12, cmax = 12, nymax = 10):
             wc += 1
 
     img.medges = fmedges
-    return img, a
+    return img, a, apoly
