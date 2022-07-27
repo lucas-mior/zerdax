@@ -56,11 +56,11 @@ def find_board(img):
     # save(img, "clahe@{}".format(c), img.clahe)
     # save(img, "wang@{}".format(c), img.wang)
     # save(img, "canny@{}".format(c), img.canny)
-    save(img, "medges_hull", img.medges)
+    # save(img, "medges_hull", img.medges)
 
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
-    cv2.drawContours(drawn_contours, [img.poly], -1, (0, 0, 255), thickness=3)
+    # cv2.drawContours(drawn_contours, [img.poly], -1, (0, 0, 255), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.3, drawn_contours, 0.8, 0)
     save(img, "convex_hull_poly", drawn_contours)
 
@@ -93,9 +93,10 @@ def find_board(img):
 
     # save(img, "hull", img.hull)
 
-    img.canny = find_canny(img, wmin = 7)
+    img.canny = find_canny(img, wmin = 8)
+    save(img, "canny_angles_magic", img.canny)
     img.medges += img.canny
-    save(img, "medges{}+canny".format(c), img.medges)
+    # save(img, "medges{}+canny".format(c), img.medges)
     img.angles, img.select_lines = find_angles(img)
 
     lines,inter = magic_lines(img)
@@ -129,9 +130,13 @@ def find_morph(img, Amin):
         hullxy = cv2.convexHull(poly)
         a = cv2.contourArea(hullxy)
         if a > Amin:
-            print("{} > {} @ ksize = {} [GOTHULL]".format(a, Amin, kd))
-            got_hull = True
-            break
+            if poly.shape[0] < 4:
+                kd += 1
+                continue
+            else:
+                print("{} > {} @ ksize = {} [GOTHULL]".format(a, Amin, kd))
+                got_hull = True
+                break
         else:
             print("{} < {} @ ksize = {}".format(a, Amin, kd))
             kd += 1
@@ -169,7 +174,7 @@ def find_canny(img, wmin = 6):
     c_thrl = c_thrl0
     c_thrh = c_thrh0
 
-    while c_thrh > 20:
+    while c_thrh > 12:
         img.canny = cv2.Canny(img.wang, c_thrl, c_thrh)
         w = img.canny.mean()
         if w > wmin:
@@ -178,8 +183,7 @@ def find_canny(img, wmin = 6):
         else:
             if wmin - w < wmin:
                 print("{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
-        if c_thrl > 10:
-            c_thrl -= 9
+        c_thrl = max(2, c_thrl - 9)
         c_thrh -= 9
 
     if w < wmin:
@@ -268,11 +272,11 @@ def find_intersections(img, lines):
             x = round(determinant(d, xdiff) / div)
             y = round(determinant(d, ydiff) / div)
 
-            # dist = cv2.pointPolygonTest(img.shull, (x, y), True)
-            # if dist < -10:
-            #     j += 1
-            #     continue
-            if x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
+            dist = cv2.pointPolygonTest(img.shull, (x, y), True)
+            if img.got_hull and dist < -20:
+                j += 1
+                continue
+            elif x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
                 j += 1
                 continue
             else:
@@ -300,22 +304,19 @@ def reduce_hull(img):
     img.harea = img.hwidth * img.hheigth
     return img
 
-# def update_hull(img):
-#     contours, _ = cv2.findContours(img.medges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-#     areas = [cv2.contourArea(c) for c in contours]
-#     max_index = np.argmax(areas)
-#     cont = contours[max_index]
-#     # hullxy = cv2.convexHull(cont)
-#     x,y,w,h = cv2.boundingRect(cont)
-#     hullxy = np.array([(x,y), (x,y+h), (x+w, y+h), (x+w, y)])
+def update_hull(img):
+    contours, _ = cv2.findContours(img.medges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    areas = [cv2.contourArea(c) for c in contours]
+    max_index = np.argmax(areas)
+    cont = contours[max_index]
+    hullxy = cv2.convexHull(cont)
 
-#     drawn_contours = np.empty(img.hull3ch.shape, dtype='uint8') * 0
-#     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
-#     cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
-#     cv2.rectangle(drawn_contours, (x,y), (x+w,y+h),(0,0,255), thickness=3)
-#     drawn_contours = cv2.addWeighted(img.hull3ch, 0.5, drawn_contours, 0.8, 0)
-#     save(img, "updatehull", drawn_contours)
-#     return hullxy
+    drawn_contours = np.empty(img.hull3ch.shape, dtype='uint8') * 0
+    cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
+    cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
+    drawn_contours = cv2.addWeighted(img.hull3ch, 0.5, drawn_contours, 0.8, 0)
+    save(img, "updatehull", drawn_contours)
+    return hullxy
 
 def magic_lines(img):
     got_hough = False
@@ -336,18 +337,19 @@ def magic_lines(img):
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines = filter_angles(img, lines)
-            if lines.shape[0] >= 20:
+            if lines.shape[0] >= 25:
                 print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
                 got_hough = True
                 aux = np.copy(img.select_lines[:,:,0:6]) 
                 lines = np.append(lines, aux, axis=0) 
+                lines = filter_angles(img, lines)
                 break
 
         if lines is not None:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         j += 1
         h_angl += np.pi / 1800
-        if h_angl > (np.pi / 20) and tuned < 5:
+        if h_angl > (np.pi / 20) and tuned < 10:
             h_angl = h_angl0
             h_minl -= 5
             h_thrv -= 5
@@ -364,7 +366,12 @@ def magic_lines(img):
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
         save(img, "hough_magic", drawn_lines)
 
-        # img.shull = update_hull(img)
+        ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+        img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
+        img.medges = cv2.bitwise_or(img.medges, draw_lines[:,:,0])
+        save(img, "medges_update", img.medges)
+
+        img.shull = update_hull(img)
         inter = find_intersections(img, lines[:,0,:])
 
         drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
@@ -410,10 +417,10 @@ def filter_angles(img, lines):
     i = 0
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
-            if abs(t - img.angles[0]) > 10 and abs(t - img.angles[1]) > 10:
+            if abs(t - img.angles[0]) > 15 and abs(t - img.angles[1]) > 15:
                 if img.angles.shape[0] == 2:
                     rem[i] = 1
-                elif abs(t - img.angles[2]) > 10:
+                elif abs(t - img.angles[2]) > 15:
                     rem[i] = 1
                 else:
                     rem[i] = 0
