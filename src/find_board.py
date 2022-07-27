@@ -19,15 +19,14 @@ def find_board(img):
     img, a = region(img)
 
     if img.poly.shape[0] < 3 or a < img.sarea * 0.1:
+        print("vishhhhhhhhhhhhhhhhhhh")
         _, lines = find_angles(img, getangles=False)
         draw_lines = cv2.cvtColor(img.sgray, cv2.COLOR_GRAY2BGR) * 0
         for line in lines:
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         img.medges = cv2.bitwise_or(img.medges, draw_lines[:,:,0])
-
-    img, a = region(img, maxkd = 20, cmax = 20, nymax = 12)
-
+        img, a = region(img, maxkd = 20, cmax = 20, nymax = 12)
 
     # save(img, "clahe@", img.clahe)
     # save(img, "wang@", img.wang)
@@ -527,7 +526,7 @@ def region(img, maxkd = 12, cmax = 12, nymax = 10):
 
     Amin = 0.45 * img.sarea
     increasing = True
-    while c <= cmax and wc < nymax:
+    while c <= cmax and wc <= nymax:
         print("Amin =", Amin)
         print("clahe = ", c)
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
