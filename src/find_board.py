@@ -19,23 +19,19 @@ def find_board(img):
     img, a, apoly = region(img)
     img.ext = False
 
-    drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-    cv2.drawContours(drawn_contours, [img.poly], -1, (0, 0, 255), thickness=3)
-    img.medges = cv2.bitwise_or(img.medges, drawn_contours[:,:,2])
-
-    if img.poly.shape[0] <= 2 or (abs(apoly - a) > 0.04*img.sarea):
+    if img.poly.shape[0] <= 2 or (abs(apoly - a) > 0.04*img.sarea) or not img.got_hull:
         print("\033[31;1;1m========== CASO EXTREMO ===========\033[0;m")
         img.ext = True
-        drawn_contours2 = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-        cv2.drawContours(drawn_contours2, [img.hullxy], -1, (0, 255, 0), thickness=3)
-        img.help = drawn_contours2[:,:,1]
-        drawn_contours += drawn_contours2
-        # img.medges = cv2.bitwise_or(img.medges, drawn_contours2[:,:,0])
+        drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+        cv2.drawContours(drawn_contours, [img.hullxy], -1, (255, 0, 0), thickness=3)
+        img.help = drawn_contours[:,:,0]
         img, a, apoly = region(img, maxkd = 20, cmax = 20, nymax = 12, skip=True)
 
+    drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+    cv2.drawContours(drawn_contours, [img.poly], -1, (0, 0, 255), thickness=3)
+    cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
     save(img, "convex_poly", drawn_contours)
-    exit()
 
     # limx, limy = broad_hull(img)
     x,y,w,h = cv2.boundingRect(img.poly)
@@ -79,12 +75,9 @@ def find_board(img):
 
 def find_morph(img, Amin, maxkd=12, skip=False):
     got_hull = False
-    alast = 0
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 5
     while kd <= maxkd:
-        if (kd == 7):
-            alast = a
         if kd > 12:
             kx = kd
         else:
@@ -112,14 +105,14 @@ def find_morph(img, Amin, maxkd=12, skip=False):
                 kd += 1
                 continue
             else:
-                print("{} > {} @ ksize = {} [GOTHULL]".format(a, Amin, kd))
+                # print("{} > {} @ ksize = {} [GOTHULL]".format(a, Amin, kd))
                 got_hull = True
                 break
         else:
-            print("{} < {} @ ksize = {}".format(a, Amin, kd))
+            # print("{} < {} @ ksize = {}".format(a, Amin, kd))
             kd += 1
 
-    save(img, "tentand:", edges_wcanny)
+    # save(img, "tentand:", edges_wcanny)
     medges = edges_bin
 
     return medges, hullxy, got_hull, a, kd, poly, apoly
@@ -519,17 +512,15 @@ def find_corners(img, inter):
 
     return corners
 
-def region(img, maxkd = 12, cmax = 12, nymax = 10, skip=False):
+def region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):
     c = 3
     wc = 6
     a = 0
-
-    Amin = 0.45 * img.sarea
-    increasing = True
-    while c <= cmax and wc <= nymax:
+    c0 = 11
+    c5 = 0
+    Amin = (c0-c5)*0.05 * img.sarea
+    while c <= cmax:
         alast = a
-        print("Amin =", Amin)
-        print("clahe = ", c)
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
         img.clahe = clahe.apply(img.wang0)
         img.wang = lwang.wang_filter(img.clahe)
@@ -541,13 +532,14 @@ def region(img, maxkd = 12, cmax = 12, nymax = 10, skip=False):
         if img.got_hull:
             break
         else:
-            if abs(a - alast) < img.sarea*0.02:
-                while a < Amin and Amin > (img.sarea * 0.1):
-                    Amin -= 0.002 * img.sarea
-                if Amin > (img.sarea * 0.1):
-                    continue
+            if abs(a - alast) < img.sarea*0.01:
+                c0 += 1
+                A0 = (c0-c5)*0.05 * img.sarea
+                if a > A0:
+                    Amin = A0
             c += 1
-            wc += 1
+            if wc < nymax:
+                wc += 1
 
     img.medges = fmedges
     return img, a, apoly
