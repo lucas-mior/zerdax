@@ -20,19 +20,19 @@ def find_board(img):
 
     if img.poly.shape[0] < 3 or a < img.sarea * 0.1:
         _, lines = find_angles(img, getangles=False)
-        draw_lines = cv2.cvtColor(img.gray, cv2.COLOR_GRAY2BGR) * 0
+        draw_lines = cv2.cvtColor(img.sgray, cv2.COLOR_GRAY2BGR) * 0
         for line in lines:
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         img.medges = cv2.bitwise_or(img.medges, draw_lines[:,:,0])
 
-    img, a = region(img)
+    img, a = region(img, maxkd = 20, cmax = 20, nymax = 12)
 
 
-    save(img, "clahe@", img.clahe)
-    save(img, "wang@", img.wang)
-    save(img, "canny@", img.canny)
-    save(img, "medges_hull", img.medges)
+    # save(img, "clahe@", img.clahe)
+    # save(img, "wang@", img.wang)
+    # save(img, "canny@", img.canny)
+    # save(img, "medges_hull", img.medges)
 
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
@@ -80,16 +80,20 @@ def find_board(img):
 
     return img
 
-def find_morph(img, Amin):
+def find_morph(img, Amin, maxkd=12):
     got_hull = False
     alast = 0
     increasing = False
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 5
-    while kd <= 12:
+    while kd <= maxkd:
         if (kd == 7):
             alast = a
-        k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kd+round(kd/3)))
+        if kd > 12:
+            kx = kd
+        else:
+            kx = kd+round(kd/3)
+        k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kx))
         dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
         edges_gray = cv2.divide(img.wang, dilate, scale = 255)
         edges_thr = cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1]
@@ -171,7 +175,10 @@ def find_canny(img, wmin = 6):
 def find_angles(img, getangles=True):
     got_hough = False
     h_maxg0 = 2
-    h_minl0 = round((img.hwidth + img.hheigth)*0.2)
+    if getangles:
+        h_minl0 = round((img.hwidth + img.hheigth)*0.2)
+    else:
+        h_minl0 = round((img.swidth + img.sheigth)*0.2)
     h_thrv0 = round(h_minl0 / 10)
     h_angl0 = np.pi / 360
 
@@ -185,8 +192,8 @@ def find_angles(img, getangles=True):
         if lines is not None and lines.shape[0] >= minlines:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
             lines = radius_theta(lines)
-            lines = filter_lines(img, lines)
             if getangles:
+                lines = filter_lines(img, lines)
                 lines, angles = lines_kmeans(img, lines)
                 print("angles: ", angles)
             else:
@@ -211,12 +218,13 @@ def find_angles(img, getangles=True):
         print("find_angles failed")
         exit()
 
-    drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-    for line in lines:
-        for x1,y1,x2,y2,r,t in line:
-            cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
-    drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
-    save(img, "hough_select", drawn_lines)
+    if getangles:
+        drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+        for line in lines:
+            for x1,y1,x2,y2,r,t in line:
+                cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
+        drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, drawn_lines, 0.8, 0)
+        save(img, "hough_select", drawn_lines)
 
     return angles, lines
 
@@ -513,22 +521,20 @@ def find_corners(img, inter):
 
     return corners
 
-def region(img):
+def region(img, maxkd = 12, cmax = 12, nymax = 10):
     c = 3
-    cmax = 12
     wc = 6
-    # wcmax = wc + (cmax-c)/2
 
     Amin = 0.45 * img.sarea
     increasing = True
-    while c <= cmax and wc < 10:
+    while c <= cmax and wc < nymax:
         print("Amin =", Amin)
         print("clahe = ", c)
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
         img.clahe = clahe.apply(img.wang0)
         img.wang = lwang.wang_filter(img.clahe)
         img.canny = find_canny(img, wmin=wc)
-        img.medges,img.hullxy,img.got_hull,increasing,a,img.kd,img.poly = find_morph(img, Amin)
+        img.medges,img.hullxy,img.got_hull,increasing,a,img.kd,img.poly = find_morph(img, Amin, maxkd)
         if c <= 7:
             fmedges = img.medges
         if increasing:
@@ -549,4 +555,4 @@ def region(img):
             wc += 1
 
         img.medges = fmedges
-        return img, a
+    return img, a
