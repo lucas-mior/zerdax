@@ -18,8 +18,8 @@ def find_board(img):
     save(img, "wang0", img.wang0)
     img, a = region(img)
 
-    if img.poly.shape[0] < 3 or a < img.sarea * 0.1:
-        print("vishhhhhhhhhhhhhhhhhhh")
+    if img.poly.shape[0] <= 2 or (a < img.sarea * 0.15):
+        print("\033[31;1;1m========== CASO EXTREMO ===========\033[0;m")
         _, lines = find_angles(img, getangles=False)
         draw_lines = cv2.cvtColor(img.sgray, cv2.COLOR_GRAY2BGR) * 0
         for line in lines:
@@ -27,6 +27,8 @@ def find_board(img):
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         img.medges = cv2.bitwise_or(img.medges, draw_lines[:,:,0])
         img, a = region(img, maxkd = 20, cmax = 20, nymax = 12)
+    else:
+        print("poly.shape:", img.poly.shape)
 
     # save(img, "clahe@", img.clahe)
     # save(img, "wang@", img.wang)
@@ -553,5 +555,5 @@ def region(img, maxkd = 12, cmax = 12, nymax = 10):
             c += 1
             wc += 1
 
-        img.medges = fmedges
+    img.medges = fmedges
     return img, a
