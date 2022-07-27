@@ -94,7 +94,7 @@ def find_board(img):
     # save(img, "hull", img.hull)
 
     img.canny = find_canny(img, wmin = 8)
-    save(img, "canny_angles_magic", img.canny)
+    save(img, "canny_find_magic_angles", img.canny)
     img.medges += img.canny
     # save(img, "medges{}+canny".format(c), img.medges)
     img.angles, img.select_lines = find_angles(img)
@@ -272,7 +272,8 @@ def find_intersections(img, lines):
             x = round(determinant(d, xdiff) / div)
             y = round(determinant(d, ydiff) / div)
 
-            dist = cv2.pointPolygonTest(img.shull, (x, y), True)
+            if img.got_hull:
+                dist = cv2.pointPolygonTest(img.shull, (x, y), True)
             if img.got_hull and dist < -20:
                 j += 1
                 continue
@@ -366,12 +367,13 @@ def magic_lines(img):
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.5, draw_lines, 0.8, 0)
         save(img, "hough_magic", drawn_lines)
 
-        ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-        img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
-        img.medges = cv2.bitwise_or(img.medges, draw_lines[:,:,0])
-        save(img, "medges_update", img.medges)
 
-        img.shull = update_hull(img)
+        if img.got_hull:
+            ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+            img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
+            img.medges = cv2.bitwise_or(img.medges, draw_lines[:,:,0])
+            save(img, "medges_update", img.medges)
+            img.shull = update_hull(img)
         inter = find_intersections(img, lines[:,0,:])
 
         drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
