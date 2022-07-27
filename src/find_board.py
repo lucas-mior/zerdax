@@ -11,32 +11,33 @@ from Image import Image
 from aux import *
 from lines import HoughBundler
 import lwang
+import random
 
 def find_board(img):
     # save(img, "sgray", img.sgray)
     img.wang0 = lwang.wang_filter(img.sgray)
     # save(img, "wang0", img.wang0)
-    img, a, apoly,cont = region(img)
+    img, a = region(img)
     img.ext = False
 
-    if img.poly.shape[0] <= 2 or (abs(apoly - a) > 0.04*img.sarea) or (not img.got_hull and abs(a) < (0.2 * img.sarea)):
+    if not img.got_hull:
         print("\033[31;1;1m========== CASO EXTREMO ===========\033[0;m")
         img.ext = True
         drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
         cv2.drawContours(drawn_contours, [img.hullxy], -1, (255, 255, 0), thickness=3)
         img.help = drawn_contours[:,:,0]
-        img, a, apoly, _ = region(img, maxkd = 20, cmax = 20, nymax = 12, skip=True)
+        img, a = region(img, maxkd = 20, cmax = 20, nymax = 12, skip=True)
 
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-    cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
-    cv2.drawContours(drawn_contours, [img.poly], -1, (0, 0, 255), thickness=3)
+    cv2.drawContours(drawn_contours, img.cont, -1, (255, 0, 0), thickness=3)
+    # cv2.drawContours(drawn_contours, [img.poly], -1, (0, 0, 255), thickness=3)
     img.medges = cv2.bitwise_or(img.medges, drawn_contours[:,:,2])
     cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
-    save(img, "convex_poly", drawn_contours)
+    # save(img, "convex", drawn_contours)
 
     # limx, limy = broad_hull(img)
-    x,y,w,h = cv2.boundingRect(img.poly)
+    x,y,w,h = cv2.boundingRect(img.hullxy)
     limx = np.zeros((2), dtype='int32')
     limy = np.zeros((2), dtype='int32')
     limx[0] = max(y-15, 0)
@@ -64,7 +65,7 @@ def find_board(img):
     # save(img, "hull", img.hull)
 
     img.canny = find_canny(img, wmin = 8)
-    save(img, "canny_find_magic_angles", img.canny)
+    # save(img, "canny_find_magic_angles", img.canny)
     img.medges += img.canny
     # save(img, "medges+canny", img.medges)
     img.angles, img.select_lines = find_angles(img)
@@ -76,7 +77,7 @@ def find_board(img):
     return img
 
 def find_morph(img, Amin, maxkd=12, skip=False):
-    got_hull = False
+    img.got_hull = False
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 5
     while kd <= maxkd:
@@ -97,26 +98,21 @@ def find_morph(img, Amin, maxkd=12, skip=False):
         contours, _ = cv2.findContours(edges_wcanny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in contours]
         max_index = np.argmax(areas)
-        cont = contours[max_index]
-        poly = cv2.approxPolyDP(cont,0.035*cv2.arcLength(cont,True),True)
-        hullxy = cv2.convexHull(poly)
-        a = cv2.contourArea(hullxy)
-        apoly = cv2.contourArea(poly)
+        img.cont = contours[max_index]
+        img.hullxy = cv2.convexHull(img.cont)
+        img.hullxy = cv2.approxPolyDP(img.hullxy,0.05*cv2.arcLength(img.hullxy,True),True)
+        a = cv2.contourArea(img.hullxy)
         if a > Amin:
-            if poly.shape[0] < 4:
-                kd += 1
-                continue
-            else:
-                print("{} > {} @ ksize = {} [GOTHULL]".format(a, Amin, kd))
-                got_hull = True
-                break
+            print("{} > {} @ ksize = {} [GOTHULL]".format(a, Amin, kd))
+            img.got_hull = True
+            break
         else:
-            print("{} < {} @ ksize = {}".format(a, Amin, kd))
+            # print("{} < {} @ ksize = {}".format(a, Amin, kd))
             kd += 1
 
-    medges = edges_bin
+    img.medges = edges_wcanny
 
-    return medges, hullxy, got_hull, a, kd, poly, apoly, cont
+    return img, a
 
 def broad_hull(img):
     Pxmin = img.hullxy[np.argmin(img.hullxy[:,0,0]),0]
@@ -145,7 +141,8 @@ def find_canny(img, wmin = 6):
             break
         else:
             if wmin - w < wmin:
-                print("{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
+                pass
+                # print("{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
         c_thrl = max(2, c_thrl - 9)
         c_thrh -= 9
 
@@ -171,9 +168,10 @@ def find_angles(img, getangles=True):
     h_angl = h_angl0
     minlines = 24
     while h_angl < (np.pi / 30):
+        th = 180*(h_angl/np.pi)
         lines = cv2.HoughLinesP(img.canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
         if lines is not None and lines.shape[0] >= minlines:
-            print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
+            print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
             lines = radius_theta(lines)
             if getangles:
                 lines = filter_lines(img, lines)
@@ -184,7 +182,8 @@ def find_angles(img, getangles=True):
             got_hough = True
             break
         elif lines is not None:
-            print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
+            if th > random.uniform(0, th*4):
+                print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
         if h_maxg < 20:
             h_maxg += 1
         if h_minl > h_minl0 / 2:
@@ -207,7 +206,7 @@ def find_angles(img, getangles=True):
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, drawn_lines, 0.7, 0)
-        save(img, "hough_select", drawn_lines)
+        # save(img, "hough_select", drawn_lines)
 
     return angles, lines
 
@@ -242,9 +241,9 @@ def find_intersections(img, lines):
             x = round(determinant(d, xdiff) / div)
             y = round(determinant(d, ydiff) / div)
 
-            if img.got_hull:
+            if not img.brect:
                 dist = cv2.pointPolygonTest(img.shull, (x, y), True)
-            if img.got_hull and dist < -20:
+            if not img.brect and dist < -20:
                 j += 1
                 continue
             elif x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
@@ -286,7 +285,7 @@ def update_hull(img):
     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.hull3ch, 0.4, drawn_contours, 0.7, 0)
-    save(img, "updatehull", drawn_contours)
+    # save(img, "updatehull", drawn_contours)
     return hullxy
 
 def magic_lines(img):
@@ -305,20 +304,21 @@ def magic_lines(img):
     else:
         maxtun = 10
         minlines = 25
-        tol = 15
+        tol = 17
     h_maxg = h_maxg0
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
     j = 0
     while h_angl < (np.pi / 10):
+        th = 180*(h_angl/np.pi)
         lines = cv2.HoughLinesP(img.canny, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
         if lines is not None:
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines = filter_angles(img, lines)
             if lines.shape[0] >= minlines:
-                print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
+                print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
                 got_hough = True
                 aux = np.copy(img.select_lines[:,:,0:6])
                 lines = np.append(lines, aux, axis=0)
@@ -326,7 +326,8 @@ def magic_lines(img):
                 break
 
         if lines is not None:
-            print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
+            if th > random.uniform(0, th*4):
+                print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
         j += 1
         h_angl += np.pi / 1800
         if h_angl > (np.pi / 20) and tuned < maxtun:
@@ -344,13 +345,13 @@ def magic_lines(img):
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, draw_lines, 0.7, 0)
-        save(img, "hough_magic", drawn_lines)
+        # save(img, "hough_magic", drawn_lines)
 
         if img.got_hull:
             ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
             img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
             img.medges = cv2.bitwise_or(img.medges, draw_lines[:,:,0])
-            save(img, "medges_update", img.medges)
+            # save(img, "medges_update", img.medges)
             img.shull = update_hull(img)
         inter = find_intersections(img, lines[:,0,:])
 
@@ -358,7 +359,7 @@ def magic_lines(img):
         for p in inter:
             cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
         drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
-        save(img, "intersections".format(img.basename), drawn_circles)
+        # save(img, "intersections".format(img.basename), drawn_circles)
     else:
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         exit()
@@ -500,11 +501,8 @@ def find_corners(img, inter):
     BL = aux
 
     drawn_circles = np.copy(img.hull3ch) * 0
-    # for p in BR, BL, TR, TL:                      B   G  R
-    cv2.circle(drawn_circles, BR, radius=7, color=(255, 0, 0), thickness=-1)
-    cv2.circle(drawn_circles, BL, radius=7, color=(0, 0, 255), thickness=-1)
-    cv2.circle(drawn_circles, TR, radius=7, color=(0, 255, 0), thickness=-1)
-    cv2.circle(drawn_circles, TL, radius=7, color=(255, 255, 255), thickness=-1)
+    for p in BR, BL, TR, TL:                      #B   G  R
+        cv2.circle(drawn_circles, p, radius=7, color=(0, 255, 0), thickness=-1)
 
     drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
     save(img, "corners", drawn_circles)
@@ -520,30 +518,40 @@ def region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):
     c0 = 12
     c5 = 0
     Amin = (c0-c5)*0.05 * img.sarea
-    while c <= cmax:
-        print("Amin = ", Amin)
-        print("Clahe = ", c)
+    while c <= cmax or c5 <= 10:
+        print("Amin: ", int(Amin))
+        print("Clahe: ", c)
         alast = a
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
         img.clahe = clahe.apply(img.wang0)
         img.wang = lwang.wang_filter(img.clahe)
         img.canny = find_canny(img, wmin=wc)
-        img.medges,img.hullxy,img.got_hull,a,img.kd,img.poly,apoly,cont = find_morph(img, Amin, maxkd, skip)
+        img, a = find_morph(img, Amin, maxkd, skip)
         if c <= 12:
             fmedges = img.medges
 
         if img.got_hull:
+            if c5 >= 5:
+                img.brect = False
+            else:
+                img.brect = True
             break
         else:
-            if abs(a - alast) < img.sarea*0.02:
-                if c5 <= 7:
-                    c5 += 1
-                print("c5 = ",c5, "NOT increasing")
-                Amin = (c0-c5)*0.05 * img.sarea
-            else:
+            print("{} < {}".format(int(a), int(Amin)))
+            if abs(a - alast) < img.sarea*0.01:
+                print("c5 = ", c5, "NOT increasing")
+                # perim1 = cv2.arcLength(img.cont, True)
+                # perim2 = cv2.arcLength(img.hullxy, True)
+                # print("cont perim: ", perim1)
+                # print("hull perim: ", perim2)
+                # if abs(perim1 - perim2) < 2*perim2:
+                if c5 < 10:
+                    c5 += 0.8
+                    Amin = (c0-c5)*0.05 * img.sarea
+            if c <= cmax:
                 c += 1
-                if wc < nymax:
-                    wc += 1
+            if wc <= nymax:
+                wc += 0.5
 
     img.medges = fmedges
-    return img, a, apoly, cont
+    return img, a

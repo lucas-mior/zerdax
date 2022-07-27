@@ -11,6 +11,7 @@ from Image import Image
 from aux import *
 from lines import HoughBundler
 import lwang
+import random
 
 def find_squares(img):
     img = perspective_transform(img)
@@ -20,7 +21,7 @@ def find_squares(img):
     # save(img, "wwang", img.wwang)
 
     img.wcanny = find_wcanny(img, wmin = 12)
-    save(img, "wcanny", img.wcanny)
+    # save(img, "wcanny", img.wcanny)
 
     lines = w_lines(img)
     lines = geo_lines(img, lines)
@@ -80,20 +81,23 @@ def w_lines(img):
     h_angl = h_angl0
     j = 0
     while h_angl < (np.pi / 10):
+        th = 180*(h_angl/np.pi)
         lines = cv2.HoughLinesP(img.wcanny, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
         if lines is not None:
             lines = radius_theta(lines)
             lines = filter_90(img, lines)
-            bundler = HoughBundler() 
-            lines = bundler.process_lines(lines) 
-            lines = radius_theta(lines)
-            if lines.shape[0] >= 18:
-                print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
-                got_hough = True
-                break
+            if lines.shape[0] > 3:
+                bundler = HoughBundler() 
+                lines = bundler.process_lines(lines) 
+                lines = radius_theta(lines)
+                if lines.shape[0] >= 18:
+                    print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
+                    got_hough = True
+                    break
 
         if lines is not None:
-            print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
+            if th > random.uniform(0, th*4):
+                print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         j += 1
         h_angl += np.pi / 1800
         if h_angl > (np.pi / 20) and tuned < 10:
