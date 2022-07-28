@@ -41,25 +41,23 @@ def full(filename, save):
     img = find_squares(img)
     img = find_pieces(img)
 
+    piece = img.ObjectsList[0]
+    print("piece: ", piece)
 
-    drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-
-    fen = '' 
-    for i in range(7, -1, -1):
+    fen = ''
+    for i in range(7, -1, -1): #FEN começa em cima
         for j in range(0, 8):
             sq = img.sqback[j,i]
             got_piece = False
             print("sq: ", i, j)
             for piece in img.ObjectsList:
-                p = (int(piece[3]), int(piece[5]))
+                p = (int(piece[4]), int(piece[2]) - 15) # um pouco acima do Ymin, no X medio
                 if cv2.pointPolygonTest(sq, p, True) >= 0:
                     fen += piece[6].split(" ")[0]
-                    print('adding', piece[6])
                     got_piece = True
                     img.ObjectsList.remove(piece)
                     break
             if not got_piece:
-                print('adding 1')
                 fen += '1'
         fen += '/'
 
