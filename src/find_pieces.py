@@ -164,7 +164,7 @@ def find_pieces(img):
     yolo = YOLO()
     r_image, ObjectsList = yolo.detect_img(img.hullcolor)
     yolo.close_session()
-    save(img, "output", r_image)
+    save(img, "yolo", r_image)
     print(ObjectsList)
     img.r_image = r_image
     img.ObjectsList = ObjectsList

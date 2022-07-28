@@ -14,9 +14,9 @@ import lwang
 import random
 
 def find_board(img):
-    # save(img, "sgray", img.sgray)
+    save(img, "sgray", img.sgray)
     img.wang0 = lwang.wang_filter(img.sgray)
-    # save(img, "wang0", img.wang0)
+    save(img, "wang0", img.wang0)
     img, a = region(img)
     img.ext = False
 
@@ -28,24 +28,24 @@ def find_board(img):
         img.help = drawn_contours[:,:,0]
         img, a = region(img, maxkd = 20, cmax = 20, nymax = 12, skip=True)
 
-    # img.medges += img.canny
-    # save(img, "medges+canny", img.medges)
+    img.medges += img.canny
+    save(img, "medges+canny", img.medges)
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(drawn_contours, img.cont, -1, (255, 0, 0), thickness=3)
     # cv2.drawContours(drawn_contours, [img.poly], -1, (0, 0, 255), thickness=3)
     img.medges = cv2.bitwise_or(img.medges, drawn_contours[:,:,2])
     cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
-    # save(img, "convex", drawn_contours)
+    save(img, "convex", drawn_contours)
 
     # limx, limy = broad_hull(img)
     x,y,w,h = cv2.boundingRect(img.hullxy)
     limx = np.zeros((2), dtype='int32')
     limy = np.zeros((2), dtype='int32')
-    limx[0] = max(y-15, 0)
-    limx[1] = min(y+h+15, img.swidth)
-    limy[0] = max(x-15, 0)
-    limy[1] = max(x+w+15, img.sheigth)
+    limx[0] = max(y-65, 0)
+    limx[1] = min(y+h+20, img.swidth)
+    limy[0] = max(x-20, 0)
+    limy[1] = max(x+w+20, img.sheigth)
 
     if not img.got_hull:
         print("finding board region failed [find_morph()]")
@@ -65,10 +65,10 @@ def find_board(img):
     img = reduce_hull(img)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
 
-    # save(img, "hull", img.hull)
+    save(img, "hull", img.hull)
 
     img.canny = find_canny(img, wmin = 8)
-    # save(img, "canny_find_magic_angles", img.canny)
+    save(img, "canny_find_magic_angles", img.canny)
     img.medges += img.canny
     # save(img, "medges+canny", img.medges)
     img.angles, img.select_lines = find_angles(img)
@@ -209,7 +209,7 @@ def find_angles(img, getangles=True):
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, drawn_lines, 0.7, 0)
-        # save(img, "hough_select", drawn_lines)
+        save(img, "hough_select", drawn_lines)
 
     return angles, lines
 
@@ -286,7 +286,7 @@ def update_hull(img):
     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.hull3ch, 0.4, drawn_contours, 0.7, 0)
-    # save(img, "updatehull", drawn_contours)
+    save(img, "updatehull", drawn_contours)
     return hullxy
 
 def magic_lines(img):
@@ -346,13 +346,13 @@ def magic_lines(img):
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, draw_lines, 0.7, 0)
-        # save(img, "hough_magic", drawn_lines)
+        save(img, "hough_magic", drawn_lines)
 
         if img.got_hull:
             ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
             img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
             img.medges = cv2.bitwise_or(img.medges, draw_lines[:,:,0])
-            # save(img, "medges_update", img.medges)
+            save(img, "medges_update", img.medges)
             img.shull = update_hull(img)
         inter = find_intersections(img, lines[:,0,:])
 
@@ -360,7 +360,7 @@ def magic_lines(img):
         for p in inter:
             cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
         drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
-        # save(img, "intersections".format(img.basename), drawn_circles)
+        save(img, "intersections".format(img.basename), drawn_circles)
     else:
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         exit()
@@ -506,7 +506,7 @@ def find_corners(img, inter):
         cv2.circle(drawn_circles, p, radius=7, color=(0, 255, 0), thickness=-1)
 
     drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
-    # save(img, "corners", drawn_circles)
+    save(img, "corners", drawn_circles)
 
     corners = np.array([BR, BL, TR, TL])
 
