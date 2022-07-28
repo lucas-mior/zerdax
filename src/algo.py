@@ -7,7 +7,6 @@ from aux import *
 from find_board import find_board
 from find_squares import find_squares
 from find_pieces import find_pieces
-from produce_fen import produce_fen
 
 def compressed_fen(fen):
     """ From: 11111q1k/1111r111/111p1pQP/111P1P11/11prn1R1/11111111/111111P1/R11111K1
