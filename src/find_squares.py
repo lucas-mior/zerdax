@@ -45,6 +45,36 @@ def find_squares(img):
         cv2.circle(drawn_circles, p, radius=5, color=(255, 0, 0), thickness=-1)
     drawn_circles = cv2.addWeighted(img.warped3ch, 0.4, drawn_circles, 0.7, 0)
     save(img, "intersections".format(img.basename), drawn_circles)
+
+    inter = inter[inter[:,1].argsort()]
+    intersq = np.zeros((9,9,2), dtype='int32')
+    print("inter.shape:", inter.shape)
+    interH = inter[00:9] # H
+    interG = inter[9:18]
+    interF = inter[18:27]
+    interE = inter[27:36]
+    interD = inter[36:45]
+    interC = inter[45:54]
+    interB = inter[54:63]
+    interA = inter[63:72] # A
+    interZ = inter[72:81] # bottom
+
+    intersq[8,:] = interH[interH[:,0].argsort()]
+    intersq[7,:] = interG[interG[:,0].argsort()]
+    intersq[6,:] = interF[interF[:,0].argsort()]
+    intersq[5,:] = interE[interE[:,0].argsort()]
+    intersq[4,:] = interD[interD[:,0].argsort()]
+    intersq[3,:] = interC[interC[:,0].argsort()]
+    intersq[2,:] = interB[interB[:,0].argsort()]
+    intersq[1,:] = interA[interA[:,0].argsort()]
+    intersq[0,:] = interZ[interZ[:,0].argsort()] # bottom
+
+    squares = np.zeros((8,8,2,2), dtype='int32') #A1, A2, ... H8 / BL, TR
+    for i in range(0,8):
+        for j in range(0,8):
+            squares[i,j,0] = intersq[i,j]
+            squares[i,j,1] = intersq[i+1,j+1]
+
     return img
 
 def perspective_transform(img):
