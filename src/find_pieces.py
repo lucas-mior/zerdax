@@ -16,16 +16,9 @@ from keras.layers import Input
 from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body
 from yolo3.utils import image_preporcess
 
-gpu_info = get_ipython().getoutput('nvidia-smi')
-gpu_info = '\n'.join(gpu_info)
-if gpu_info.find('failed') >= 0:
-    print('Not connected to a GPU')
-else:
-    print(gpu_info)
-
 class YOLO(object):
     _defaults = {
-        "model_path": 'logs/001_CasoBaseCompleto/trained_weights_final.h5',
+        "model_path": 'logs/trained_weights_final.h5',
         "anchors_path": 'model_data/yolo_anchors.txt',
         "classes_path": '_classes.txt',
         "score" : 0.2,
