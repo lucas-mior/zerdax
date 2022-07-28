@@ -55,16 +55,16 @@ def perspective_transform(img):
     BL = img.corners[1]
     TR = img.corners[2]
     TL = img.corners[3]
-    rect = np.array(((TL[0], TL[1]), (TR[0], TR[1]), (BR[0], BR[1]), (BL[0], BL[1])), dtype="float32")
+    orig_points = np.array(((TL[0], TL[1]), (TR[0], TR[1]), (BR[0], BR[1]), (BL[0], BL[1])), dtype="float32")
 
     width = 412
     height = 412
     img.wwidth = width
     img.wheigth = width
 
-    dst = np.array([[0,0], [width-1,0], [width-1,height-1], [0,height-1]],dtype="float32")
-    M = cv2.getPerspectiveTransform(rect,dst)
-    img.warped = cv2.warpPerspective(img.hull, M, (width, height))
+    newshape = np.array([[0,0], [width-1,0], [width-1,height-1], [0,height-1]],dtype="float32")
+    img.M = cv2.getPerspectiveTransform(orig_points, newshape)
+    img.warped = cv2.warpPerspective(img.hull, img.M, (width, height))
 
     # save(img, "warped", img.warped)
     return img
