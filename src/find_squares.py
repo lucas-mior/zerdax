@@ -46,6 +46,7 @@ def find_squares(img):
 
     vert = vert[remv==0]
     hori = hori[remh==0]
+    draww_lines(img, "vert_hori_rem", vert, hori)
 
     distv, disth = get_distances(vert,hori)
     medv, medh = mean_dist(distv,disth)
@@ -55,7 +56,7 @@ def find_squares(img):
 
     vert = vert[cerv==1]
     hort = hori[cerh==1]
-    draww_lines(img, "vert_hori1", vert, hori)
+    draww_lines(img, "vert_hori_cer", vert, hori)
 
     while vert[0,0,0] > (medv + 10):
         new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 400, 0,0]]], dtype='int32')
@@ -94,6 +95,18 @@ def find_squares(img):
 
     draww_lines(img, "vert_hori3", vert, hori)
 
+    if vert.shape[0] == 10:
+        print("9 lines")
+        d1 = abs(vert[0,0,0]-0)
+        d2 = abs(vert[-1,0,0]-412)
+        if d1 < d2:
+            vert = vert[1:]
+        else:
+            vert = vert[0:-1]
+    elif vert.shape[0] == 11:
+        vert = vert[1:-1]
+
+    draww_lines(img, "vert_hori4", vert, hori)
     return img
 
 def perspective_transform(img):
