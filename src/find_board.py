@@ -28,6 +28,8 @@ def find_board(img):
         img.help = drawn_contours[:,:,0]
         img, a = region(img, maxkd = 20, cmax = 20, nymax = 12, skip=True)
 
+    # img.medges += img.canny
+    # save(img, "medges+canny", img.medges)
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(drawn_contours, img.cont, -1, (255, 0, 0), thickness=3)
     # cv2.drawContours(drawn_contours, [img.poly], -1, (0, 0, 255), thickness=3)
@@ -502,7 +504,7 @@ def find_corners(img, inter):
         cv2.circle(drawn_circles, p, radius=7, color=(0, 255, 0), thickness=-1)
 
     drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
-    save(img, "corners", drawn_circles)
+    # save(img, "corners", drawn_circles)
 
     corners = np.array([BR, BL, TR, TL])
 

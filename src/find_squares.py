@@ -13,7 +13,7 @@ from lines import HoughBundler
 import lwang
 import random
 
-def draww_lines(img, name, vert, hori):
+def save_lines(img, name, vert, hori):
     drawn_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
     draw_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
     for line in vert:
@@ -33,10 +33,10 @@ def find_squares(img):
     # save(img, "wwang", img.wwang)
 
     img.wcanny = find_wcanny(img, wmin = 12)
-    save(img, "wcanny", img.wcanny)
+    # save(img, "wcanny", img.wcanny)
 
     vert,hori = w_lines(img)
-    # draww_lines(img, "vert_hori0", vert, hori)
+    # save_lines(img, "vert_hori0", vert, hori)
     vert,hori = magic_vert_hori(img, vert, hori)
 
     inter = find_intersections(img, vert[:,0,:], hori[:,0,:])
@@ -44,7 +44,7 @@ def find_squares(img):
     for p in inter:
         cv2.circle(drawn_circles, p, radius=5, color=(255, 0, 0), thickness=-1)
     drawn_circles = cv2.addWeighted(img.warped3ch, 0.4, drawn_circles, 0.7, 0)
-    save(img, "intersections".format(img.basename), drawn_circles)
+    # save(img, "intersections".format(img.basename), drawn_circles)
 
     squares = sq_inter(img, inter)
 
@@ -136,7 +136,7 @@ def w_lines(img):
 
     if not got_hough:
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
-        save(img, "wcannyfail", img.wcanny)
+        # save(img, "wcannyfail", img.wcanny)
         exit()
 
     return vert,hori
@@ -281,7 +281,7 @@ def magic_vert_hori(img, vert, hori):
 
     vert = vert[remv==0]
     hori = hori[remh==0]
-    # draww_lines(img, "vert_hori_rem", vert, hori)
+    # save_lines(img, "vert_hori_rem", vert, hori)
 
     distv, disth = get_distances(vert,hori)
     medv, medh = mean_dist(distv,disth)
@@ -291,7 +291,7 @@ def magic_vert_hori(img, vert, hori):
 
     vert = vert[cerv==1]
     hort = hori[cerh==1]
-    # draww_lines(img, "vert_hori_cer", vert, hori)
+    # save_lines(img, "vert_hori_cer", vert, hori)
 
     while vert[0,0,0] > (medv + 10):
         new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 400, 0,0]]], dtype='int32')
@@ -310,7 +310,7 @@ def magic_vert_hori(img, vert, hori):
         hori = np.append(hori, new, axis=0)
         hori = hori[hori[:,0,1].argsort()]
 
-    # draww_lines(img, "vert_hori2", vert, hori)
+    # save_lines(img, "vert_hori2", vert, hori)
 
     i = 0
     while i < (vert.shape[0] - 1):
@@ -328,7 +328,7 @@ def magic_vert_hori(img, vert, hori):
             hori = hori[hori[:,0,1].argsort()]
         i += 1
 
-    # draww_lines(img, "vert_hori3", vert, hori)
+    # save_lines(img, "vert_hori3", vert, hori)
 
     if vert.shape[0] == 10:
         d1 = abs(vert[0,0,0]-0)
@@ -350,7 +350,7 @@ def magic_vert_hori(img, vert, hori):
     elif hori.shape[0] == 11:
         hori = hori[1:-1]
 
-    draww_lines(img, "vert_hori4", vert, hori)
+    # save_lines(img, "vert_hori4", vert, hori)
     return vert, hori
 
 def sq_inter(img, inter):
@@ -391,6 +391,6 @@ def sq_inter(img, inter):
     cv2.drawContours(drawn_lines, [squares[0,0]], -1, (255, 0, 0), thickness=2)
     cv2.drawContours(drawn_lines, [squares[2,4]], -1, (0, 0, 255), thickness=2)
     drawn_contours = cv2.addWeighted(img.warped3ch, 0.4, drawn_lines, 0.7, 0)
-    save(img, "casaA1eC5", drawn_contours)
+    # save(img, "casaA1eC5", drawn_contours)
 
     return squares
