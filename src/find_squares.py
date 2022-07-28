@@ -61,7 +61,7 @@ def find_squares(img):
     for i in range(0, 8):
         for sq in sqback[i]:
             for p in sq:
-                cv2.circle(drawn_circles, p, radius=7, color=(round(255/(i+1)), 50, round(255/2*(i+1))), thickness=-1)
+                cv2.circle(drawn_circles, p, radius=7, color=(round(255/(i+1)), 50, 255-round(255/(i+1))), thickness=-1)
     drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
     save(img, "backwarp".format(img.basename), drawn_circles)
 
