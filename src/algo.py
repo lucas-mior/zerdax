@@ -9,6 +9,14 @@ from find_squares import find_squares
 from find_pieces import find_pieces
 from produce_fen import produce_fen
 
+def compressed_fen(fen):
+    """ From: 11111q1k/1111r111/111p1pQP/111P1P11/11prn1R1/11111111/111111P1/R11111K1
+        To: 5q1k/4r3/3p1pQP/3P1P2/2prn1R1/8/6P1/R5K1
+    """
+    for length in reversed(range(2,9)):
+        fen = fen.replace(length * '1', str(length))
+    return fen
+
 def reduce(img):
     img.swidth = 1000
     img.sfact = img.swidth / img.gray.shape[1]
@@ -39,22 +47,23 @@ def full(filename, save):
     fen = '' 
     for i in range(7, -1, -1):
         for j in range(0, 8):
-            sq = img.sqback[i,j]
+            sq = img.sqback[j,i]
             got_piece = False
-            print("sq: ", sq)
+            print("sq: ", i, j)
             for piece in img.ObjectsList:
                 p = (int(piece[3]), int(piece[5]))
-                print("p: ", p)
                 if cv2.pointPolygonTest(sq, p, True) >= 0:
                     fen += piece[6].split(" ")[0]
+                    print('adding', piece[6])
                     got_piece = True
                     img.ObjectsList.remove(piece)
-            if got_piece:
-                continue
-            else:
+                    break
+            if not got_piece:
+                print('adding 1')
                 fen += '1'
         fen += '/'
 
+    fen = compressed_fen(fen)
     # [top, left, bottom, right, mid_v, mid_h, label, scores]
 
     return fen
