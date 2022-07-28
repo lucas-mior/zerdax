@@ -44,37 +44,32 @@ def find_squares(img):
     remv,cerv,remh,cerh = create_aux(vert,hori)
 
     i = 0
-    for d in distv:
-        if abs(d[0] - medv) > 8:
+    for dv in distv:
+        if abs(dv[0] - medv) > 8:
             cerv[i] = 0
-            if abs(d[1] - medv) > 8:
-                print("d1: ", d[1])
-                print("medv: ", medv)
+            if abs(dv[1] - medv) > 8:
                 remv[i] = 1
             else:
                 remv[i] = 0
         else:
             remv[i] = 0
-            if abs(d[1] - medv) <= 8:
+            if abs(dv[1] - medv) <= 8:
                 cerv[i] = 1
             else:
                 cerv[i] = 0
         i += 1
 
     i = 0
-    for d in disth:
-        if abs(d[0] - medh) > 8:
+    for dh in disth:
+        if abs(dh[0] - medh) > 8:
             cerh[i] = 0
-            if abs(d[1] - medh) > 8:
-                print("d0: ", d[0])
-                print("d1: ", d[1])
-                print("medh: ", medh)
+            if abs(dh[1] - medh) > 8:
                 remh[i] = 1
             else:
                 remh[i] = 0
         else:
             remh[i] = 0
-            if abs(d[1] - medh) <= 8:
+            if abs(dh[1] - medh) <= 8:
                 cerh[i] = 1
             else:
                 cerh[i] = 0
@@ -317,7 +312,7 @@ def create_aux(vert,hori):
     remv = np.int32(remv)
     remv[:] = 0
     cerv = np.empty(vert.shape[0])
-    cerv = np.int32(remv)
+    cerv = np.int32(cerv)
     cerv[:] = 0
     remh = np.empty(hori.shape[0])
     remh = np.int32(remh)
