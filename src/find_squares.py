@@ -106,6 +106,17 @@ def find_squares(img):
     elif vert.shape[0] == 11:
         vert = vert[1:-1]
 
+    if hori.shape[0] == 10:
+        print("9 lines")
+        d1 = abs(hori[0,0,0]-0)
+        d2 = abs(hori[-1,0,0]-412)
+        if d1 < d2:
+            hori = hori[1:]
+        else:
+            hori = hori[0:-1]
+    elif hori.shape[0] == 11:
+        hori = hori[1:-1]
+
     draww_lines(img, "vert_hori4", vert, hori)
     return img
 
