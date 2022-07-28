@@ -39,7 +39,6 @@ def find_squares(img):
     draww_lines(img, "vert_hori0", vert, hori)
 
     distv, disth = get_distances(vert,hori)
-    print("distances:", distv, disth)
     medv, medh = mean_dist(distv,disth)
 
     remv,cerv,remh,cerh = create_aux(vert,hori)
@@ -47,61 +46,55 @@ def find_squares(img):
     i = 0
     for d in distv:
         if abs(d[0] - medv) > 8:
-            cerv[i] = False
+            cerv[i] = 0
             if abs(d[1] - medv) > 8:
-                remv[i] = True
+                remv[i] = 1
             else:
-                remv[i] = False
+                remv[i] = 0
         else:
-            remv[i] = False
+            remv[i] = 0
             if abs(d[1] - medv) <= 8:
-                cerv[i] = True
+                cerv[i] = 1
             else:
-                cerv[i] = False
+                cerv[i] = 0
         i += 1
 
     i = 0
     for d in disth:
         if abs(d[0] - medh) > 8:
-            cerh[i] = False
+            cerh[i] = 0
             if abs(d[1] - medh) > 8:
-                remh[i] = True
+                remh[i] = 1
             else:
-                remh[i] = False
+                remh[i] = 0
         else:
-            remh[i] = False
-            if abs(d[1] - medv) <= 8:
-                cerh[i] = True
+            remh[i] = 0
+            if abs(d[1] - medh) <= 8:
+                cerh[i] = 1
             else:
-                cerh[i] = False
+                cerh[i] = 0
         i += 1
 
-    ver1 = vert[cerv==True]
-    hor1 = hori[cerh==True]
+    ver1 = vert[cerv==1]
+    hor1 = hori[cerh==1]
     ver1 = ver1[ver1[:,0,0].argsort()]
     hor1 = hor1[hor1[:,0,1].argsort()]
 
-    vert = vert[remv==False]
-    hori = hori[remh==False]
+    vert = vert[remv==0]
+    hori = hori[remh==0]
 
-    print("vert:", vert.shape)
-    print("hori:", hori.shape)
-
-    if vert[0,0,0] > (medv + 10):
-        new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 400, 0,0]]], dtype='int32')
-        vert = np.append(vert, new, axis=0)
-    if abs(vert[-1,0,0] - 412) > (medv + 10):
-        new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,400, 0,0]]], dtype='int32')
-        vert = np.append(vert, new, axis=0)
-    if hori[0,0,1] > (medh + 10):
-        new = np.array([[[10, hori[0,0,1]-medh, 400, hori[0,0,1]-medh, 0,0]]], dtype='int32')
-        hori = np.append(hori, new, axis=0)
-    if abs(hori[-1,0,1] - 412) > (medh + 10):
-        new = np.array([[[10, hori[-1,0,1]+medh, 400, hori[-1,0,1]+medh, 0,0]]], dtype='int32')
-        hori = np.append(hori, new, axis=0)
-
-    print("after vert: ", vert, vert.shape)
-    print("after hori: ", hori, hori.shape)
+    # if vert[0,0,0] > (medv + 10):
+    #     new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 400, 0,0]]], dtype='int32')
+    #     vert = np.append(vert, new, axis=0)
+    # if abs(vert[-1,0,0] - 412) > (medv + 10):
+    #     new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,400, 0,0]]], dtype='int32')
+    #     vert = np.append(vert, new, axis=0)
+    # if hori[0,0,1] > (medh + 10):
+    #     new = np.array([[[10, hori[0,0,1]-medh, 400, hori[0,0,1]-medh, 0,0]]], dtype='int32')
+    #     hori = np.append(hori, new, axis=0)
+    # if abs(hori[-1,0,1] - 412) > (medh + 10):
+    #     new = np.array([[[10, hori[-1,0,1]+medh, 400, hori[-1,0,1]+medh, 0,0]]], dtype='int32')
+    #     hori = np.append(hori, new, axis=0)
 
     drawn_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
     draw_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
@@ -236,25 +229,27 @@ def geo_lines(img, lines):
 
 def get_distances(vert,hori):
     distv = np.zeros((vert.shape[0], 2), dtype='int32')
-    disth = np.zeros((hori.shape[0], 2), dtype='int32')
-
-    distv[0][0] = abs(vert[1,0,0] - vert[0,0,0])
-    distv[0][1] = abs(vert[1,0,0] - vert[0,0,0])
+    distv[0,0] = abs(vert[1,0,0] - vert[0,0,0])
+    distv[0,1] = abs(vert[1,0,0] - vert[0,0,0])
     for i in range (1, vert.shape[0]-1):
-        distv[i][0] = abs(vert[i-1,0,0] - vert[i,0,0])
-        distv[i][1] = abs(vert[i+1,0,0] - vert[i,0,0])
+        distv[i,0] = abs(vert[i-1,0,0] - vert[i,0,0])
+        distv[i,1] = abs(vert[i+1,0,0] - vert[i,0,0])
     i += 1
-    distv[i][0] = abs(vert[i-1,0,0] - vert[i,0,0])
-    distv[i][1] = abs(vert[i-1,0,0] - vert[i,0,0])
+    distv[i,0] = abs(vert[i-1,0,0] - vert[i,0,0])
+    distv[i,1] = abs(vert[i-1,0,0] - vert[i,0,0])
 
-    disth[0][0] = abs(hori[1,0,1] - hori[0,0,1])
-    disth[0][1] = abs(hori[1,0,1] - hori[0,0,1])
+    disth = np.zeros((hori.shape[0], 2), dtype='int32')
+    disth[0,0] = abs(hori[1,0,1] - hori[0,0,1])
+    disth[0,1] = abs(hori[1,0,1] - hori[0,0,1])
     for i in range (1, hori.shape[0]-1):
-        disth[i][0] = abs(hori[i-1,0,1] - hori[i,0,1])
-        disth[i][1] = abs(hori[i+1,0,1] - hori[i,0,1])
+        disth[i,0] = abs(hori[i-1,0,1] - hori[i,0,1])
+        disth[i,1] = abs(hori[i+1,0,1] - hori[i,0,1])
     i += 1
-    disth[i][0] = abs(hori[i-1,0,1] - hori[i,0,1])
-    disth[i][1] = abs(hori[i-1,0,1] - hori[i,0,1])
+    disth[i,0] = abs(hori[i-1,0,1] - hori[i,0,1])
+    disth[i,1] = abs(hori[i-1,0,1] - hori[i,0,1])
+
+    print("distv:", distv)
+    print("disth:", disth)
 
     return distv, disth
 
@@ -318,10 +313,14 @@ def mean_dist(distv,disth):
 def create_aux(vert,hori):
     remv = np.empty(vert.shape[0])
     remv = np.int32(remv)
+    remv[:] = 0
     cerv = np.empty(vert.shape[0])
     cerv = np.int32(remv)
+    cerv[:] = 0
     remh = np.empty(hori.shape[0])
     remh = np.int32(remh)
+    remh[:] = 0
     cerh = np.empty(hori.shape[0])
     cerh = np.int32(cerh)
+    cerh[:] = 0
     return remv,cerv,remh,cerh
