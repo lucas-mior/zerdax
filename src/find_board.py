@@ -210,9 +210,6 @@ def find_angles(img, getangles=True):
 
     return angles, lines
 
-def determinant(a, b):
-    return a[0]*b[1] - a[1]*b[0]
-
 def find_intersections(img, lines):
     inter = []
     last = (0,0)

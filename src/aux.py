@@ -6,6 +6,10 @@ import math
 import numpy as np
 
 i = 0
+
+def determinant(a, b):
+    return a[0]*b[1] - a[1]*b[0]
+
 def save(img, filename, image):
     global i
     cv2.imwrite("{}{:02d}_{}.png".format(img.basename, i, filename), image)

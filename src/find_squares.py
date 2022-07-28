@@ -36,88 +36,15 @@ def find_squares(img):
     save(img, "wcanny", img.wcanny)
 
     vert,hori = w_lines(img)
-    draww_lines(img, "vert_hori0", vert, hori)
+    # draww_lines(img, "vert_hori0", vert, hori)
+    vert,hori = magic_vert_hori(img, vert, hori)
 
-    distv, disth = get_distances(vert,hori)
-    medv, medh = mean_dist(distv,disth)
-
-    remv = iterate(distv, medv)
-    remh = iterate(disth, medh)
-
-    vert = vert[remv==0]
-    hori = hori[remh==0]
-    draww_lines(img, "vert_hori_rem", vert, hori)
-
-    distv, disth = get_distances(vert,hori)
-    medv, medh = mean_dist(distv,disth)
-
-    cerv = iterate2(distv, medv)
-    cerh = iterate2(disth, medh)
-
-    vert = vert[cerv==1]
-    hort = hori[cerh==1]
-    draww_lines(img, "vert_hori_cer", vert, hori)
-
-    while vert[0,0,0] > (medv + 10):
-        new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 400, 0,0]]], dtype='int32')
-        vert = np.append(vert, new, axis=0)
-        vert = vert[vert[:,0,0].argsort()]
-    while abs(vert[-1,0,0] - 412) > (medv + 10):
-        new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,400, 0,0]]], dtype='int32')
-        vert = np.append(vert, new, axis=0)
-        vert = vert[vert[:,0,0].argsort()]
-    while hori[0,0,1] > (medh + 10):
-        new = np.array([[[10, hori[0,0,1]-medh, 400, hori[0,0,1]-medh, 0,0]]], dtype='int32')
-        hori = np.append(hori, new, axis=0)
-        hori = hori[hori[:,0,1].argsort()]
-    while abs(hori[-1,0,1] - 412) > (medh + 10):
-        new = np.array([[[10, hori[-1,0,1]+medh, 400, hori[-1,0,1]+medh, 0,0]]], dtype='int32')
-        hori = np.append(hori, new, axis=0)
-        hori = hori[hori[:,0,1].argsort()]
-
-    draww_lines(img, "vert_hori2", vert, hori)
-
-    i = 0
-    while i < (vert.shape[0] - 1):
-        if abs(vert[i,0,0] - vert[i+1,0,0]) > (medv*1.5):
-            new = np.array([[[vert[i,0,0]+medv, 10, vert[i,0,0]+medv, 400, 0,0]]], dtype='int32')
-            vert = np.append(vert, new, axis=0)
-            vert = vert[vert[:,0,0].argsort()]
-        i += 1
-
-    i = 0
-    while i < (hori.shape[0] - 1):
-        if abs(hori[i,0,1] - hori[i+1,0,1]) > (medh*1.5):
-            new = np.array([[[10, hori[i,0,1]+medh, 400, hori[i,0,1]+medh, 0,0]]], dtype='int32')
-            hori = np.append(hori, new, axis=0)
-            hori = hori[hori[:,0,1].argsort()]
-        i += 1
-
-    draww_lines(img, "vert_hori3", vert, hori)
-
-    if vert.shape[0] == 10:
-        print("9 lines")
-        d1 = abs(vert[0,0,0]-0)
-        d2 = abs(vert[-1,0,0]-412)
-        if d1 < d2:
-            vert = vert[1:]
-        else:
-            vert = vert[0:-1]
-    elif vert.shape[0] == 11:
-        vert = vert[1:-1]
-
-    if hori.shape[0] == 10:
-        print("9 lines")
-        d1 = abs(hori[0,0,0]-0)
-        d2 = abs(hori[-1,0,0]-412)
-        if d1 < d2:
-            hori = hori[1:]
-        else:
-            hori = hori[0:-1]
-    elif hori.shape[0] == 11:
-        hori = hori[1:-1]
-
-    draww_lines(img, "vert_hori4", vert, hori)
+    inter = find_intersections(img, vert[:,0,:], hori[:,0,:])
+    drawn_circles = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
+    for p in inter:
+        cv2.circle(drawn_circles, p, radius=5, color=(255, 0, 0), thickness=-1)
+    drawn_circles = cv2.addWeighted(img.warped3ch, 0.4, drawn_circles, 0.7, 0)
+    save(img, "intersections".format(img.basename), drawn_circles)
     return img
 
 def perspective_transform(img):
@@ -268,20 +195,17 @@ def get_distances(vert,hori):
 
     return distv, disth
 
-def find_intersections(img, lines):
+def find_intersections(img, vert, hori):
     inter = []
     last = (0,0)
 
     i = 0
-    for x1,y1,x2,y2,r,t in lines:
+    for x1,y1,x2,y2,r,t in vert:
         l1 = [(x1,y1), (x2,y2)]
         j = 0
-        for xx1,yy1,xx2,yy2,rr,tt in lines:
+        for xx1,yy1,xx2,yy2,rr,tt in hori:
             l2 =  [(xx1,yy1), (xx2,yy2)]
             if (x1,y1) == (xx1,yy1) and (x2,y2) == (xx2,yy2):
-                continue
-
-            if abs(t - tt) < 20 or abs(t - tt) > 160:
                 continue
 
             xdiff = (l1[0][0] - l1[1][0], l2[0][0] - l2[1][0])
@@ -353,3 +277,84 @@ def iterate2(dist, med):
             cer[i] = 0
         i += 1
     return cer
+
+def magic_vert_hori(img, vert, hori):
+    distv, disth = get_distances(vert,hori)
+    medv, medh = mean_dist(distv,disth)
+
+    remv = iterate(distv, medv)
+    remh = iterate(disth, medh)
+
+    vert = vert[remv==0]
+    hori = hori[remh==0]
+    # draww_lines(img, "vert_hori_rem", vert, hori)
+
+    distv, disth = get_distances(vert,hori)
+    medv, medh = mean_dist(distv,disth)
+
+    cerv = iterate2(distv, medv)
+    cerh = iterate2(disth, medh)
+
+    vert = vert[cerv==1]
+    hort = hori[cerh==1]
+    # draww_lines(img, "vert_hori_cer", vert, hori)
+
+    while vert[0,0,0] > (medv + 10):
+        new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 400, 0,0]]], dtype='int32')
+        vert = np.append(vert, new, axis=0)
+        vert = vert[vert[:,0,0].argsort()]
+    while abs(vert[-1,0,0] - 412) > (medv + 10):
+        new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,400, 0,0]]], dtype='int32')
+        vert = np.append(vert, new, axis=0)
+        vert = vert[vert[:,0,0].argsort()]
+    while hori[0,0,1] > (medh + 10):
+        new = np.array([[[10, hori[0,0,1]-medh, 400, hori[0,0,1]-medh, 0,0]]], dtype='int32')
+        hori = np.append(hori, new, axis=0)
+        hori = hori[hori[:,0,1].argsort()]
+    while abs(hori[-1,0,1] - 412) > (medh + 10):
+        new = np.array([[[10, hori[-1,0,1]+medh, 400, hori[-1,0,1]+medh, 0,0]]], dtype='int32')
+        hori = np.append(hori, new, axis=0)
+        hori = hori[hori[:,0,1].argsort()]
+
+    # draww_lines(img, "vert_hori2", vert, hori)
+
+    i = 0
+    while i < (vert.shape[0] - 1):
+        if abs(vert[i,0,0] - vert[i+1,0,0]) > (medv*1.5):
+            new = np.array([[[vert[i,0,0]+medv, 10, vert[i,0,0]+medv, 400, 0,0]]], dtype='int32')
+            vert = np.append(vert, new, axis=0)
+            vert = vert[vert[:,0,0].argsort()]
+        i += 1
+
+    i = 0
+    while i < (hori.shape[0] - 1):
+        if abs(hori[i,0,1] - hori[i+1,0,1]) > (medh*1.5):
+            new = np.array([[[10, hori[i,0,1]+medh, 400, hori[i,0,1]+medh, 0,0]]], dtype='int32')
+            hori = np.append(hori, new, axis=0)
+            hori = hori[hori[:,0,1].argsort()]
+        i += 1
+
+    # draww_lines(img, "vert_hori3", vert, hori)
+
+    if vert.shape[0] == 10:
+        d1 = abs(vert[0,0,0]-0)
+        d2 = abs(vert[-1,0,0]-412)
+        if d1 < d2:
+            vert = vert[1:]
+        else:
+            vert = vert[0:-1]
+    elif vert.shape[0] == 11:
+        vert = vert[1:-1]
+
+    if hori.shape[0] == 10:
+        d1 = abs(hori[0,0,1]-0)
+        d2 = abs(hori[-1,0,1]-412)
+        if d1 < d2:
+            hori = hori[1:]
+        else:
+            hori = hori[0:-1]
+    elif hori.shape[0] == 11:
+        hori = hori[1:-1]
+
+    draww_lines(img, "vert_hori4", vert, hori)
+    return vert, hori
