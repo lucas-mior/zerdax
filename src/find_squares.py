@@ -13,6 +13,18 @@ from lines import HoughBundler
 import lwang
 import random
 
+def draww_lines(img, name, vert, hori):
+    drawn_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
+    draw_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
+    for line in vert:
+        for x1,y1,x2,y2,r,t in line:
+            cv2.line(draw_lines,(x1,y1),(x2,y2),(255,0,0),round(2/img.sfact))
+    for line in hori:
+        for x1,y1,x2,y2,r,t in line:
+            cv2.line(draw_lines,(x1,y1),(x2,y2),(0,255,0),round(2/img.sfact))
+    drawn_lines = cv2.addWeighted(img.warped3ch, 0.5, draw_lines, 0.7, 0)
+    save(img, name, drawn_lines)
+
 def find_squares(img):
     img = perspective_transform(img)
     img.warped3ch = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR)
@@ -24,18 +36,7 @@ def find_squares(img):
     save(img, "wcanny", img.wcanny)
 
     vert,hori = w_lines(img)
-    print("vert,hori:", vert,hori)
-
-    drawn_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
-    draw_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
-    for line in vert:
-        for x1,y1,x2,y2,r,t in line:
-            cv2.line(draw_lines,(x1,y1),(x2,y2),(255,0,0),round(2/img.sfact))
-    for line in hori:
-        for x1,y1,x2,y2,r,t in line:
-            cv2.line(draw_lines,(x1,y1),(x2,y2),(0,255,0),round(2/img.sfact))
-    drawn_lines = cv2.addWeighted(img.warped3ch, 0.5, draw_lines, 0.7, 0)
-    save(img, "vert_hori0", drawn_lines)
+    draww_lines(img, "vert_hori0", vert, hori)
 
     distv, disth = get_distances(vert,hori)
     print("distances:", distv, disth)
