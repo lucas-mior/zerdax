@@ -36,7 +36,7 @@ def find_squares(img):
     drawn_lines = cv2.addWeighted(img.warped3ch, 0.5, draw_lines, 0.7, 0)
     save(img, "vert_hori", drawn_lines)
 
-    # distv, disth = get_distances(vert,hori)
+    distv, disth = get_distances(vert,hori)
 
     return img
 
@@ -158,33 +158,33 @@ def geo_lines(img, lines):
 
     return vert, hori
 
-# def get_distances(vert,hori):
-#     distv = np.zeros((vert.shape[0], 2), dtype='int32')
-#     disth = np.zeros((vert.shape[0], 2), dtype='int32')
+def get_distances(vert,hori):
+    distv = np.zeros((vert.shape[0], 2), dtype='int32')
+    disth = np.zeros((hori.shape[0], 2), dtype='int32')
 
-#     distv[0][0] = abs(vert[1,0,0] - vert[0,0,0])
-#     distv[0][1] = abs(vert[1,0,0] - vert[0,0,0])
+    distv[0][0] = abs(vert[1,0,0] - vert[0,0,0])
+    distv[0][1] = abs(vert[1,0,0] - vert[0,0,0])
 
-#     for i in range (1, vert.shape[0]-1):
-#         distv[i][0] = abs(vert[i-1,0,0] - vert[i,0,0])
-#         distv[i][1] = abs(vert[i+1,0,0] - vert[i,0,0])
+    for i in range (1, vert.shape[0]-1):
+        distv[i][0] = abs(vert[i-1,0,0] - vert[i,0,0])
+        distv[i][1] = abs(vert[i+1,0,0] - vert[i,0,0])
 
-#     i += 1
-#     distv[i][0] = abs(vert[i-1,0,0] - vert[i,0,0])
-#     distv[i][1] = abs(vert[i-1,0,0] - vert[i,0,0])
+    i += 1
+    distv[i][0] = abs(vert[i-1,0,0] - vert[i,0,0])
+    distv[i][1] = abs(vert[i-1,0,0] - vert[i,0,0])
 
-#     disth[0][0] = abs(hori[1,0,0] - hori[0,0,0])
-#     disth[0][1] = abs(hori[1,0,0] - hori[0,0,0])
+    disth[0][0] = abs(hori[1,0,1] - hori[0,0,1])
+    disth[0][1] = abs(hori[1,0,1] - hori[0,0,1])
 
-#     for i in range (1, hori.shape[0]-1):
-#         disth[i][0] = abs(hori[i-1,0,0] - hori[i,0,0])
-#         disth[i][1] = abs(hori[i+1,0,0] - hori[i,0,0])
+    for j in range (1, hori.shape[0]-1):
+        disth[i][0] = abs(hori[j-1,0,1] - hori[j,0,1])
+        disth[i][1] = abs(hori[j+1,0,1] - hori[j,0,1])
 
-#     i += 1
-#     disth[i][0] = abs(hori[i-1,0,0] - hori[i,0,0])
-#     disth[i][1] = abs(hori[i-1,0,0] - hori[i,0,0])
+    j += 1
+    disth[j][0] = abs(hori[j-1,0,1] - hori[j,0,1])
+    disth[j][1] = abs(hori[j-1,0,1] - hori[j,0,1])
 
-#     return distv, disth
+    return distv, disth
 
 def find_intersections(img, lines):
     inter = []
