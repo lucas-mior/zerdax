@@ -47,23 +47,17 @@ def find_squares(img):
     # save(img, "intersections".format(img.basename), drawn_circles)
 
     squares = sq_inter(img, inter)
+    squares = np.float32(squares)
     print("M = ", img.M)
     _, img.invM = cv2.invert(img.M)
-    print("invM = ", img.invM)
 
-    x = squares[0,0,0,0]
-    y = squares[0,0,0,1]
-    coord = [x, y] + [1]
-    P = np.float32(coord)
-    print("P: ", P)
-    x, y, z = np.dot(img.invM, P)
-    print("x, y, z: ", x, y, z)
-
-    new_x = round(x/z)
-    new_y = round(y/z)
+    sqback = cv2.perspectiveTransform(squares[0,:], img.invM)
+    print("sqback:", sqback)
+    sqback = np.int32(sqback)
 
     drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-    cv2.circle(drawn_circles, (new_x, new_y), radius=7, color=(255, 0, 0), thickness=-1)
+    for p in sqback[0]:
+        cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
     drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
     save(img, "backwarpA1".format(img.basename), drawn_circles)
 
