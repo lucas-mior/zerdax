@@ -58,7 +58,8 @@ def full(filename, save):
                     break
             if not got_piece:
                 fen += '1'
-        fen += '/'
+        if i >= 1
+            fen += '/'
 
     fen = compressed_fen(fen)
     # [top, left, bottom, right, mid_v, mid_h, label, scores]
