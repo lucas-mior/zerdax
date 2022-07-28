@@ -53,17 +53,19 @@ def find_squares(img):
     sqback = np.zeros(squares.shape, dtype='float32')
 
     for i in range(0, 8):
-        sqback[i] = cv2.perspectiveTransform(squares[i,:], img.invM)
+        sqback[i] = cv2.perspectiveTransform(squares[i], img.invM)
 
-    sqback = np.int32(sqback)
+    img.sqback = np.int32(sqback)
 
     drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-    for i in range(0, 8):
-        for sq in sqback[i]:
-            for p in sq:
-                cv2.circle(drawn_circles, p, radius=7, color=(round(255/(i+1)), 50, 255-round(255/(i+1))), thickness=-1)
-    drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
-    save(img, "backwarp".format(img.basename), drawn_circles)
+    # for i in range(0, 8):
+    #     for sq in img.sqback[i]:
+    #         for p in sq:
+    #             cv2.circle(drawn_circles, p, radius=7, color=(round(255/(i+1)), 10, 255-round(255/(i+1))), thickness=-1)
+    # drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
+    # save(img, "backwarp".format(img.basename), drawn_circles)
+
+    # dist = cv2.pointPolygonTest(img.sqback[0,0], (x, y), True)
 
     return img
 

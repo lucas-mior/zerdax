@@ -5,6 +5,8 @@ from Image import Image
 
 from find_board import find_board
 from find_squares import find_squares
+from find_pieces import find_pieces
+from produce_fen import produce_fen
 
 def reduce(img):
     img.swidth = 1000
@@ -28,8 +30,7 @@ def full(filename, save):
     img.save = save
     img = find_board(img)
     img = find_squares(img)
+    img = find_pieces(img)
+    img = produce_fen(img)
 
-    print("\033[37;1;1mboard: \033[0;m", img.corners)
-
-    predicted_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-    return predicted_fen
+    return img.predicted_fen
