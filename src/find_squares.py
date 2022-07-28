@@ -50,16 +50,20 @@ def find_squares(img):
     squares = np.float32(squares)
     print("M = ", img.M)
     _, img.invM = cv2.invert(img.M)
+    sqback = np.zeros(squares.shape, dtype='float32')
 
-    sqback = cv2.perspectiveTransform(squares[0,:], img.invM)
-    print("sqback:", sqback)
+    for i in range(0, 8):
+        sqback[i] = cv2.perspectiveTransform(squares[i,:], img.invM)
+
     sqback = np.int32(sqback)
 
     drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-    for p in sqback[0]:
-        cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
+    for i in range(0, 8):
+        for sq in sqback[i]:
+            for p in sq:
+                cv2.circle(drawn_circles, p, radius=7, color=(round(255/(i+1)), 50, round(255/2*(i+1))), thickness=-1)
     drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
-    save(img, "backwarpA1".format(img.basename), drawn_circles)
+    save(img, "backwarp".format(img.basename), drawn_circles)
 
     return img
 
