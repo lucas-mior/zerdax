@@ -1,0 +1,13 @@
+bishop
+b
+k
+n
+p
+q
+r
+B
+K
+N
+P
+Q
+R

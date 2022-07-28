@@ -12,3 +12,10 @@ __pycache__
 *.toc
 *.gz
 *.synctex
+
+*.so
+*.zip
+*yolo3
+*CV
+*model_data
+*logs
