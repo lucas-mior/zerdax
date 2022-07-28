@@ -41,64 +41,58 @@ def find_squares(img):
     distv, disth = get_distances(vert,hori)
     medv, medh = mean_dist(distv,disth)
 
-    remv,cerv,remh,cerh = create_aux(vert,hori)
-
-    i = 0
-    for dv in distv:
-        if abs(dv[0] - medv) > 8:
-            cerv[i] = 0
-            if abs(dv[1] - medv) > 8:
-                remv[i] = 1
-            else:
-                remv[i] = 0
-        else:
-            remv[i] = 0
-            if abs(dv[1] - medv) <= 8:
-                cerv[i] = 1
-            else:
-                cerv[i] = 0
-        i += 1
-
-    i = 0
-    for dh in disth:
-        if abs(dh[0] - medh) > 8:
-            cerh[i] = 0
-            if abs(dh[1] - medh) > 8:
-                remh[i] = 1
-            else:
-                remh[i] = 0
-        else:
-            remh[i] = 0
-            if abs(dh[1] - medh) <= 8:
-                cerh[i] = 1
-            else:
-                cerh[i] = 0
-        i += 1
-
-    v = np.copy(vert)
-    h = np.copy(hori)
-    ver1 = v[cerv==1]
-    hor1 = h[cerh==1]
-    ver1 = ver1[ver1[:,0,0].argsort()]
-    hor1 = hor1[hor1[:,0,1].argsort()]
+    remv = iterate(distv, medv)
+    remh = iterate(disth, medh)
 
     vert = vert[remv==0]
     hori = hori[remh==0]
 
-    if vert[0,0,0] > (medv + 10):
+    distv, disth = get_distances(vert,hori)
+    medv, medh = mean_dist(distv,disth)
+
+    cerv = iterate2(distv, medv)
+    cerh = iterate2(disth, medh)
+
+    vert = vert[cerv==1]
+    hort = hori[cerh==1]
+    draww_lines(img, "vert_hori1", vert, hori)
+
+    while vert[0,0,0] > (medv + 10):
         new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 400, 0,0]]], dtype='int32')
         vert = np.append(vert, new, axis=0)
-    if abs(vert[-1,0,0] - 412) > (medv + 10):
+        vert = vert[vert[:,0,0].argsort()]
+    while abs(vert[-1,0,0] - 412) > (medv + 10):
         new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,400, 0,0]]], dtype='int32')
         vert = np.append(vert, new, axis=0)
-    if hori[0,0,1] > (medh + 10):
+        vert = vert[vert[:,0,0].argsort()]
+    while hori[0,0,1] > (medh + 10):
         new = np.array([[[10, hori[0,0,1]-medh, 400, hori[0,0,1]-medh, 0,0]]], dtype='int32')
         hori = np.append(hori, new, axis=0)
-    if abs(hori[-1,0,1] - 412) > (medh + 10):
+        hori = hori[hori[:,0,1].argsort()]
+    while abs(hori[-1,0,1] - 412) > (medh + 10):
         new = np.array([[[10, hori[-1,0,1]+medh, 400, hori[-1,0,1]+medh, 0,0]]], dtype='int32')
         hori = np.append(hori, new, axis=0)
+        hori = hori[hori[:,0,1].argsort()]
 
-    draww_lines(img, "vert_hori1", vert, hori)
+    draww_lines(img, "vert_hori2", vert, hori)
+
+    i = 0
+    while i < (vert.shape[0] - 1):
+        if abs(vert[i,0,0] - vert[i+1,0,0]) > (medv*1.5):
+            new = np.array([[[vert[i,0,0]+medv, 10, vert[i,0,0]+medv, 400, 0,0]]], dtype='int32')
+            vert = np.append(vert, new, axis=0)
+            vert = vert[vert[:,0,0].argsort()]
+        i += 1
+
+    i = 0
+    while i < (hori.shape[0] - 1):
+        if abs(hori[i,0,1] - hori[i+1,0,1]) > (medh*1.5):
+            new = np.array([[[10, hori[i,0,1]+medh, 400, hori[i,0,1]+medh, 0,0]]], dtype='int32')
+            hori = np.append(hori, new, axis=0)
+            hori = hori[hori[:,0,1].argsort()]
+        i += 1
+
+    draww_lines(img, "vert_hori3", vert, hori)
 
     return img
 
@@ -307,17 +301,31 @@ def mean_dist(distv,disth):
     print("medh: ", medh1, medh2, medh)
     return medv,medh
 
-def create_aux(vert,hori):
-    remv = np.empty(vert.shape[0])
-    remv = np.int32(remv)
-    remv[:] = 0
-    cerv = np.empty(vert.shape[0])
-    cerv = np.int32(cerv)
-    cerv[:] = 0
-    remh = np.empty(hori.shape[0])
-    remh = np.int32(remh)
-    remh[:] = 0
-    cerh = np.empty(hori.shape[0])
-    cerh = np.int32(cerh)
-    cerh[:] = 0
-    return remv,cerv,remh,cerh
+def iterate(dist, med):
+    rem = np.empty(dist.shape[0])
+    rem = np.int32(rem)
+    rem[:] = 0
+
+    i = 0
+    for d in dist:
+        if abs(d[0] - med) > 8:
+            if abs(d[1] - med) > 8:
+                rem[i] = 1
+            else:
+                rem[i] = 0
+        i += 1
+    return rem
+
+def iterate2(dist, med):
+    cer = np.empty(dist.shape[0])
+    cer = np.int32(cer)
+    cer[:] = 0
+
+    i = 0
+    for d in dist:
+        if abs(d[0] - med) < 8 and abs(d[1] - med) < 8:
+            cer[i] = 1
+        else:
+            cer[i] = 0
+        i += 1
+    return cer
