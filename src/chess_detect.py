@@ -1,13 +1,43 @@
-import numpy as np
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+gpu_info = get_ipython().getoutput('nvidia-smi')
+gpu_info = '\n'.join(gpu_info)
+if gpu_info.find('failed') >= 0:
+  print('Not connected to a GPU')
+else:
+  print(gpu_info)
+
+
+# In[2]:
+
+
+from google.colab import drive
+drive.mount('/drive')
+
+
+# In[3]:
+
+
+cd /drive/MyDrive/Projetos/zerdaX
+
+
+# In[4]:
+
+
 import colorsys
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 import cv2
-from aux import *
 
 from tensorflow.python.framework.ops import disable_eager_execution
 disable_eager_execution()
 
+
+from google.colab.patches import cv2_imshow
 import numpy as np
 from keras import backend as K
 from keras.models import load_model
@@ -15,13 +45,6 @@ from keras.layers import Input
 
 from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body
 from yolo3.utils import image_preporcess
-
-gpu_info = get_ipython().getoutput('nvidia-smi')
-gpu_info = '\n'.join(gpu_info)
-if gpu_info.find('failed') >= 0:
-    print('Not connected to a GPU')
-else:
-    print(gpu_info)
 
 class YOLO(object):
     _defaults = {
@@ -142,12 +165,16 @@ class YOLO(object):
 
             # put object rectangle
             cv2.rectangle(image, (left, top), (right, bottom), self.colors[c], thickness)
+
             # get text size
             (test_width, text_height), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, thickness/self.text_size, 1)
+
             # put text rectangle
             cv2.rectangle(image, (left, top), (left + test_width, top - text_height - baseline), self.colors[c], thickness=cv2.FILLED)
+
             # put text above rectangle
             cv2.putText(image, label, (left, top-2), cv2.FONT_HERSHEY_SIMPLEX, thickness/self.text_size, (0, 0, 0), 1)
+
             # add everything to list
             ObjectsList.append([top, left, bottom, right, mid_v, mid_h, label, scores])
 
@@ -157,6 +184,7 @@ class YOLO(object):
         self.sess.close()
 
     def detect_img(self, image):
+        image = cv2.imread(image, cv2.IMREAD_COLOR)
         original_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         original_image_color = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
         
@@ -164,16 +192,59 @@ class YOLO(object):
         return r_image, ObjectsList
 
     
-def find_pieces(img):
-    print("chamar codigo do vitao aqui")
-    img.pieces = np.zeros((32,6), dtype='int32')
+# if __name__=="__main__":
+#     yolo = YOLO()
+#     image = 'CV/b04.jpg'
+#     r_image, ObjectsList = yolo.detect_img(image)
+#     print(ObjectsList)
+#     cv2_imshow(r_image)
+#     if cv2.waitKey(25) & 0xFF == ord("q"):
+#         cv2.destroyAllWindows()
 
+#     #yolo.close_session()
+
+
+# In[5]:
+
+
+import os
+luquinhas = os.listdir("CV/")
+yolo = YOLO()
+for img in luquinhas:
+    image = "CV/"+img
+    r_image, ObjectsList = yolo.detect_img(image)
+    #cv2.imwrite(image[:-4]+"_yolo.jpg", r_image)
+    linha = ','.join(str(x) for x in ObjectsList)
+    with open("CV/coordenadas.txt", "a") as bloco:
+        bloco.write("["+image+"_yolo.jpg], "+linha+"\n")
+        bloco.close
+    #yolo.close_session()
+  
+    #print(ObjectsList)
+    #cv2_imshow(r_image)
+    #if cv2.waitKey(25) & 0xFF == ord("q"):
+    #    cv2.destroyAllWindows()
+
+
+# In[2]:
+
+
+import glob
+luquinhas = glob.glob
+for :
     yolo = YOLO()
-    r_image, ObjectsList = yolo.detect_img(img.hull)
-    yolo.close_session()
-    save(img, "output", r_image)
+    image = 'CV/b04.jpg'
+    r_image, ObjectsList = yolo.detect_img(image)
     print(ObjectsList)
-    img.r_image = r_image
-    img.ObjectsList = r_image
+    cv2_imshow(r_image)
+    if cv2.waitKey(25) & 0xFF == ord("q"):
+        cv2.destroyAllWindows()
 
-    return img
+
+# 
+
+# In[ ]:
+
+
+linha[1:-1]
+
