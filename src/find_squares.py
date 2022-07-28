@@ -39,48 +39,68 @@ def find_squares(img):
 
     distv, disth = get_distances(vert,hori)
     print("distances:", distv, disth)
+    medv, medh = mean_dist(distv,disth)
 
-    l = distv.shape[0]-1
-    medv1 = np.median(distv[1:l,0])
-    medv2 = np.median(distv[1:l,1])
-    medv = (medv1 + medv2)/2
-
-    l = disth.shape[0]-1
-    medh1 = np.median(disth[1:l,0])
-    medh2 = np.median(disth[1:l,1])
-    medh = (medh1 + medh2)/2
-
-    print("medv: ", medv1, medv2, medv)
-    print("medh: ", medh1, medh2, medh)
-
-    remv = np.empty(vert.shape[0])
-    remv = np.int32(remv)
-    remh = np.empty(hori.shape[0])
-    remh = np.int32(remh)
+    remv,cerv,remh,cerh = create_aux(vert,hori)
 
     i = 0
     for d in distv:
         if abs(d[0] - medv) > 8:
+            cerv[i] = False
             if abs(d[1] - medv) > 8:
                 remv[i] = True
             else:
                 remv[i] = False
         else:
             remv[i] = False
+            if abs(d[1] - medv) <= 8:
+                cerv[i] = True
+            else:
+                cerv[i] = False
         i += 1
+
     i = 0
     for d in disth:
-        if abs(d[0] - medh) > 15:
-            if abs(d[1] - medh) > 15:
+        if abs(d[0] - medh) > 8:
+            cerh[i] = False
+            if abs(d[1] - medh) > 8:
                 remh[i] = True
             else:
                 remh[i] = False
         else:
             remh[i] = False
+            if abs(d[1] - medv) <= 8:
+                cerh[i] = True
+            else:
+                cerh[i] = False
         i += 1
+
+    ver1 = vert[cerv==True]
+    hor1 = hori[cerh==True]
+    ver1 = ver1[ver1[:,0,0].argsort()]
+    hor1 = hor1[hor1[:,0,1].argsort()]
 
     vert = vert[remv==False]
     hori = hori[remh==False]
+
+    print("vert:", vert.shape)
+    print("hori:", hori.shape)
+
+    if vert[0,0,0] > (medv + 10):
+        new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 400, 0,0]]], dtype='int32')
+        vert = np.append(vert, new, axis=0)
+    if abs(vert[-1,0,0] - 412) > (medv + 10):
+        new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,400, 0,0]]], dtype='int32')
+        vert = np.append(vert, new, axis=0)
+    if hori[0,0,1] > (medh + 10):
+        new = np.array([[[10, hori[0,0,1]-medh, 400, hori[0,0,1]-medh, 0,0]]], dtype='int32')
+        hori = np.append(hori, new, axis=0)
+    if abs(hori[-1,0,1] - 412) > (medh + 10):
+        new = np.array([[[10, hori[-1,0,1]+medh, 400, hori[-1,0,1]+medh, 0,0]]], dtype='int32')
+        hori = np.append(hori, new, axis=0)
+
+    print("after vert: ", vert, vert.shape)
+    print("after hori: ", hori, hori.shape)
 
     drawn_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
     draw_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
@@ -96,10 +116,10 @@ def find_squares(img):
     return img
 
 def perspective_transform(img):
-    BR = img.corners[0] 
-    BL = img.corners[1] 
-    TR = img.corners[2] 
-    TL = img.corners[3] 
+    BR = img.corners[0]
+    BL = img.corners[1]
+    TR = img.corners[2]
+    TL = img.corners[3]
     rect = np.array(((TL[0], TL[1]), (TR[0], TR[1]), (BR[0], BR[1]), (BL[0], BL[1])), dtype="float32")
 
     width = 412
@@ -137,7 +157,7 @@ def find_wcanny(img, wmin = 12):
 
 def w_lines(img):
     got_hough = False
-    h_minl0 = round((img.wwidth)*0.7)
+    h_minl0 = round((img.wwidth)*0.8)
     h_thrv0 = round(h_minl0 / 1.5)
     h_maxg0 = round(h_minl0 / 50) + 60
     h_angl0 = np.pi / 120
@@ -151,13 +171,13 @@ def w_lines(img):
     minlines = 10
     while h_angl < (np.pi / 10):
         th = 180*(h_angl/np.pi)
-        lines = cv2.HoughLinesP(img.wcanny, 1, h_angl, h_thrv,  None, h_minl, h_maxg)
+        lines = cv2.HoughLinesP(img.wcanny, 2, h_angl, h_thrv,  None, h_minl, h_maxg)
         if lines is not None:
             lines = radius_theta(lines)
             lines = filter_90(img, lines)
             if lines.shape[0] > 10:
-                bundler = HoughBundler() 
-                lines = bundler.process_lines(lines) 
+                bundler = HoughBundler()
+                lines = bundler.process_lines(lines)
                 lines = radius_theta(lines)
                 vert,hori = geo_lines(img,lines)
                 if vert.shape[0] >= minlines and hori.shape[0] >= minlines:
@@ -173,7 +193,7 @@ def w_lines(img):
         if h_angl > (np.pi / 20) and tuned < 20:
             h_angl = h_angl0
             h_minl -= 1
-            h_thrv -= 12
+            h_thrv -= 8
             h_maxg += 5
             tuned += 1
             if tuned > 12:
@@ -280,3 +300,27 @@ def find_intersections(img, lines):
 
     inter = np.array(inter, dtype='int32')
     return inter
+
+def mean_dist(distv,disth):
+    medv1 = np.median(distv[1:-1,0])
+    medv2 = np.median(distv[1:-1,1])
+    medv = round((medv1 + medv2)/2)
+
+    medh1 = np.median(disth[1:-1,0])
+    medh2 = np.median(disth[1:-1,1])
+    medh = round((medh1 + medh2)/2)
+
+    print("medv: ", medv1, medv2, medv)
+    print("medh: ", medh1, medh2, medh)
+    return medv,medh
+
+def create_aux(vert,hori):
+    remv = np.empty(vert.shape[0])
+    remv = np.int32(remv)
+    cerv = np.empty(vert.shape[0])
+    cerv = np.int32(remv)
+    remh = np.empty(hori.shape[0])
+    remh = np.int32(remh)
+    cerh = np.empty(hori.shape[0])
+    cerh = np.int32(cerh)
+    return remv,cerv,remh,cerh
