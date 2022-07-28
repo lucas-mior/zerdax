@@ -123,7 +123,7 @@ def w_lines(img):
     h_angl = h_angl0
     j = 0
     minlines = 10
-    while h_angl < (np.pi / 10):
+    while h_angl < (np.pi / 30):
         th = 180*(h_angl/np.pi)
         lines = cv2.HoughLinesP(img.wcanny, 2, h_angl, h_thrv,  None, h_minl, h_maxg)
         if lines is not None:
@@ -144,7 +144,7 @@ def w_lines(img):
                 print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         j += 1
         h_angl += np.pi / 1800
-        if h_angl > (np.pi / 20) and tuned < 20:
+        if h_angl > (np.pi / 40) and tuned < 20:
             h_angl = h_angl0
             h_minl -= 1
             h_thrv -= 8

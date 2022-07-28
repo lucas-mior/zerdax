@@ -3,6 +3,7 @@ import numpy as np
 
 from Image import Image
 
+from aux import *
 from find_board import find_board
 from find_squares import find_squares
 from find_pieces import find_pieces
@@ -31,6 +32,29 @@ def full(filename, save):
     img = find_board(img)
     img = find_squares(img)
     img = find_pieces(img)
-    img = produce_fen(img)
 
-    return img.predicted_fen
+
+    drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+
+    fen = '' 
+    for i in range(7, -1, -1):
+        for j in range(0, 8):
+            sq = img.sqback[i,j]
+            got_piece = False
+            print("sq: ", sq)
+            for piece in img.ObjectsList:
+                p = (int(piece[3]), int(piece[5]))
+                print("p: ", p)
+                if cv2.pointPolygonTest(sq, p, True) >= 0:
+                    fen += piece[6].split(" ")[0]
+                    got_piece = True
+                    img.ObjectsList.remove(piece)
+            if got_piece:
+                continue
+            else:
+                fen += '1'
+        fen += '/'
+
+    # [top, left, bottom, right, mid_v, mid_h, label, scores]
+
+    return fen

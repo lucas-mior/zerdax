@@ -59,6 +59,7 @@ def find_board(img):
     limy[1] = round(limy[1] / img.sfact)
 
     img.hull = img.gray[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
+    img.hullcolor = img.color[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.hxoff = limx[0]
     img.hyoff = limy[0]
     img = reduce_hull(img)
@@ -267,6 +268,7 @@ def reduce_hull(img):
     img.hheigth = round(img.hfact * img.hull.shape[0])
 
     img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
+    img.hullcolor = cv2.resize(img.hullcolor, (img.hwidth, img.hheigth))
     img.medges = cv2.resize(img.medges, (img.hwidth, img.hheigth))
     img.wang = cv2.resize(img.wang, (img.hwidth, img.hheigth))
     img.clahe = cv2.resize(img.clahe, (img.hwidth, img.hheigth))
