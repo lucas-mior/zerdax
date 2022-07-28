@@ -51,7 +51,7 @@ def full(filename, save):
             got_piece = False
             print("sq: ", i, j)
             for piece in img.ObjectsList:
-                p = (int(piece[4]), int(piece[2]) - 15) # um pouco acima do Ymin, no X medio
+                p = (int(piece[4]), int(piece[2]) - 15) # no Xmed, um pouco acima do Ymin
                 if cv2.pointPolygonTest(sq, p, True) >= 0:
                     fen += piece[6].split(" ")[0]
                     got_piece = True
