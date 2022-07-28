@@ -48,6 +48,8 @@ def find_squares(img):
         if abs(d[0] - medv) > 8:
             cerv[i] = 0
             if abs(d[1] - medv) > 8:
+                print("d1: ", d[1])
+                print("medv: ", medv)
                 remv[i] = 1
             else:
                 remv[i] = 0
@@ -64,6 +66,9 @@ def find_squares(img):
         if abs(d[0] - medh) > 8:
             cerh[i] = 0
             if abs(d[1] - medh) > 8:
+                print("d0: ", d[0])
+                print("d1: ", d[1])
+                print("medh: ", medh)
                 remh[i] = 1
             else:
                 remh[i] = 0
@@ -75,26 +80,28 @@ def find_squares(img):
                 cerh[i] = 0
         i += 1
 
-    ver1 = vert[cerv==1]
-    hor1 = hori[cerh==1]
+    v = np.copy(vert)
+    h = np.copy(hori)
+    ver1 = v[cerv==1]
+    hor1 = h[cerh==1]
     ver1 = ver1[ver1[:,0,0].argsort()]
     hor1 = hor1[hor1[:,0,1].argsort()]
 
     vert = vert[remv==0]
     hori = hori[remh==0]
 
-    # if vert[0,0,0] > (medv + 10):
-    #     new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 400, 0,0]]], dtype='int32')
-    #     vert = np.append(vert, new, axis=0)
-    # if abs(vert[-1,0,0] - 412) > (medv + 10):
-    #     new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,400, 0,0]]], dtype='int32')
-    #     vert = np.append(vert, new, axis=0)
-    # if hori[0,0,1] > (medh + 10):
-    #     new = np.array([[[10, hori[0,0,1]-medh, 400, hori[0,0,1]-medh, 0,0]]], dtype='int32')
-    #     hori = np.append(hori, new, axis=0)
-    # if abs(hori[-1,0,1] - 412) > (medh + 10):
-    #     new = np.array([[[10, hori[-1,0,1]+medh, 400, hori[-1,0,1]+medh, 0,0]]], dtype='int32')
-    #     hori = np.append(hori, new, axis=0)
+    if vert[0,0,0] > (medv + 10):
+        new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 400, 0,0]]], dtype='int32')
+        vert = np.append(vert, new, axis=0)
+    if abs(vert[-1,0,0] - 412) > (medv + 10):
+        new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,400, 0,0]]], dtype='int32')
+        vert = np.append(vert, new, axis=0)
+    if hori[0,0,1] > (medh + 10):
+        new = np.array([[[10, hori[0,0,1]-medh, 400, hori[0,0,1]-medh, 0,0]]], dtype='int32')
+        hori = np.append(hori, new, axis=0)
+    if abs(hori[-1,0,1] - 412) > (medh + 10):
+        new = np.array([[[10, hori[-1,0,1]+medh, 400, hori[-1,0,1]+medh, 0,0]]], dtype='int32')
+        hori = np.append(hori, new, axis=0)
 
     draww_lines(img, "vert_hori1", vert, hori)
 
@@ -225,6 +232,8 @@ def get_distances(vert,hori):
     for i in range (1, vert.shape[0]-1):
         distv[i,0] = abs(vert[i-1,0,0] - vert[i,0,0])
         distv[i,1] = abs(vert[i+1,0,0] - vert[i,0,0])
+        print("distv0: {} = abs({} - {})".format(distv[i,0], vert[i-1,0,0], vert[i,0,0]))
+        print("distv1: {} = abs({} - {})".format(distv[i,1], vert[i+1,0,0], vert[i,0,0]))
     i += 1
     distv[i,0] = abs(vert[i-1,0,0] - vert[i,0,0])
     distv[i,1] = abs(vert[i-1,0,0] - vert[i,0,0])
@@ -235,6 +244,8 @@ def get_distances(vert,hori):
     for i in range (1, hori.shape[0]-1):
         disth[i,0] = abs(hori[i-1,0,1] - hori[i,0,1])
         disth[i,1] = abs(hori[i+1,0,1] - hori[i,0,1])
+        print("disth0: {} = abs({} - {})".format(disth[i,0], hori[i-1,0,1], hori[i,0,1]))
+        print("disth1: {} = abs({} - {})".format(disth[i,1], hori[i+1,0,1], hori[i,0,1]))
     i += 1
     disth[i,0] = abs(hori[i-1,0,1] - hori[i,0,1])
     disth[i,1] = abs(hori[i-1,0,1] - hori[i,0,1])
