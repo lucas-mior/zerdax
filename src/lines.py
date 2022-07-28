@@ -87,10 +87,9 @@ class HoughBundler:
             lines[i,4] = self.get_orientation(line)
             i += 1
 
-        a = [] 
         orien = np.median(lines[:,4])
         for line in lines:
-            if abs(line[4] - orien) <= 1:
+            if abs(line[4] - orien) <= 2:
                 a = [[line[0:2], line[2:4]]]
                 break
 

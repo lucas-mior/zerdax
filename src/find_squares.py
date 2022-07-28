@@ -21,12 +21,13 @@ def find_squares(img):
     # save(img, "wwang", img.wwang)
 
     img.wcanny = find_wcanny(img, wmin = 12)
+    save(img, "wcanny", img.wcanny)
 
     vert,hori = w_lines(img)
+    print("vert,hori:", vert,hori)
 
     drawn_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
     draw_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
-
     for line in vert:
         for x1,y1,x2,y2,r,t in line:
             cv2.line(draw_lines,(x1,y1),(x2,y2),(255,0,0),round(2/img.sfact))
@@ -34,9 +35,63 @@ def find_squares(img):
         for x1,y1,x2,y2,r,t in line:
             cv2.line(draw_lines,(x1,y1),(x2,y2),(0,255,0),round(2/img.sfact))
     drawn_lines = cv2.addWeighted(img.warped3ch, 0.5, draw_lines, 0.7, 0)
-    save(img, "vert_hori", drawn_lines)
+    save(img, "vert_hori0", drawn_lines)
 
     distv, disth = get_distances(vert,hori)
+    print("distances:", distv, disth)
+
+    l = distv.shape[0]-1
+    medv1 = np.median(distv[1:l,0])
+    medv2 = np.median(distv[1:l,1])
+    medv = (medv1 + medv2)/2
+
+    l = disth.shape[0]-1
+    medh1 = np.median(disth[1:l,0])
+    medh2 = np.median(disth[1:l,1])
+    medh = (medh1 + medh2)/2
+
+    print("medv: ", medv1, medv2, medv)
+    print("medh: ", medh1, medh2, medh)
+
+    remv = np.empty(vert.shape[0])
+    remv = np.int32(remv)
+    remh = np.empty(hori.shape[0])
+    remh = np.int32(remh)
+
+    i = 0
+    for d in distv:
+        if abs(d[0] - medv) > 8:
+            if abs(d[1] - medv) > 8:
+                remv[i] = True
+            else:
+                remv[i] = False
+        else:
+            remv[i] = False
+        i += 1
+    i = 0
+    for d in disth:
+        if abs(d[0] - medh) > 15:
+            if abs(d[1] - medh) > 15:
+                remh[i] = True
+            else:
+                remh[i] = False
+        else:
+            remh[i] = False
+        i += 1
+
+    vert = vert[remv==False]
+    hori = hori[remh==False]
+
+    drawn_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
+    draw_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
+    for line in vert:
+        for x1,y1,x2,y2,r,t in line:
+            cv2.line(draw_lines,(x1,y1),(x2,y2),(255,0,0),round(2/img.sfact))
+    for line in hori:
+        for x1,y1,x2,y2,r,t in line:
+            cv2.line(draw_lines,(x1,y1),(x2,y2),(0,255,0),round(2/img.sfact))
+    drawn_lines = cv2.addWeighted(img.warped3ch, 0.5, draw_lines, 0.7, 0)
+    save(img, "vert_hori1", drawn_lines)
 
     return img
 
@@ -100,7 +155,7 @@ def w_lines(img):
         if lines is not None:
             lines = radius_theta(lines)
             lines = filter_90(img, lines)
-            if lines.shape[0] > 3:
+            if lines.shape[0] > 10:
                 bundler = HoughBundler() 
                 lines = bundler.process_lines(lines) 
                 lines = radius_theta(lines)
@@ -164,25 +219,21 @@ def get_distances(vert,hori):
 
     distv[0][0] = abs(vert[1,0,0] - vert[0,0,0])
     distv[0][1] = abs(vert[1,0,0] - vert[0,0,0])
-
     for i in range (1, vert.shape[0]-1):
         distv[i][0] = abs(vert[i-1,0,0] - vert[i,0,0])
         distv[i][1] = abs(vert[i+1,0,0] - vert[i,0,0])
-
     i += 1
     distv[i][0] = abs(vert[i-1,0,0] - vert[i,0,0])
     distv[i][1] = abs(vert[i-1,0,0] - vert[i,0,0])
 
     disth[0][0] = abs(hori[1,0,1] - hori[0,0,1])
     disth[0][1] = abs(hori[1,0,1] - hori[0,0,1])
-
-    for j in range (1, hori.shape[0]-1):
-        disth[i][0] = abs(hori[j-1,0,1] - hori[j,0,1])
-        disth[i][1] = abs(hori[j+1,0,1] - hori[j,0,1])
-
-    j += 1
-    disth[j][0] = abs(hori[j-1,0,1] - hori[j,0,1])
-    disth[j][1] = abs(hori[j-1,0,1] - hori[j,0,1])
+    for i in range (1, hori.shape[0]-1):
+        disth[i][0] = abs(hori[i-1,0,1] - hori[i,0,1])
+        disth[i][1] = abs(hori[i+1,0,1] - hori[i,0,1])
+    i += 1
+    disth[i][0] = abs(hori[i-1,0,1] - hori[i,0,1])
+    disth[i][1] = abs(hori[i-1,0,1] - hori[i,0,1])
 
     return distv, disth
 
