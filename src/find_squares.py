@@ -46,34 +46,44 @@ def find_squares(img):
     drawn_circles = cv2.addWeighted(img.warped3ch, 0.4, drawn_circles, 0.7, 0)
     save(img, "intersections".format(img.basename), drawn_circles)
 
-    inter = inter[inter[:,1].argsort()]
+    inter = inter[inter[:,0].argsort()]
     intersq = np.zeros((9,9,2), dtype='int32')
     print("inter.shape:", inter.shape)
-    interH = inter[00:9] # H
-    interG = inter[9:18]
-    interF = inter[18:27]
-    interE = inter[27:36]
-    interD = inter[36:45]
-    interC = inter[45:54]
-    interB = inter[54:63]
-    interA = inter[63:72] # A
-    interZ = inter[72:81] # bottom
+    interA = inter[00:9] # A
+    interB = inter[9:18]
+    interC = inter[18:27]
+    interD = inter[27:36]
+    interE = inter[36:45]
+    interF = inter[45:54]
+    interG = inter[54:63]
+    interH = inter[63:72] # H
+    interZ = inter[72:81] # right
 
-    intersq[8,:] = interH[interH[:,0].argsort()]
-    intersq[7,:] = interG[interG[:,0].argsort()]
-    intersq[6,:] = interF[interF[:,0].argsort()]
-    intersq[5,:] = interE[interE[:,0].argsort()]
-    intersq[4,:] = interD[interD[:,0].argsort()]
-    intersq[3,:] = interC[interC[:,0].argsort()]
-    intersq[2,:] = interB[interB[:,0].argsort()]
-    intersq[1,:] = interA[interA[:,0].argsort()]
-    intersq[0,:] = interZ[interZ[:,0].argsort()] # bottom
+    intersq[0,:] = interA[interA[:,1].argsort()[::-1]] # A
+    intersq[1,:] = interB[interB[:,1].argsort()[::-1]]
+    intersq[2,:] = interC[interC[:,1].argsort()[::-1]]
+    intersq[3,:] = interD[interD[:,1].argsort()[::-1]]
+    intersq[4,:] = interE[interE[:,1].argsort()[::-1]]
+    intersq[5,:] = interF[interF[:,1].argsort()[::-1]]
+    intersq[6,:] = interG[interG[:,1].argsort()[::-1]]
+    intersq[7,:] = interH[interH[:,1].argsort()[::-1]] # H
+    intersq[8,:] = interZ[interZ[:,1].argsort()[::-1]] # right
 
-    squares = np.zeros((8,8,2,2), dtype='int32') #A1, A2, ... H8 / BL, TR
+    squares = np.zeros((8,8,4,2), dtype='int32') #A1, A2, ... H8 / BL, TR
     for i in range(0,8):
         for j in range(0,8):
             squares[i,j,0] = intersq[i,j]
-            squares[i,j,1] = intersq[i+1,j+1]
+            squares[i,j,1] = intersq[i+1,j]
+            squares[i,j,2] = intersq[i+1,j+1]
+            squares[i,j,3] = intersq[i,j+1]
+
+    print("squares[0,0] = ", squares[0,0])
+
+    drawn_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
+    cv2.drawContours(drawn_lines, [squares[0,0]], -1, (255, 0, 0), thickness=2)
+    cv2.drawContours(drawn_lines, [squares[2,4]], -1, (0, 0, 255), thickness=2)
+    drawn_contours = cv2.addWeighted(img.warped3ch, 0.4, drawn_lines, 0.7, 0)
+    save(img, "casaA1eC5", drawn_contours)
 
     return img
 
@@ -202,8 +212,6 @@ def get_distances(vert,hori):
     for i in range (1, vert.shape[0]-1):
         distv[i,0] = abs(vert[i-1,0,0] - vert[i,0,0])
         distv[i,1] = abs(vert[i+1,0,0] - vert[i,0,0])
-        print("distv0: {} = abs({} - {})".format(distv[i,0], vert[i-1,0,0], vert[i,0,0]))
-        print("distv1: {} = abs({} - {})".format(distv[i,1], vert[i+1,0,0], vert[i,0,0]))
     i += 1
     distv[i,0] = abs(vert[i-1,0,0] - vert[i,0,0])
     distv[i,1] = abs(vert[i-1,0,0] - vert[i,0,0])
@@ -214,14 +222,9 @@ def get_distances(vert,hori):
     for i in range (1, hori.shape[0]-1):
         disth[i,0] = abs(hori[i-1,0,1] - hori[i,0,1])
         disth[i,1] = abs(hori[i+1,0,1] - hori[i,0,1])
-        print("disth0: {} = abs({} - {})".format(disth[i,0], hori[i-1,0,1], hori[i,0,1]))
-        print("disth1: {} = abs({} - {})".format(disth[i,1], hori[i+1,0,1], hori[i,0,1]))
     i += 1
     disth[i,0] = abs(hori[i-1,0,1] - hori[i,0,1])
     disth[i,1] = abs(hori[i-1,0,1] - hori[i,0,1])
-
-    print("distv:", distv)
-    print("disth:", disth)
 
     return distv, disth
 
@@ -275,8 +278,6 @@ def mean_dist(distv,disth):
     medh2 = np.median(disth[1:-1,1])
     medh = round((medh1 + medh2)/2)
 
-    print("medv: ", medv1, medv2, medv)
-    print("medh: ", medh1, medh2, medh)
     return medv,medh
 
 def iterate(dist, med):
