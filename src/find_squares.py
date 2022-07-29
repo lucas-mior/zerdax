@@ -179,24 +179,38 @@ def geo_lines(img, lines):
 
 def get_distances(vert,hori):
     distv = np.zeros((vert.shape[0], 2), dtype='int32')
-    distv[0,0] = abs(vert[1,0,0] - vert[0,0,0])
-    distv[0,1] = abs(vert[1,0,0] - vert[0,0,0])
+    x1 = (vert[1,0,0]+vert[1,0,2])/2
+    x2 = (vert[0,0,0]+vert[0,0,2])/2
+    distv[0,0] = abs(x1 - x2)
+    distv[0,1] = abs(x1 - x2)
     for i in range (1, vert.shape[0]-1):
-        distv[i,0] = abs(vert[i-1,0,0] - vert[i,0,0])
-        distv[i,1] = abs(vert[i+1,0,0] - vert[i,0,0])
+        x1 = (vert[i-1,0,0]+vert[i-1,0,2])/2
+        x2 = (vert[i+0,0,0]+vert[i+0,0,2])/2
+        x3 = (vert[i+1,0,0]+vert[i+1,0,2])/2
+        distv[i,0] = abs(x1 - x2)
+        distv[i,1] = abs(x1 - x2)
     i += 1
-    distv[i,0] = abs(vert[i-1,0,0] - vert[i,0,0])
-    distv[i,1] = abs(vert[i-1,0,0] - vert[i,0,0])
+    x1 = (vert[i-1,0,0]+vert[i-1,0,2])/2
+    x2 = (vert[i+0,0,0]+vert[i+0,0,2])/2
+    distv[i,0] = abs(x1 - x2)
+    distv[i,1] = abs(x1 - x2)
 
     disth = np.zeros((hori.shape[0], 2), dtype='int32')
-    disth[0,0] = abs(hori[1,0,1] - hori[0,0,1])
-    disth[0,1] = abs(hori[1,0,1] - hori[0,0,1])
+    x1 = (hori[1,0,1]+hori[1,0,3])/2
+    x2 = (hori[0,0,1]+hori[0,0,3])/2
+    disth[0,0] = abs(x1 - x2)
+    disth[0,1] = abs(x1 - x2)
     for i in range (1, hori.shape[0]-1):
-        disth[i,0] = abs(hori[i-1,0,1] - hori[i,0,1])
-        disth[i,1] = abs(hori[i+1,0,1] - hori[i,0,1])
+        x1 = (hori[i-1,0,1]+hori[i-1,0,3])/2
+        x2 = (hori[i+0,0,1]+hori[i+0,0,3])/2
+        x3 = (hori[i+1,0,1]+hori[i+1,0,3])/2
+        disth[i,0] = abs(x1 - x2)
+        disth[i,1] = abs(x1 - x2)
     i += 1
-    disth[i,0] = abs(hori[i-1,0,1] - hori[i,0,1])
-    disth[i,1] = abs(hori[i-1,0,1] - hori[i,0,1])
+    x1 = (hori[i-1,0,1]+hori[i-1,0,3])/2
+    x2 = (hori[i+0,0,1]+hori[i+0,0,3])/2
+    disth[i,0] = abs(x1 - x2)
+    disth[i,1] = abs(x1 - x2)
 
     return distv, disth
 
