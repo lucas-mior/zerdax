@@ -15,6 +15,7 @@ import random
 
 def find_board(img):
     save(img, "sgray", img.sgray)
+    print("applying filter to image..."
     img.wang0 = lwang.wang_filter(img.sgray)
     save(img, "wang0", img.wang0)
     img, a = region(img)
