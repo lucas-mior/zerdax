@@ -18,7 +18,7 @@ def find_board(img):
     print("applying filter to image...")
     img.wang0 = lwang.wang_filter(img.sgray)
     save(img, "wang0", img.wang0)
-    img, a = region(img)
+    img, a = find_region(img)
     img.ext = False
 
     if not img.got_hull:
@@ -27,7 +27,7 @@ def find_board(img):
         drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
         cv2.drawContours(drawn_contours, [img.hullxy], -1, (255, 255, 0), thickness=3)
         img.help = drawn_contours[:,:,0]
-        img, a = region(img, maxkd = 20, cmax = 20, nymax = 12, skip=True)
+        img, a = find_region(img, maxkd = 20, cmax = 20, nymax = 12, skip=True)
 
     save(img, "dilate", img.dilate)
     save(img, "divide", img.divide)
@@ -516,7 +516,7 @@ def find_corners(img, inter):
 
     return corners
 
-def region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):
+def find_region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):
     c = 3
     wc = 6
     a = 0
