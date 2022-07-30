@@ -20,7 +20,7 @@ class YOLO(object):
     _defaults = {
         "model_path": 'logs/trained_weights_final.h5',
         "anchors_path": 'model_data/yolo_anchors.txt',
-        "classes_path": '_classes.txt',
+        "classes_path": 'classes.txt',
         "score" : 0.2,
         "iou" : 0.250,
         "model_image_size" : (416, 416),
