@@ -33,7 +33,7 @@ def full(filename):
         returns a FEN notation
     """
     img = Image(filename)
-    img.color = cv2.imread(filename)
+    img.color = cv2.imread(img.filename)
     img.gray = cv2.cvtColor(img.color, cv2.COLOR_BGR2GRAY)
     img = reduce(img)
     img.gray3ch = cv2.cvtColor(img.sgray, cv2.COLOR_GRAY2BGR)
