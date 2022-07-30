@@ -17,9 +17,9 @@ def Main():
     image = args.image
     cout = colored("============ zerdax {} ============".format(image), "white", attrs=['bold'])
     print(cout)
-    exit()
     fen = full(image)
-    print("\033[01;38;1mFEN:\033[0;m", fen)
+    cout = colored("FEN:", "white", attrs=['bold'])
+    print(cout, fen)
 
 if __name__ == '__main__':
     Main()
