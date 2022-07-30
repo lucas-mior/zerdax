@@ -26,8 +26,8 @@ def find_squares(img):
     img = perspective_transform(img)
     img.warped3ch = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR)
 
-    img.wwang = lf.ffilter(img.warped)
-    save(img, "wwang", img.wwang)
+    img.wfilt = lf.ffilter(img.warped)
+    save(img, "wfilt", img.wfilt)
 
     img.wcanny = find_wcanny(img, wmin = 12)
     save(img, "wcanny", img.wcanny)

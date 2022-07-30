@@ -13,8 +13,8 @@ import random
 def find_board(img):
     save(img, "sgray", img.sgray)
     print("applying filter to image...")
-    img.wang0 = lf.ffilter(img.sgray)
-    save(img, "wang0", img.wang0)
+    img.filt0 = lf.ffilter(img.sgray)
+    save(img, "filt0", img.filt0)
     img, a = find_region(img)
     img.ext = False
 
@@ -50,7 +50,7 @@ def find_board(img):
         print("finding board region failed [find_morph()]")
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    img.wang = img.wang[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
+    img.filt = img.filt[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.clahe = img.clahe[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     limx[0] = round(limx[0] / img.sfact)
     limx[1] = round(limx[1] / img.sfact)
@@ -87,8 +87,8 @@ def find_morph(img, Amin, maxkd=12, skip=False):
         else:
             kx = kd+round(kd/3)
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kx))
-        img.dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
-        img.divide = cv2.divide(img.wang, img.dilate, scale = 255)
+        img.dilate = cv2.morphologyEx(img.filt, cv2.MORPH_DILATE, k_dil)
+        img.divide = cv2.divide(img.filt, img.dilate, scale = 255)
         edges_thr = cv2.threshold(img.divide, 0, 255, cv2.THRESH_OTSU)[1]
         edges_bin = cv2.bitwise_not(edges_thr)
 
@@ -135,7 +135,7 @@ def find_canny(img, wmin = 6):
     c_thrh = c_thrh0
 
     while c_thrh > 12:
-        img.canny = cv2.Canny(img.wang, c_thrl, c_thrh)
+        img.canny = cv2.Canny(img.filt, c_thrl, c_thrh)
         w = img.canny.mean()
         if w > wmin:
             print("{0:0=.2f} > {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
@@ -266,7 +266,7 @@ def reduce_hull(img):
     img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
     img.hullcolor = cv2.resize(img.hullcolor, (img.hwidth, img.hheigth))
     img.medges = cv2.resize(img.medges, (img.hwidth, img.hheigth))
-    img.wang = cv2.resize(img.wang, (img.hwidth, img.hheigth))
+    img.filt = cv2.resize(img.filt, (img.hwidth, img.hheigth))
     img.clahe = cv2.resize(img.clahe, (img.hwidth, img.hheigth))
     img.harea = img.hwidth * img.hheigth
     return img
@@ -506,8 +506,8 @@ def find_region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):
         print("Clahe: ", c)
         alast = a
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
-        img.clahe = clahe.apply(img.wang0)
-        img.wang = lf.ffilter(img.clahe)
+        img.clahe = clahe.apply(img.filt0)
+        img.filt = lf.ffilter(img.clahe)
         img.canny = find_canny(img, wmin=wc)
         img, a = find_morph(img, Amin, maxkd, skip)
         if c <= 12:
