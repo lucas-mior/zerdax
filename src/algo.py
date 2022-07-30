@@ -8,7 +8,7 @@ from find_board import find_board
 from find_squares import find_squares
 from find_pieces import find_pieces
 
-def compressed_fen(fen):
+def compress_fen(fen):
     """ From: 11111q1k/1111r111/111p1pQP/111P1P11/11prn1R1/11111111/111111P1/R11111K1
         To: 5q1k/4r3/3p1pQP/3P1P2/2prn1R1/8/6P1/R5K1
     """
@@ -25,7 +25,7 @@ def reduce(img):
     img.sarea = img.sheigth * img.swidth
     return img
 
-def full(filename, save):
+def full(filename):
     """ given a file path to a chessboard image,
         returns a FEN notation
     """
@@ -35,13 +35,13 @@ def full(filename, save):
     img = reduce(img)
     img.gray3ch = cv2.cvtColor(img.sgray, cv2.COLOR_GRAY2BGR)
 
-    img.save = save
     img = find_board(img)
     img = find_squares(img)
     img = find_pieces(img)
 
     piece = img.ObjectsList[0]
     print("piece: ", piece)
+    # [top, left, bottom, right, mid_v, mid_h, label, scores]
 
     fen = ''
     for i in range(7, -1, -1): #FEN começa em cima
@@ -61,7 +61,5 @@ def full(filename, save):
         if i >= 1:
             fen += '/'
 
-    fen = compressed_fen(fen)
-    # [top, left, bottom, right, mid_v, mid_h, label, scores]
-
+    fen = compress_fen(fen)
     return fen

@@ -12,7 +12,7 @@ def determinant(a, b):
 
 def save(img, filename, image):
     global i
-    cv2.imwrite("{}{:02d}_{}.png".format(img.basename, i, filename), image)
+    # cv2.imwrite("{}{:02d}_{}.png".format(img.basename, i, filename), image)
     i += 1
 
 def savefig(img, filename, fig):

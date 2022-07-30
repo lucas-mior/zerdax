@@ -28,6 +28,9 @@ def find_board(img):
         img.help = drawn_contours[:,:,0]
         img, a = region(img, maxkd = 20, cmax = 20, nymax = 12, skip=True)
 
+    save(img, "dilate", img.dilate)
+    save(img, "divide", img.divide)
+    save(img, "medges", img.medges)
     img.medges += img.canny
     save(img, "medges+canny", img.medges)
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
@@ -89,9 +92,9 @@ def find_morph(img, Amin, maxkd=12, skip=False):
         else:
             kx = kd+round(kd/3)
         k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kx))
-        dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
-        edges_gray = cv2.divide(img.wang, dilate, scale = 255)
-        edges_thr = cv2.threshold(edges_gray, 0, 255, cv2.THRESH_OTSU)[1]
+        img.dilate = cv2.morphologyEx(img.wang, cv2.MORPH_DILATE, k_dil)
+        img.divide = cv2.divide(img.wang, img.dilate, scale = 255)
+        edges_thr = cv2.threshold(img.divide, 0, 255, cv2.THRESH_OTSU)[1]
         edges_bin = cv2.bitwise_not(edges_thr)
 
         edges_bin = cv2.morphologyEx(edges_bin, cv2.MORPH_ERODE, ko, iterations = 1)
@@ -113,7 +116,7 @@ def find_morph(img, Amin, maxkd=12, skip=False):
             # print("{} < {} @ ksize = {}".format(a, Amin, kd))
             kd += 1
 
-    img.medges = edges_wcanny
+    img.medges = edges_bin
 
     return img, a
 
