@@ -22,7 +22,7 @@ def find_board(img):
     img.ext = False
 
     if not img.got_hull:
-        print("\033[31;1;1m========== CASO EXTREMO ===========\033[0;m")
+        print("caso extremo (remover essa palhaçada)")
         img.ext = True
         drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
         cv2.drawContours(drawn_contours, [img.hullxy], -1, (255, 255, 0), thickness=3)
