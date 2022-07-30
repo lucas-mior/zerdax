@@ -33,9 +33,13 @@ def full(filename):
         returns a FEN notation
     """
     img = Image(filename)
+    print("reading image...")
     img.color = cv2.imread(img.filename)
+    print("converting image to grayscale...")
     img.gray = cv2.cvtColor(img.color, cv2.COLOR_BGR2GRAY)
+    print("reducing image to 1000 width...")
     img = reduce(img)
+    print("generating 3 channel gray image for drawings...")
     img.gray3ch = cv2.cvtColor(img.sgray, cv2.COLOR_GRAY2BGR)
 
     img = find_board(img)
