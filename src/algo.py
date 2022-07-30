@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-from termcolor import colored, cprint
 
 from Image import Image
 
@@ -13,8 +12,7 @@ def compress_fen(fen):
     """ From: 11111q1k/1111r111/111p1pQP/111P1P11/11prn1R1/11111111/111111P1/R11111K1
         To: 5q1k/4r3/3p1pQP/3P1P2/2prn1R1/8/6P1/R5K1
     """
-    cout = colored("generating compressed FEN...", color="white", attrs=['bold'])
-    print(cout)
+    print("generating compressed FEN...")
     for length in reversed(range(2,9)):
         fen = fen.replace(length * '1', str(length))
     return fen
@@ -68,8 +66,6 @@ def full(filename):
         if i >= 1:
             fen += '/'
 
-    cout = colored("long fen:", color="white", attrs=['bold'])
-    print(cout, fen)
-
+    print("long fen:", fen)
     fen = compress_fen(fen)
     return fen

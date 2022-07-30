@@ -2,7 +2,6 @@
 
 import argparse
 from algo import full
-from termcolor import colored, cprint
 
 def parseargs():
     parser = argparse.ArgumentParser(description='Convert chess photo to FEN')
@@ -15,11 +14,9 @@ def parseargs():
 def Main():
     args = parseargs()
     image = args.image
-    cout = colored("============ zerdax {} ============".format(image), "white", attrs=['bold'])
-    print(cout)
+    print("============ zerdax {} ============".format(image))
     fen = full(image)
-    cout = colored("FEN:", "white", attrs=['bold'])
-    print(cout, fen)
+    print("FEN:", fen)
 
 if __name__ == '__main__':
     Main()
