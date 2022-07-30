@@ -50,7 +50,7 @@ void convolute(double *f, int xx, int yy, double *W, double *N, double *g) {
     }
 }
 
-void wang_filter(double *f, int xx, int yy, double *W, double *N, double *g) {
+void ffilter(double *f, int xx, int yy, double *W, double *N, double *g) {
     weight_array(f, xx, yy, W);
     norm_array(f, xx, yy, W, N);
     convolute(f, xx, yy, W, N, g);

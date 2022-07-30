@@ -1,10 +1,10 @@
 CFLAGS = -O2 -Wall -Wextra -Wpedantic
-OBJ = src/libwang.so
-SRC = src/libwang.c
+OBJ = src/libffilter.so
+SRC = src/libffilter.c
 
-all: src/libwang.so src/tags
+all: src/libffilter.so src/tags
 
-src/libwang.so: $(SRC)
+src/libffilter.so: $(SRC)
 	$(CC) $(CFLAGS) -shared -o $(OBJ) -fPIC -lm $(SRC)
 
 src/tags: $(SRC)

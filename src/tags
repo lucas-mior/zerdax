@@ -4,88 +4,13 @@
 !_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
 !_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
 !_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
-!_TAG_PROC_CWD	/home/lucas/docs/UFSC_elétrica/2022.1/EEL7815_Projeto_Proc_1/zerdax/src/	//
+!_TAG_PROC_CWD	/home/lucas/docs/UFSC_elétrica/2022.1/EEL7815_Projeto_Proc_1/zerdax/	//
 !_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
 !_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
 !_TAG_PROGRAM_URL	https://ctags.io/	/official site/
 !_TAG_PROGRAM_VERSION	5.9.0	/p5.9.20210905.0/
-HoughBundler	lines.py	/^class HoughBundler:     $/;"	c
-Image	Image.py	/^class Image:$/;"	c
-K	find_pieces.py	/^from keras import backend as K$/;"	x	nameref:unknown:backend
-Main	zerdax.py	/^def Main():$/;"	f
-YOLO	find_pieces.py	/^class YOLO(object):$/;"	c
-__init__	Image.py	/^    def __init__(self, filename):$/;"	m	class:Image
-__init__	find_pieces.py	/^    def __init__(self, **kwargs):$/;"	m	class:YOLO
-__init__	lines.py	/^    def __init__(self,min_dist=8,min_angle=20):$/;"	m	class:HoughBundler
-_defaults	find_pieces.py	/^    _defaults = {$/;"	v	class:YOLO
-_get_anchors	find_pieces.py	/^    def _get_anchors(self):$/;"	m	class:YOLO
-_get_class	find_pieces.py	/^    def _get_class(self):$/;"	m	class:YOLO
-broad_hull	find_board.py	/^def broad_hull(img):$/;"	f
-check_is_line_different	lines.py	/^    def check_is_line_different(self, line_1, groups, min_dist_to_merge, min_angle_to_merge):$/;"	m	class:HoughBundler
-close_session	find_pieces.py	/^    def close_session(self):$/;"	m	class:YOLO
-compress_fen	algo.py	/^def compress_fen(fen):$/;"	f
-ct	lwang.py	/^import ctypes as ct$/;"	I	nameref:module:ctypes
-detect_image	find_pieces.py	/^    def detect_image(self, image):$/;"	m	class:YOLO
-detect_img	find_pieces.py	/^    def detect_img(self, image):$/;"	m	class:YOLO
-determinant	aux.py	/^def determinant(a, b):$/;"	f
-dist_point_to_line	lines.py	/^    def dist_point_to_line(self, point, line):$/;"	m	class:HoughBundler
-filter_90	find_squares.py	/^def filter_90(img, lines):$/;"	f
-filter_angles	find_board.py	/^def filter_angles(img, lines, tol = 15):$/;"	f
-filter_lines	find_board.py	/^def filter_lines(img, lines):$/;"	f
-find_angles	find_board.py	/^def find_angles(img, getangles=True):$/;"	f
-find_board	find_board.py	/^def find_board(img):$/;"	f
-find_canny	find_board.py	/^def find_canny(img, wmin = 6):$/;"	f
-find_corners	find_board.py	/^def find_corners(img, inter):$/;"	f
-find_intersections	find_board.py	/^def find_intersections(img, lines):$/;"	f
-find_intersections	find_squares.py	/^def find_intersections(img, vert, hori):$/;"	f
-find_morph	find_board.py	/^def find_morph(img, Amin, maxkd=12, skip=False):$/;"	f
-find_pieces	find_pieces.py	/^def find_pieces(img):$/;"	f
-find_squares	find_squares.py	/^def find_squares(img):$/;"	f
-find_wcanny	find_squares.py	/^def find_wcanny(img, wmin = 12):$/;"	f
-full	algo.py	/^def full(filename):$/;"	f
-generate	find_pieces.py	/^    def generate(self):$/;"	m	class:YOLO
-geo_lines	find_squares.py	/^def geo_lines(img, lines):$/;"	f
-get_defaults	find_pieces.py	/^    def get_defaults(cls, n):$/;"	m	class:YOLO
-get_dist	lines.py	/^    def get_dist(self, a_line, b_line):$/;"	m	class:HoughBundler
-get_distances	find_squares.py	/^def get_distances(vert,hori):$/;"	f
-get_orientation	lines.py	/^    def get_orientation(self, line):$/;"	m	class:HoughBundler
-i	aux.py	/^i = 0$/;"	v
-iterate	find_squares.py	/^def iterate(dist, med):$/;"	f
-iterate2	find_squares.py	/^def iterate2(dist, med):$/;"	f
-line_magnitude	lines.py	/^        def line_magnitude(x1, y1, x2, y2):$/;"	f	member:HoughBundler.dist_point_to_line	file:
-lines_kmeans	find_board.py	/^def lines_kmeans(img, lines):$/;"	f
-magic_lines	find_board.py	/^def magic_lines(img):$/;"	f
-magic_vert_hori	find_squares.py	/^def magic_vert_hori(img, vert, hori):$/;"	f
-mean_dist	find_squares.py	/^def mean_dist(distv,disth):$/;"	f
-merge_line_segments	lines.py	/^    def merge_line_segments(self, lines):$/;"	m	class:HoughBundler
-merge_lines_into_groups	lines.py	/^    def merge_lines_into_groups(self, lines):$/;"	m	class:HoughBundler
-mpl	aux.py	/^import matplotlib as mpl$/;"	I	nameref:module:matplotlib
-mpl	find_board.py	/^import matplotlib as mpl$/;"	I	nameref:module:matplotlib
-mpl	find_squares.py	/^import matplotlib as mpl$/;"	I	nameref:module:matplotlib
-ndp	lwang.py	/^from numpy.ctypeslib import ndpointer as ndp$/;"	x	nameref:unknown:ndpointer
-np	algo.py	/^import numpy as np$/;"	I	nameref:module:numpy
-np	aux.py	/^import numpy as np$/;"	I	nameref:module:numpy
-np	find_board.py	/^import numpy as np$/;"	I	nameref:module:numpy
-np	find_pieces.py	/^import numpy as np$/;"	I	nameref:module:numpy
-np	find_squares.py	/^import numpy as np$/;"	I	nameref:module:numpy
-np	lines.py	/^import numpy as np$/;"	I	nameref:module:numpy
-np	lwang.py	/^import numpy as np$/;"	I	nameref:module:numpy
-parseargs	zerdax.py	/^def parseargs():$/;"	f
-perspective_transform	find_squares.py	/^def perspective_transform(img):$/;"	f
-plt	aux.py	/^import matplotlib.pyplot as plt$/;"	I	nameref:module:matplotlib.pyplot
-plt	find_board.py	/^import matplotlib.pyplot as plt$/;"	I	nameref:module:matplotlib.pyplot
-plt	find_squares.py	/^import matplotlib.pyplot as plt$/;"	I	nameref:module:matplotlib.pyplot
-process_lines	lines.py	/^    def process_lines(self, lines):$/;"	m	class:HoughBundler
-radius	aux.py	/^def radius(x1,y1,x2,y2):$/;"	f
-radius_theta	aux.py	/^def radius_theta(lines):$/;"	f
-reduce	algo.py	/^def reduce(img):$/;"	f
-reduce_hull	find_board.py	/^def reduce_hull(img):$/;"	f
-region	find_board.py	/^def region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):$/;"	f
-save	aux.py	/^def save(img, filename, image):$/;"	f
-save_lines	find_squares.py	/^def save_lines(img, name, vert, hori):$/;"	f
-savefig	aux.py	/^def savefig(img, filename, fig):$/;"	f
-sq_inter	find_squares.py	/^def sq_inter(img, inter):$/;"	f
-theta	aux.py	/^def theta(x1,y1,x2,y2):$/;"	f
-update_hull	find_board.py	/^def update_hull(img):$/;"	f
-w_lines	find_squares.py	/^def w_lines(img):$/;"	f
-wang_filter	lwang.py	/^def wang_filter(image):$/;"	f
+convolute	src/libffilter.c	/^void convolute(double *f, int xx, int yy, double *W, double *N, double *g) {$/;"	f	typeref:typename:void
+ffilter	src/libffilter.c	/^void ffilter(double *f, int xx, int yy, double *W, double *N, double *g) {$/;"	f	typeref:typename:void
+norm_array	src/libffilter.c	/^void norm_array(double *f, int xx, int yy, double *W, double *N) {$/;"	f	typeref:typename:void
+weight	src/libffilter.c	/^double weight(double *f, int x, int y, int xx, int yy) {$/;"	f	typeref:typename:double
+weight_array	src/libffilter.c	/^void weight_array(double *f, int xx, int yy, double *W) {$/;"	f	typeref:typename:void
