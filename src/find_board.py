@@ -3,9 +3,6 @@ import numpy as np
 import math
 import sys
 from pathlib import Path
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
 
 from Image import Image
 from aux import *
@@ -36,13 +33,11 @@ def find_board(img):
     save(img, "medges+canny", img.medges)
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
     cv2.drawContours(drawn_contours, img.cont, -1, (255, 0, 0), thickness=3)
-    # cv2.drawContours(drawn_contours, [img.poly], -1, (0, 0, 255), thickness=3)
     img.medges = cv2.bitwise_or(img.medges, drawn_contours[:,:,2])
     cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
     save(img, "convex", drawn_contours)
 
-    # limx, limy = broad_hull(img)
     x,y,w,h = cv2.boundingRect(img.hullxy)
     limx = np.zeros((2), dtype='int32')
     limy = np.zeros((2), dtype='int32')
@@ -74,7 +69,6 @@ def find_board(img):
     img.canny = find_canny(img, wmin = 8)
     save(img, "canny_find_magic_angles", img.canny)
     img.medges += img.canny
-    # save(img, "medges+canny", img.medges)
     img.angles, img.select_lines = find_angles(img)
 
     lines,inter = magic_lines(img)
@@ -114,7 +108,7 @@ def find_morph(img, Amin, maxkd=12, skip=False):
             img.got_hull = True
             break
         else:
-            # print("{} < {} @ ksize = {}".format(a, Amin, kd))
+            print("{} < {} @ ksize = {}".format(a, Amin, kd))
             kd += 1
 
     img.medges = edges_bin
@@ -148,8 +142,7 @@ def find_canny(img, wmin = 6):
             break
         else:
             if wmin - w < wmin:
-                pass
-                # print("{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
+                print("{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
         c_thrl = max(2, c_thrl - 9)
         c_thrh -= 9
 
@@ -259,7 +252,6 @@ def find_intersections(img, lines):
                     inter.append((x,y))
                     last = (x,y)
                 else:
-                    # print("Close point ignored: ({},{}) ~ ({},{})".format(last[0],last[1],x,y))
                     continue
         i += 1
 
@@ -428,14 +420,6 @@ def lines_kmeans(img, lines):
     B = lines[labels==1]
     C = lines[labels==2]
 
-    # fig = plt.figure()
-    # plt.xticks(range(-90, 91, 10))
-    # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-    # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-    # plt.hist(C[:,5], 180, [-90, 90], color = (0.0, 0.9, 0.0, 0.9))
-    # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.8))
-    # savefig(img, "kmeans0", fig)
-
     d1 = abs(centers[0] - centers[1])
     d2 = abs(centers[0] - centers[2])
     d3 = abs(centers[1] - centers[2])
@@ -448,12 +432,6 @@ def lines_kmeans(img, lines):
         compactness,labels,centers = cv2.kmeans(lines[:,:,5], 2, None, criteria, 10, flags)
         A = lines[labels==0]
         B = lines[labels==1]
-        # fig = plt.figure()
-        # plt.xticks(range(-90, 91, 10))
-        # plt.hist(A[:,5], 180, [-90, 90], color = (0.9, 0.0, 0.0, 0.9))
-        # plt.hist(B[:,5], 180, [-90, 90], color = (0.0, 0.0, 0.9, 0.9))
-        # plt.hist(centers, 20, [-90, 90], color = (0.7, 0.7, 0.0, 0.7))
-        # savefig(img, "kmeans1", fig)
 
     diff = []
     diff.append((abs(centers[0] - 90), -90))
@@ -506,7 +484,7 @@ def find_corners(img, inter):
     BL = aux
 
     drawn_circles = np.copy(img.hull3ch) * 0
-    for p in BR, BL, TR, TL:                      #B   G  R
+    for p in BR, BL, TR, TL:
         cv2.circle(drawn_circles, p, radius=7, color=(0, 255, 0), thickness=-1)
 
     drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
@@ -545,11 +523,6 @@ def find_region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):
             print("{} < {}".format(int(a), int(Amin)))
             if abs(a - alast) < img.sarea*0.01:
                 print("c5 = ", c5, "NOT increasing")
-                # perim1 = cv2.arcLength(img.cont, True)
-                # perim2 = cv2.arcLength(img.hullxy, True)
-                # print("cont perim: ", perim1)
-                # print("hull perim: ", perim2)
-                # if abs(perim1 - perim2) < 2*perim2:
                 if c5 < 10:
                     c5 += 0.8
                     Amin = (c0-c5)*0.05 * img.sarea

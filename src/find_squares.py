@@ -3,9 +3,6 @@ import numpy as np
 import math
 import sys
 from pathlib import Path
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
 
 from Image import Image
 from aux import *
@@ -247,9 +244,6 @@ def find_intersections(img, vert, hori):
                 if radius(last[0], last[1], x, y) > 10:
                     inter.append((x,y))
                     last = (x,y)
-                else:
-                    # print("Close point ignored: ({},{}) ~ ({},{})".format(last[0],last[1],x,y))
-                    continue
         i += 1
 
     inter = np.array(inter, dtype='int32')
@@ -304,7 +298,6 @@ def magic_vert_hori(img, vert, hori):
 
     vert = vert[remv==0]
     hori = hori[remh==0]
-    # save_lines(img, "vert_hori_rem", vert, hori)
 
     distv, disth = get_distances(vert,hori)
     medv, medh = mean_dist(distv,disth)
@@ -314,7 +307,6 @@ def magic_vert_hori(img, vert, hori):
 
     vert = vert[cerv==1]
     hort = hori[cerh==1]
-    # save_lines(img, "vert_hori_cer", vert, hori)
 
     while vert[0,0,0] > (medv + 10):
         new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 400, 0,0]]], dtype='int32')
@@ -333,8 +325,6 @@ def magic_vert_hori(img, vert, hori):
         hori = np.append(hori, new, axis=0)
         hori = hori[hori[:,0,1].argsort()]
 
-    # save_lines(img, "vert_hori2", vert, hori)
-
     i = 0
     while i < (vert.shape[0] - 1):
         if abs(vert[i,0,0] - vert[i+1,0,0]) > (medv*1.5):
@@ -350,8 +340,6 @@ def magic_vert_hori(img, vert, hori):
             hori = np.append(hori, new, axis=0)
             hori = hori[hori[:,0,1].argsort()]
         i += 1
-
-    # save_lines(img, "vert_hori3", vert, hori)
 
     if vert.shape[0] == 10:
         d1 = abs(vert[0,0,0]-0)
