@@ -7,7 +7,7 @@ from pathlib import Path
 from Image import Image
 from aux import *
 from lines import HoughBundler
-import lwang
+import lffilter
 import random
 
 def save_lines(img, name, vert, hori):
@@ -26,7 +26,7 @@ def find_squares(img):
     img = perspective_transform(img)
     img.warped3ch = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR)
 
-    img.wwang = lwang.wang_filter(img.warped)
+    img.wwang = lf.ffilter(img.warped)
     save(img, "wwang", img.wwang)
 
     img.wcanny = find_wcanny(img, wmin = 12)

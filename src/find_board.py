@@ -7,13 +7,13 @@ from pathlib import Path
 from Image import Image
 from aux import *
 from lines import HoughBundler
-import lwang
+import lffilter as lf
 import random
 
 def find_board(img):
     save(img, "sgray", img.sgray)
     print("applying filter to image...")
-    img.wang0 = lwang.wang_filter(img.sgray)
+    img.wang0 = lf.ffilter(img.sgray)
     save(img, "wang0", img.wang0)
     img, a = find_region(img)
     img.ext = False
@@ -507,7 +507,7 @@ def find_region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):
         alast = a
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
         img.clahe = clahe.apply(img.wang0)
-        img.wang = lwang.wang_filter(img.clahe)
+        img.wang = lf.ffilter(img.clahe)
         img.canny = find_canny(img, wmin=wc)
         img, a = find_morph(img, Amin, maxkd, skip)
         if c <= 12:
