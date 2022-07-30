@@ -7,7 +7,7 @@ from pathlib import Path
 from Image import Image
 from aux import *
 from lines import HoughBundler
-import lffilter
+import lffilter as lf
 import random
 
 def save_lines(img, name, vert, hori):
