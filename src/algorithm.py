@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 from pathlib import Path
 
-from auxiliar import *
 from find_board import find_board
 from find_squares import find_squares
 from find_pieces import find_pieces
