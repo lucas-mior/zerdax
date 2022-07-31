@@ -2,7 +2,7 @@ import cv2
 
 def generate_fen(img):
     img = create_fen(img)
-    img.fen = compress_fen(img.fen)
+    img.fen = compress_fen(img.longfen)
     return img
 
 def create_fen(img):
@@ -23,8 +23,8 @@ def create_fen(img):
         fen += '/'
     fen = fen[:-1]
 
-    img.fen = fen
-    print("long fen:", img.fen)
+    img.longfen = fen
+    print("long fen:", img.longfen)
     return img
 
 def compress_fen(fen):

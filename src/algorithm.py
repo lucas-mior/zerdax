@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from pathlib import Path
+import re
 
 from find_board import find_board
 from find_squares import find_squares
@@ -36,5 +37,18 @@ def algorithm(filename):
     img = find_squares(img)
     img = find_pieces(img)
     img = generate_fen(img)
+    draw_fen_terminal(img.longfen)
 
     return img.fen
+
+def draw_fen_terminal(fen):
+    print("―"*19)
+
+    print("| ", end='')
+    fen = re.sub(r'/', "|\n| ", fen)
+    fen = re.sub(r'([a-zA-Z])', r'\1 ', fen)
+    fen = re.sub(r'(1)', r'· ', fen)
+    print(fen, end='')
+    print("|")
+
+    print("―"*19)
