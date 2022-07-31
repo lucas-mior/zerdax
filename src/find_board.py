@@ -342,9 +342,6 @@ def magic_lines(img):
     return lines,inter
 
 def filter_lines(img, lines):
-    """
-    remove lines that are on the border of the image and are horizontal or vertical
-    """
     rem = np.empty(lines.shape[0])
     rem = np.int32(rem)
 

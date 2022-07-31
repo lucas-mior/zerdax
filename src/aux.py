@@ -26,8 +26,6 @@ def radius(x1,y1,x2,y2):
 def theta(x1,y1,x2,y2):
     orientation = math.atan2(y1-y2, x2-x1)
     orientation = math.degrees(orientation)
-    # if orientation < 0:
-    #     orientation += 180
     return orientation
 
 def radius_theta(lines):

@@ -388,7 +388,7 @@ def sq_inter(img, inter):
     intersq[7,:] = interH[interH[:,1].argsort()[::-1]] # H
     intersq[8,:] = interZ[interZ[:,1].argsort()[::-1]] # right
 
-    squares = np.zeros((8,8,4,2), dtype='int32') #A1, A2, ... H8 / BL, TR
+    squares = np.zeros((8,8,4,2), dtype='int32')
     for i in range(0,8):
         for j in range(0,8):
             squares[i,j,0] = intersq[i,j]
