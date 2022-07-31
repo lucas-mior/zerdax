@@ -24,7 +24,7 @@ def find_board(img):
         drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
         cv2.drawContours(drawn_contours, [img.hullxy], -1, (255, 255, 0), thickness=3)
         img.help = drawn_contours[:,:,0]
-        img, a = find_region(img, maxkd = 20, cmax = 20, nymax = 12, skip=True)
+        img, a = find_region(img, kd = 12, cmax = 20, nymax = 12, skip=True)
 
     save(img, "dilate", img.dilate)
     save(img, "divide", img.divide)
@@ -77,39 +77,32 @@ def find_board(img):
 
     return img
 
-def find_morph(img, Amin, maxkd=12, skip=False):
+def find_morph(img, Amin, kd=5, skip=False):
     img.got_hull = False
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-    kd = 5
-    while kd <= maxkd:
-        if kd > 12:
-            kx = kd
-        else:
-            kx = kd+round(kd/3)
-        k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kx))
-        img.dilate = cv2.morphologyEx(img.filt, cv2.MORPH_DILATE, k_dil)
-        img.divide = cv2.divide(img.filt, img.dilate, scale = 255)
-        edges_thr = cv2.threshold(img.divide, 0, 255, cv2.THRESH_OTSU)[1]
-        edges_bin = cv2.bitwise_not(edges_thr)
+    kx = kd+round(kd/3)
+    k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kx))
+    img.dilate = cv2.morphologyEx(img.filt, cv2.MORPH_DILATE, k_dil)
+    img.divide = cv2.divide(img.filt, img.dilate, scale = 255)
+    edges_thr = cv2.threshold(img.divide, 0, 255, cv2.THRESH_OTSU)[1]
+    edges_bin = cv2.bitwise_not(edges_thr)
 
-        edges_bin = cv2.morphologyEx(edges_bin, cv2.MORPH_ERODE, ko, iterations = 1)
-        edges_wcanny = cv2.bitwise_or(img.canny, edges_bin)
-        if skip:
-            edges_wcanny = cv2.bitwise_or(img.help, edges_wcanny)
-        contours, _ = cv2.findContours(edges_wcanny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        areas = [cv2.contourArea(c) for c in contours]
-        max_index = np.argmax(areas)
-        img.cont = contours[max_index]
-        img.hullxy = cv2.convexHull(img.cont)
-        img.hullxy = cv2.approxPolyDP(img.hullxy,0.05*cv2.arcLength(img.hullxy,True),True)
-        a = cv2.contourArea(img.hullxy)
-        if a > Amin:
-            print("{} > {} @ ksize = {} [GOTHULL]".format(a, Amin, kd))
-            img.got_hull = True
-            break
-        else:
-            print("{} < {} @ ksize = {}".format(a, Amin, kd))
-            kd += 1
+    edges_bin = cv2.morphologyEx(edges_bin, cv2.MORPH_ERODE, ko, iterations = 1)
+    edges_wcanny = cv2.bitwise_or(img.canny, edges_bin)
+    if skip:
+        edges_wcanny = cv2.bitwise_or(img.help, edges_wcanny)
+    contours, _ = cv2.findContours(edges_wcanny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    areas = [cv2.contourArea(c) for c in contours]
+    max_index = np.argmax(areas)
+    img.cont = contours[max_index]
+    img.hullxy = cv2.convexHull(img.cont)
+    img.hullxy = cv2.approxPolyDP(img.hullxy,0.05*cv2.arcLength(img.hullxy,True),True)
+    a = cv2.contourArea(img.hullxy)
+    if a > Amin:
+        print("{} > {} @ ksize = {} [GOTHULL]".format(a, Amin, kd))
+        img.got_hull = True
+    else:
+        print("{} < {} @ ksize = {}".format(a, Amin, kd))
 
     img.medges = edges_bin
 
