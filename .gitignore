@@ -1,4 +1,6 @@
 __pycache__
+*tags
+
 *.jpg
 *.png
 *.pdf
@@ -13,14 +15,6 @@ __pycache__
 *.gz
 *.synctex
 
-*.so
-*.zip
-*yolo3
-*CV
-*model_data
-*logs
-*.fen
-*tags
 *.[oa]
 *.so
 *.zip
@@ -28,3 +22,4 @@ __pycache__
 *CV
 *model_data
 *logs
+*.fen
