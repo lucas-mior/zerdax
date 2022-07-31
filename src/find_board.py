@@ -115,19 +115,6 @@ def find_morph(img, Amin, maxkd=12, skip=False):
 
     return img, a
 
-def broad_hull(img):
-    Pxmin = img.hullxy[np.argmin(img.hullxy[:,0,0]),0]
-    Pxmax = img.hullxy[np.argmax(img.hullxy[:,0,0]),0]
-    Pymin = img.hullxy[np.argmin(img.hullxy[:,0,1]),0]
-    Pymax = img.hullxy[np.argmax(img.hullxy[:,0,1]),0]
-
-    Pxmin[0] = max(0, Pxmin[0]-20)
-    Pymin[1] = max(0, Pymin[1]-40) # peças de trás vao além
-    Pxmax[0] = min(img.swidth, Pxmax[0]+20)
-    Pymax[1] = min(img.sheigth, Pymax[1]+20)
-
-    return [Pymin[1],Pymax[1]], [Pxmin[0],Pxmax[0]]
-
 def find_canny(img, wmin = 6):
     c_thrl0 = 80
     c_thrh0 = 200
