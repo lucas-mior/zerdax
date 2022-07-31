@@ -75,6 +75,46 @@ def find_board(img):
 
     return img
 
+def find_region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):
+    c = 3
+    wc = 6
+    a = 0
+    c0 = 12
+    c5 = 0
+    Amin = (c0-c5)*0.05 * img.sarea
+    while c <= cmax or c5 <= 10:
+        print("Amin: ", int(Amin))
+        print("Clahe: ", c)
+        alast = a
+        clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
+        img.clahe = clahe.apply(img.filt0)
+        img.filt = lf.ffilter(img.clahe)
+        img.canny = find_canny(img, wmin=wc)
+        img, a = find_morph(img, Amin, maxkd, skip)
+        if c <= 12:
+            fmedges = img.medges
+
+        if img.got_hull:
+            if c5 >= 5:
+                img.brect = False
+            else:
+                img.brect = True
+            break
+        else:
+            print("{} < {}".format(int(a), int(Amin)))
+            if abs(a - alast) < img.sarea*0.01:
+                print("c5 = ", c5, "NOT increasing")
+                if c5 < 10:
+                    c5 += 0.8
+                    Amin = (c0-c5)*0.05 * img.sarea
+            if c <= cmax:
+                c += 1
+            if wc <= nymax:
+                wc += 0.5
+
+    img.medges = fmedges
+    return img, a
+
 def find_morph(img, Amin, kd=5, skip=False):
     img.got_hull = False
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
@@ -468,43 +508,3 @@ def find_corners(img, inter):
     corners = np.array([BR, BL, TR, TL])
 
     return corners
-
-def find_region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):
-    c = 3
-    wc = 6
-    a = 0
-    c0 = 12
-    c5 = 0
-    Amin = (c0-c5)*0.05 * img.sarea
-    while c <= cmax or c5 <= 10:
-        print("Amin: ", int(Amin))
-        print("Clahe: ", c)
-        alast = a
-        clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
-        img.clahe = clahe.apply(img.filt0)
-        img.filt = lf.ffilter(img.clahe)
-        img.canny = find_canny(img, wmin=wc)
-        img, a = find_morph(img, Amin, maxkd, skip)
-        if c <= 12:
-            fmedges = img.medges
-
-        if img.got_hull:
-            if c5 >= 5:
-                img.brect = False
-            else:
-                img.brect = True
-            break
-        else:
-            print("{} < {}".format(int(a), int(Amin)))
-            if abs(a - alast) < img.sarea*0.01:
-                print("c5 = ", c5, "NOT increasing")
-                if c5 < 10:
-                    c5 += 0.8
-                    Amin = (c0-c5)*0.05 * img.sarea
-            if c <= cmax:
-                c += 1
-            if wc <= nymax:
-                wc += 0.5
-
-    img.medges = fmedges
-    return img, a
