@@ -3,7 +3,6 @@ import numpy as np
 import math
 import sys
 
-from Image import Image
 from aux import *
 from lines import HoughBundler
 import lffilter as lf

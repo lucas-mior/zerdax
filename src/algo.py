@@ -1,12 +1,16 @@
 import cv2
 import numpy as np
-
-from Image import Image
+from pathlib import Path
 
 from aux import *
 from find_board import find_board
 from find_squares import find_squares
 from find_pieces import find_pieces
+
+class Image:
+    def __init__(self, filename):
+        self.filename = filename
+        self.basename = Path(self.filename).stem
 
 def create_fen(img):
     fen = ''
