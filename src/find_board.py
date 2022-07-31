@@ -12,7 +12,7 @@ def find_board(img):
     print("applying filter to image...")
     img.filt0 = lf.ffilter(img.sgray)
     print("finding region containing chess board...")
-    img, a = find_region(img)
+    img = find_region(img)
 
     img.medges += img.canny
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
@@ -95,7 +95,7 @@ def find_region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):
                 wc += 0.5
 
     img.medges = fmedges
-    return img, a
+    return img
 
 def find_morph(img, Amin, kd=5, skip=False):
     img.got_hull = False
