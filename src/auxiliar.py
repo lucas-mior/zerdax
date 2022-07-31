@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 
-i = 0
+i = 1
 
 def determinant(a, b):
     return a[0]*b[1] - a[1]*b[0]
