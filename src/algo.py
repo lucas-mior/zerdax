@@ -6,7 +6,7 @@ from aux import *
 from find_board import find_board
 from find_squares import find_squares
 from find_pieces import find_pieces
-from fen import generate_fen
+from generate_fen import generate_fen
 
 class Image:
     def __init__(self, filename):
