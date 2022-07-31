@@ -13,15 +13,6 @@ def find_board(img):
     img.filt0 = lf.ffilter(img.sgray)
     print("finding region containing chess board...")
     img, a = find_region(img)
-    img.ext = False
-
-    if not img.got_hull:
-        print("caso extremo (remover essa palhaçada)")
-        img.ext = True
-        drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-        cv2.drawContours(drawn_contours, [img.hullxy], -1, (255, 255, 0), thickness=3)
-        img.help = drawn_contours[:,:,0]
-        img, a = find_region(img, kd = 12, cmax = 20, nymax = 12, skip=True)
 
     img.medges += img.canny
     drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
@@ -300,15 +291,9 @@ def magic_lines(img):
     h_angl0 = np.pi / 120
 
     tuned = 0
-    if img.ext:
-        maxtun = 30
-        minlines = 50
-        tol = 15
-        print("==================extremo=================")
-    else:
-        maxtun = 10
-        minlines = 25
-        tol = 17
+    maxtun = 10
+    minlines = 25
+    tol = 17
     h_maxg = h_maxg0
     h_minl = h_minl0
     h_thrv = h_thrv0
