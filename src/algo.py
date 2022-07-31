@@ -19,12 +19,12 @@ def create_fen(img):
             sq = img.sqback[j,i]
             got_piece = False
             print("sq: ", i, j)
-            for piece in img.ObjectsList:
+            for piece in img.pieces:
                 p = (int(piece[4]), int(piece[2]) - 15)
                 if cv2.pointPolygonTest(sq, p, True) >= 0:
                     fen += piece[6].split(" ")[0]
                     got_piece = True
-                    img.ObjectsList.remove(piece)
+                    img.pieces.remove(piece)
                     break
             if not got_piece:
                 fen += '1'
