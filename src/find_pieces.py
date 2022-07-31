@@ -1,7 +1,6 @@
 import numpy as np
 import colorsys
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 import cv2
 from aux import *
 
