@@ -14,13 +14,21 @@ def find_board(img):
     print("finding region containing chess board...")
     img = find_region(img)
 
-    img.medges += img.canny
-    drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-    cv2.drawContours(drawn_contours, img.cont, -1, (255, 0, 0), thickness=3)
-    img.medges = cv2.bitwise_or(img.medges, drawn_contours[:,:,2])
-    cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
-    drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
+    if not img.got_hull:
+        print("finding board region failed [find_morph()]")
 
+    img = bound_region(img)
+
+    img.canny = find_canny(img, wmin = 8)
+    img.angles, img.select_lines = find_angles(img)
+
+    lines,inter = magic_lines(img)
+
+    img.corners = find_corners(img, inter)
+
+    return img
+
+def bound_region(img):
     x,y,w,h = cv2.boundingRect(img.hullxy)
     limx = np.zeros((2), dtype='int32')
     limy = np.zeros((2), dtype='int32')
@@ -29,8 +37,6 @@ def find_board(img):
     limy[0] = max(x-20, 0)
     limy[1] = max(x+w+20, img.sheigth)
 
-    if not img.got_hull:
-        print("finding board region failed [find_morph()]")
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.filt = img.filt[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
@@ -46,14 +52,6 @@ def find_board(img):
     img.hyoff = limy[0]
     img = reduce_hull(img)
     img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
-
-    img.canny = find_canny(img, wmin = 8)
-    img.medges += img.canny
-    img.angles, img.select_lines = find_angles(img)
-
-    lines,inter = magic_lines(img)
-
-    img.corners = find_corners(img, inter)
 
     return img
 
