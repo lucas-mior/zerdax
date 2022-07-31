@@ -455,8 +455,6 @@ def lines_kmeans(img, lines):
     return lines, centers
 
 def find_corners(img, inter):
-    print("inter:", inter.shape)
-
     psum = np.empty((inter.shape[0], 3), dtype='int32')
     psub = np.empty((inter.shape[0], 3), dtype='int32')
 
@@ -477,8 +475,6 @@ def find_corners(img, inter):
     TR = TR[0:2]
     TL = TL[0:2]
 
-    print("points:", BR, BL, TR, TL)
-    print("swapping TR and BL")
     dummy = TR
     TR = BL
     BL = dummy
@@ -490,5 +486,6 @@ def find_corners(img, inter):
     drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
 
     corners = np.array([BR, BL, TR, TL])
+    print("board corners:", corners)
 
     return corners
