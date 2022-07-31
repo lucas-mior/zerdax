@@ -31,12 +31,10 @@ def find_squares(img):
 
     squares = sq_inter(img, inter)
     squares = np.float32(squares)
-    print("M = ", img.M)
-    _, img.invM = cv2.invert(img.M)
     sqback = np.zeros(squares.shape, dtype='float32')
 
     for i in range(0, 8):
-        sqback[i] = cv2.perspectiveTransform(squares[i], img.invM)
+        sqback[i] = cv2.perspectiveTransform(squares[i], img.warpInvMatrix)
 
     img.sqback = np.int32(sqback)
 
@@ -55,8 +53,9 @@ def perspective_transform(img):
     img.wheigth = width
 
     newshape = np.array([[0,0], [width-1,0], [width-1,height-1], [0,height-1]],dtype="float32")
-    img.M = cv2.getPerspectiveTransform(orig_points, newshape)
-    img.warped = cv2.warpPerspective(img.hull, img.M, (width, height))
+    img.warpMatrix = cv2.getPerspectiveTransform(orig_points, newshape)
+    _, img.warpInvMatrix = cv2.invert(img.warpMatrix)
+    img.warped = cv2.warpPerspective(img.hull, img.warpMatrix, (width, height))
 
     save(img, "warped", img.warped)
     return img
