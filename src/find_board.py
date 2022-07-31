@@ -73,7 +73,7 @@ def find_region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):
     c5 = 0
     Amin = (c0-c5)*0.05 * img.sarea
     while c <= cmax or c5 <= 10:
-        print("Amin: ", int(Amin))
+        print("Amin: ", round(Amin))
         print("Clahe: ", c)
         alast = a
         clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
@@ -91,7 +91,7 @@ def find_region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):
                 img.brect = True
             break
         else:
-            print("{} < {}".format(int(a), int(Amin)))
+            print("{} < {}".format(round(a), round(Amin)))
             if abs(a - alast) < img.sarea*0.01:
                 print("c5 = ", c5, "NOT increasing")
                 if c5 < 10:
