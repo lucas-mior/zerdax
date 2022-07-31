@@ -21,7 +21,9 @@ def savefig(img, filename, fig):
     i += 1
 
 def radius(x1,y1,x2,y2):
-    radius = math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
+    dx = x2 - x1
+    dy = y2 - y1
+    radius = math.sqrt(dx*dx + dy*dy)
     return round(radius)
 
 def theta(x1,y1,x2,y2):
