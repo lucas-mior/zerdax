@@ -21,3 +21,10 @@ __pycache__
 *logs
 *.fen
 *tags
+*.[oa]
+*.so
+*.zip
+*yolo3
+*CV
+*model_data
+*logs
