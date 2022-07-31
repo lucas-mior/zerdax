@@ -37,7 +37,6 @@ def bound_region(img):
     limy[0] = max(x-20, 0)
     limy[1] = max(x+w+20, img.sheigth)
 
-
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.filt = img.filt[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.clahe = img.clahe[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
