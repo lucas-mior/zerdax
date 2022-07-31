@@ -21,12 +21,13 @@ def savefig(img, filename, fig):
     i += 1
 
 def radius(x1,y1,x2,y2):
-    return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
+    radius = math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
+    return round(radius)
 
 def theta(x1,y1,x2,y2):
     orientation = math.atan2(y1-y2, x2-x1)
     orientation = math.degrees(orientation)
-    return orientation
+    return round(orientation)
 
 def radius_theta(lines):
     dummy = np.zeros((lines.shape[0], 1, 6), dtype='int32')
@@ -35,7 +36,7 @@ def radius_theta(lines):
     i = 0
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
-            lines[i, 0, 4] = round(radius(x1,y1,x2,y2))
-            lines[i, 0, 5] = round(theta(x1,y1,x2,y2))
+            lines[i, 0, 4] = radius(x1,y1,x2,y2)
+            lines[i, 0, 5] = theta(x1,y1,x2,y2)
             i += 1
     return lines
