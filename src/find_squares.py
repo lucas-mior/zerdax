@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import math
 import sys
-from pathlib import Path
 
 from aux import *
 from lines import HoughBundler
