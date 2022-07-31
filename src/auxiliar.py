@@ -29,9 +29,9 @@ def theta(x1,y1,x2,y2):
     return orientation
 
 def radius_theta(lines):
-    aux = np.zeros((lines.shape[0], 1, 6), dtype='int32')
-    aux[:,0,0:4] = np.copy(lines[:,0,0:4])
-    lines = aux
+    dummy = np.zeros((lines.shape[0], 1, 6), dtype='int32')
+    dummy[:,0,0:4] = np.copy(lines[:,0,0:4])
+    lines = dummy
     i = 0
     for line in lines:
         for x1,y1,x2,y2,r,t in line:

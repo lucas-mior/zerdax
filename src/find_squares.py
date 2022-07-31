@@ -3,7 +3,7 @@ import numpy as np
 import math
 import sys
 
-from aux import *
+from auxiliar import *
 from lines import HoughBundler
 import lffilter as lf
 import random

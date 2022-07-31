@@ -2,7 +2,7 @@ import numpy as np
 import colorsys
 import os
 import cv2
-from aux import *
+from auxiliar import *
 
 from tensorflow.python.framework.ops import disable_eager_execution
 disable_eager_execution()

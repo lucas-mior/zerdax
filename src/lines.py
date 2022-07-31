@@ -79,9 +79,9 @@ class HoughBundler:
             return np.block([[lines[0][0:2], lines[0][2:4]]])
 
         lines = np.copy(lines)
-        aux = np.zeros((lines.shape[0], 5), dtype='int32')
-        aux[:,0:4] = np.copy(lines[:,0:4])
-        lines = aux
+        dummy = np.zeros((lines.shape[0], 5), dtype='int32')
+        dummy[:,0:4] = np.copy(lines[:,0:4])
+        lines = dummy
         i = 0
         for line in lines:
             lines[i,4] = self.get_orientation(line)

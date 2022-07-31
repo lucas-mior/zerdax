@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import argparse
-from algo import full
+from algorithm import algorithm
 
 def parseargs():
     parser = argparse.ArgumentParser(description='Convert chess photo to FEN')
@@ -15,7 +15,7 @@ def Main():
     args = parseargs()
     image = args.image
     print("============ zerdax {} ============".format(image))
-    fen = full(image)
+    fen = algorithm(image)
     print("FEN:", fen)
 
 if __name__ == '__main__':

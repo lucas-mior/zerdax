@@ -3,7 +3,7 @@ import numpy as np
 import math
 import sys
 
-from aux import *
+from auxiliar import *
 from lines import HoughBundler
 import lffilter as lf
 import random
@@ -295,8 +295,8 @@ def magic_lines(img):
             if lines.shape[0] >= minlines:
                 print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
                 got_hough = True
-                aux = np.copy(img.select_lines[:,:,0:6])
-                lines = np.append(lines, aux, axis=0)
+                dummy = np.copy(img.select_lines[:,:,0:6])
+                lines = np.append(lines, dummy, axis=0)
                 lines = filter_angles(img, lines, tol)
                 break
 
@@ -454,9 +454,9 @@ def find_corners(img, inter):
 
     print("points:", BR, BL, TR, TL)
     print("swapping TR and BL")
-    aux = TR
+    dummy = TR
     TR = BL
-    BL = aux
+    BL = dummy
 
     drawn_circles = np.copy(img.hull3ch) * 0
     for p in BR, BL, TR, TL:
