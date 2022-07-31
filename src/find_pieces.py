@@ -158,14 +158,12 @@ class YOLO(object):
 
     
 def find_pieces(img):
-    print("chamar codigo do vitao aqui")
     img.pieces = np.zeros((32,6), dtype='int32')
 
     yolo = YOLO()
     r_image, ObjectsList = yolo.detect_img(img.hullcolor)
     yolo.close_session()
     save(img, "yolo", r_image)
-    print(ObjectsList)
     img.r_image = r_image
     img.ObjectsList = ObjectsList
 
