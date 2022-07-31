@@ -22,7 +22,7 @@ def create_fen(img):
             if not got_piece:
                 fen += '1'
         fen += '/'
-    fen -= '/'
+    fen = fen[:-1]
 
     img.fen = fen
     print("long fen:", img.fen)
