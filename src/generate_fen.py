@@ -11,7 +11,6 @@ def create_fen(img):
         for j in range(0, 8):
             sq = img.sqback[j,i]
             got_piece = False
-            print("sq: ", i, j)
             for piece in img.pieces:
                 p = (int(piece[4]), int(piece[2]) - 15)
                 if cv2.pointPolygonTest(sq, p, True) >= 0:
