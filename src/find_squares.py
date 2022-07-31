@@ -13,13 +13,10 @@ def find_squares(img):
     img.warped3ch = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR)
 
     img.wfilt = lf.ffilter(img.warped)
-    save(img, "wfilt", img.wfilt)
 
     img.wcanny = find_wcanny(img, wmin = 12)
-    save(img, "wcanny", img.wcanny)
 
     vert,hori = w_lines(img)
-    save_lines(img, "vert_hori0", vert, hori)
     vert,hori = magic_vert_hori(img, vert, hori)
 
     inter = find_intersections(img, vert[:,0,:], hori[:,0,:])
@@ -27,7 +24,6 @@ def find_squares(img):
     for p in inter:
         cv2.circle(drawn_circles, p, radius=5, color=(255, 0, 0), thickness=-1)
     drawn_circles = cv2.addWeighted(img.warped3ch, 0.4, drawn_circles, 0.7, 0)
-    save(img, "intersections".format(img.basename), drawn_circles)
 
     squares = sq_inter(img, inter)
     squares = np.float32(squares)
@@ -57,7 +53,6 @@ def perspective_transform(img):
     _, img.warpInvMatrix = cv2.invert(img.warpMatrix)
     img.warped = cv2.warpPerspective(img.hull, img.warpMatrix, (width, height))
 
-    save(img, "warped", img.warped)
     return img
 
 def find_wcanny(img, wmin = 12):
@@ -127,7 +122,6 @@ def w_lines(img):
 
     if not got_hough:
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
-        save(img, "wcannyfail", img.wcanny)
         exit()
 
     return vert,hori
@@ -346,7 +340,6 @@ def magic_vert_hori(img, vert, hori):
     elif hori.shape[0] == 11:
         hori = hori[1:-1]
 
-    save_lines(img, "vert_hori4", vert, hori)
     return vert, hori
 
 def sq_inter(img, inter):
@@ -385,7 +378,6 @@ def sq_inter(img, inter):
     cv2.drawContours(drawn_lines, [squares[0,0]], -1, (255, 0, 0), thickness=2)
     cv2.drawContours(drawn_lines, [squares[2,4]], -1, (0, 0, 255), thickness=2)
     drawn_contours = cv2.addWeighted(img.warped3ch, 0.4, drawn_lines, 0.7, 0)
-    save(img, "casaA1eC5", drawn_contours)
 
     return squares
 
