@@ -11,6 +11,7 @@ import random
 def find_board(img):
     print("applying filter to image...")
     img.filt0 = lf.ffilter(img.sgray)
+    print("finding region containing chess board...")
     img, a = find_region(img)
     img.ext = False
 
