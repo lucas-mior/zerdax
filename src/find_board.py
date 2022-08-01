@@ -43,23 +43,23 @@ def create_cannys(img, w = 6):
 
 def bound_region(img):
     x,y,w,h = cv2.boundingRect(img.hullxy)
-    limx = np.zeros((2), dtype='int32')
-    limy = np.zeros((2), dtype='int32')
-    limx[0] = max(y-10, 0)
-    limx[1] = min(y+h+10, img.width)
-    limy[0] = max(x-10, 0)
-    limy[1] = max(x+w+10, img.heigth)
+    margin = 10
+    print("adding {} pixels margin...".format(margin))
+    x0 = max(y-margin, 0)
+    x1 = min(y+h+margin, img.width)
+    y0 = max(x-margin, 0)
+    y1 = max(x+w+margin, img.heigth)
 
-    img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    img.G = img.G[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    img.claheG = img.claheG[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    img.claheV = img.claheV[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    img.fedges = img.fedges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    img.hull = img.gray[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    img.hullBGR = img.BGR[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    img.gray3ch = img.gray3ch[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    img.hxoff = limx[0]
-    img.hyoff = limy[0]
+    img.medges = img.medges[x0:x1+1, y0:y1+1]
+    img.G = img.G[x0:x1+1, y0:y1+1]
+    img.claheG = img.claheG[x0:x1+1, y0:y1+1]
+    img.claheV = img.claheV[x0:x1+1, y0:y1+1]
+    img.fedges = img.fedges[x0:x1+1, y0:y1+1]
+    img.hull = img.gray[x0:x1+1, y0:y1+1]
+    img.hullBGR = img.BGR[x0:x1+1, y0:y1+1]
+    img.gray3ch = img.gray3ch[x0:x1+1, y0:y1+1]
+    img.hxoff = x0
+    img.hyoff = y0
     img = reduce_hull(img)
 
     return img
