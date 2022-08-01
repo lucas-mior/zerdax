@@ -143,8 +143,8 @@ def find_canny(image, wmin = 6):
         else:
             if wmin - w < wmin:
                 print("{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
-        c_thrl = max(clmin, c_thrl - 5)
-        c_thrh = max(ctmin, c_thrh - 5)
+        c_thrl = max(clmin, c_thrl - 9)
+        c_thrh = max(ctmin, c_thrh - 9)
 
     if w < wmin:
         print("Canny failed: {0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
@@ -289,14 +289,14 @@ def magic_lines(img):
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
-    minlines = 30
+    minlines = 20
     while h_angl < (np.pi / 720):
         th = 180*(h_angl/np.pi)
         lines = cv2.HoughLinesP(img.canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
         if lines is not None:
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
-            # lines = filter_angles(img, lines)
+            lines = filter_angles(img, lines)
             if lines.shape[0] >= minlines:
                 print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
                 got_hough = True
