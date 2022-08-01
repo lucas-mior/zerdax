@@ -11,7 +11,6 @@ import random
 def find_board(img):
     print("pre processing image...")
     img = pre_process(img)
-
     print("finding region containing chess board...")
     img = find_region(img)
     print("cropping image to fit only board region...")
@@ -33,9 +32,7 @@ def find_board(img):
 def create_cannys(img, w = 6):
     print("finding edges for gray, S, V images...")
     img.cannyG = find_canny(img.claheG, wmin = w)
-    # img.cannyS = find_canny(img.claheS, wmin = w-4)
     img.cannyV = find_canny(img.claheV, wmin = w)
-    # img.canny = cv2.bitwise_or(img.cannyS, img.cannyV)
     img.canny = cv2.bitwise_or(img.cannyG, img.cannyV)
     k_close = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     img.canny = cv2.morphologyEx(img.canny, cv2.MORPH_CLOSE, k_close)
@@ -45,14 +42,15 @@ def bound_region(img):
     x,y,w,h = cv2.boundingRect(img.hullxy)
     limx = np.zeros((2), dtype='int32')
     limy = np.zeros((2), dtype='int32')
-    limx[0] = max(y-20, 0)
-    limx[1] = min(y+h+20, img.width)
-    limy[0] = max(x-20, 0)
-    limy[1] = max(x+w+20, img.heigth)
+    limx[0] = max(y-10, 0)
+    limx[1] = min(y+h+10, img.width)
+    limy[0] = max(x-10, 0)
+    limy[1] = max(x+w+10, img.heigth)
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.G = img.G[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.claheG = img.claheG[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
+    # img.claheH = img.claheH[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     # img.claheS = img.claheS[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.claheV = img.claheV[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.fedges = img.fedges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
@@ -100,11 +98,10 @@ def find_region(img):
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.7, 0)
     # save(img, "dilate", img.dilate)
     # save(img, "divide", img.divide)
-    save(img, "cannyG", img.cannyG)
-    # save(img, "cannyS", img.cannyS)
-    save(img, "cannyV", img.cannyV)
-    save(img, "cannyGSV", img.canny)
-    save(img, "medgesforcontour", img.medges)
+    # save(img, "cannyG", img.cannyG)
+    # save(img, "cannyV", img.cannyV)
+    # save(img, "cannyGSV", img.canny)
+    # save(img, "medgesforcontour", img.medges)
     save(img, "contours", drawn_contours)
 
     if not got_hull:
@@ -275,6 +272,7 @@ def reduce_hull(img):
     img.G = cv2.resize(img.G, (img.hwidth, img.hheigth))
     img.gray = cv2.resize(img.gray, (img.hwidth, img.hheigth))
     img.claheG = cv2.resize(img.claheG, (img.hwidth, img.hheigth))
+    # img.claheH = cv2.resize(img.claheH, (img.hwidth, img.hheigth))
     # img.claheS = cv2.resize(img.claheS, (img.hwidth, img.hheigth))
     img.claheV = cv2.resize(img.claheV, (img.hwidth, img.hheigth))
     img.fedges = cv2.resize(img.fedges, (img.hwidth, img.hheigth))
@@ -497,18 +495,15 @@ def find_corners(img, inter):
 def pre_process(img):
     print("applying filter to image...")
     img.G = cv2.GaussianBlur(img.gray, (5,5), 1)
-    # img.S = cv2.GaussianBlur(img.S)
     img.V = cv2.GaussianBlur(img.V, (5,5), 1)
 
     print("applying distributed histogram equalization to image...")
     clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(10, 10))
     img.claheG = clahe.apply(img.G)
-    # img.claheS = clahe.apply(img.S)
     img.claheV = clahe.apply(img.V)
 
     print("applying filter again...")
     img.claheG = lf.ffilter(img.claheG)
-    # img.claheS = lf.ffilter(img.claheS)
     img.claheV = lf.ffilter(img.claheV)
 
     # save(img, "claheG", img.claheG)
