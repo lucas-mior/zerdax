@@ -21,11 +21,37 @@ def find_board(img):
 
     img = bound_region(img)
 
-    save(img, "fedges", img.fedges)
-    # save(img, "hull", img.hull)
+    # save(img, "fedges", img.fedges)
+    save(img, "hull", img.hull)
+    save(img, "hullcolor", img.hullcolor)
 
-    img.canny = find_canny(img.clahe, wmin = 9.5)
-    save(img, "canny0", img.canny)
+    img.HSV = cv2.cvtColor(img.hullcolor,cv2.COLOR_BGR2HSV)
+    img.H = img.HSV[:,:,0]
+    img.S = img.HSV[:,:,1]
+    img.V = img.HSV[:,:,2]
+    save(img, "H", img.H)
+    save(img, "S", img.S)
+    save(img, "V", img.V)
+
+    img.H = clahe.apply(img.H)
+    img.S = clahe.apply(img.S)
+    img.V = clahe.apply(img.V)
+
+    img.H = lf.ffilter(img.H)
+    img.S = lf.ffilter(img.S)
+    img.V = lf.ffilter(img.V)
+
+    img.cannyS = find_canny(img.S, wmin = 6)
+    save(img, "cannyS", img.cannyS)
+    img.cannyV = find_canny(img.V, wmin = 6)
+    save(img, "cannyV", img.cannyV)
+    img.union = cv2.bitwise_or(img.cannyS, img.cannyV)
+    save(img, "union", img.union)
+    img.cannyhull = find_canny(img.hull, wmin = 7)
+    save(img, "cannyhull", img.cannyhull)
+    img.canny = cv2.bitwise_or(img.union, img.cannyhull)
+    save(img, "canny000", img.canny)
+
     img = find_angles(img)
 
     lines,inter = magic_lines(img)
@@ -294,14 +320,14 @@ def magic_lines(img):
     save(img, "close", img.canny)
     h_maxg0 = 200
     h_minl0 = round(img.slen)
-    h_thrv0 = round(h_minl0 / 1.2)
+    h_thrv0 = round(h_minl0 / 1.5)
     h_angl0 = np.pi / 1040
 
     h_maxg = h_maxg0
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
-    minlines = 19
+    minlines = 22
     while h_angl < (np.pi / 480):
         th = 180*(h_angl/np.pi)
         lines = cv2.HoughLinesP(img.canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
