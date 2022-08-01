@@ -58,10 +58,25 @@ def bound_region(img):
     img.hull = img.gray[x0:x1+1, y0:y1+1]
     img.hullBGR = img.BGR[x0:x1+1, y0:y1+1]
     img.gray3ch = img.gray3ch[x0:x1+1, y0:y1+1]
-    img.hxoff = x0
-    img.hyoff = y0
     img = reduce_hull(img)
 
+    return img
+
+def reduce_hull(img):
+    img.hwidth = 900
+    img.hfact = img.hwidth / img.hull.shape[1]
+    img.hheigth = round(img.hfact * img.hull.shape[0])
+
+    img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
+    img.hullBGR = cv2.resize(img.hullBGR, (img.hwidth, img.hheigth))
+    img.gray3ch = cv2.resize(img.gray3ch, (img.hwidth, img.hheigth))
+    img.medges = cv2.resize(img.medges, (img.hwidth, img.hheigth))
+    img.G = cv2.resize(img.G, (img.hwidth, img.hheigth))
+    img.gray = cv2.resize(img.gray, (img.hwidth, img.hheigth))
+    img.claheG = cv2.resize(img.claheG, (img.hwidth, img.hheigth))
+    img.claheV = cv2.resize(img.claheV, (img.hwidth, img.hheigth))
+    img.fedges = cv2.resize(img.fedges, (img.hwidth, img.hheigth))
+    img.harea = img.hwidth * img.hheigth
     return img
 
 def find_region(img):
@@ -256,23 +271,6 @@ def find_intersections(img, lines):
 
     inter = np.array(inter, dtype='int32')
     return inter
-
-def reduce_hull(img):
-    img.hwidth = 900
-    img.hfact = img.hwidth / img.hull.shape[1]
-    img.hheigth = round(img.hfact * img.hull.shape[0])
-
-    img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
-    img.hullBGR = cv2.resize(img.hullBGR, (img.hwidth, img.hheigth))
-    img.gray3ch = cv2.resize(img.gray3ch, (img.hwidth, img.hheigth))
-    img.medges = cv2.resize(img.medges, (img.hwidth, img.hheigth))
-    img.G = cv2.resize(img.G, (img.hwidth, img.hheigth))
-    img.gray = cv2.resize(img.gray, (img.hwidth, img.hheigth))
-    img.claheG = cv2.resize(img.claheG, (img.hwidth, img.hheigth))
-    img.claheV = cv2.resize(img.claheV, (img.hwidth, img.hheigth))
-    img.fedges = cv2.resize(img.fedges, (img.hwidth, img.hheigth))
-    img.harea = img.hwidth * img.hheigth
-    return img
 
 def magic_lines(img):
     got_hough = False
