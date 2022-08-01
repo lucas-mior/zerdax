@@ -57,10 +57,10 @@ def bound_region(img):
     img.fedges = img.fedges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.hull = img.gray[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.hullBGR = img.BGR[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
+    img.gray3ch = img.gray3ch[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.hxoff = limx[0]
     img.hyoff = limy[0]
     img = reduce_hull(img)
-    img.hull3ch = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR)
 
     return img
 
@@ -91,7 +91,6 @@ def find_region(img):
             break
         else:
             print("{} < {} : {}".format(a, Amin, a/Amin))
-            print("problema é area")
 
         Amin = max(A0, round(Amin - 0.02*img.area))
         Wc = min(W0, Wc + 0.5)
@@ -207,7 +206,7 @@ def find_angles(img):
         for x1,y1,x2,y2,r,t in line:
             cv2.line(drawn_lines,(x1,y1),(x2,y2), (0,0,255), 3)
     img.select = drawn_lines[:,:,2]
-    drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, drawn_lines, 0.7, 0)
+    drawn_lines = cv2.addWeighted(img.gray3ch, 0.4, drawn_lines, 0.7, 0)
     save(img, "select", drawn_lines)
 
     img.select_lines = lines
@@ -265,6 +264,7 @@ def reduce_hull(img):
 
     img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
     img.hullBGR = cv2.resize(img.hullBGR, (img.hwidth, img.hheigth))
+    img.gray3ch = cv2.resize(img.gray3ch, (img.hwidth, img.hheigth))
     img.medges = cv2.resize(img.medges, (img.hwidth, img.hheigth))
     img.G = cv2.resize(img.G, (img.hwidth, img.hheigth))
     img.gray = cv2.resize(img.gray, (img.hwidth, img.hheigth))
@@ -321,7 +321,7 @@ def magic_lines(img):
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
             cv2.line(draw_lines,(x1,y1),(x2,y2), (0,0,255), 3)
-    drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, draw_lines, 0.7, 0)
+    drawn_lines = cv2.addWeighted(img.gray3ch, 0.4, draw_lines, 0.7, 0)
     save(img, "hough_magic", drawn_lines)
 
     dummy = np.copy(img.select_lines[:,:,0:6])
@@ -336,7 +336,7 @@ def magic_lines(img):
     drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
     for p in inter:
         cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
-    drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
+    drawn_circles = cv2.addWeighted(img.gray3ch, 0.4, drawn_circles, 0.7, 0)
     save(img, "intersections", drawn_circles)
     if not got_hough:
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
@@ -457,11 +457,11 @@ def find_corners(img, inter):
     TR = BL
     BL = dummy
 
-    drawn_circles = np.copy(img.hull3ch) * 0
+    drawn_circles = np.copy(img.gray3ch) * 0
     for p in BR, BL, TR, TL:
         cv2.circle(drawn_circles, p, radius=7, color=(0, 255, 0), thickness=-1)
 
-    drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
+    drawn_circles = cv2.addWeighted(img.gray3ch, 0.4, drawn_circles, 0.7, 0)
     save(img, "corners", drawn_circles)
 
     corners = np.array([BR, BL, TR, TL])
