@@ -21,10 +21,10 @@ def find_board(img):
 
     img = bound_region(img)
 
-    save(img, "hull", img.hull)
+    # save(img, "hull", img.hull)
 
     img.canny = find_canny(img.clahe, wmin = 8)
-    img.angles, img.select_lines = find_angles(img)
+    img = find_angles(img)
 
     lines,inter = magic_lines(img)
     img.corners = find_corners(img, inter)
@@ -87,8 +87,8 @@ def find_region(img, skip=False):
         wc += 1
 
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
-    save(img, "contours", drawn_contours)
-    save(img, "medgesforcontour", img.medges)
+    # save(img, "contours", drawn_contours)
+    # save(img, "medgesforcontour", img.medges)
 
     if not got_hull:
         print("finding board region failed")
@@ -123,12 +123,18 @@ def find_morph(img, Amin):
     return img, a
 
 def find_canny(image, wmin = 6):
-    c_thrl0 = 80
-    c_thrh0 = 200
+    c_thrl0 = 90
+    c_thrh0 = 210
     c_thrl = c_thrl0
     c_thrh = c_thrh0
+    if wmin < 7.5:
+        clmin = 10
+        ctmin = 30
+    else:
+        clmin = 40
+        ctmin = 65
 
-    while c_thrh > 30:
+    while c_thrh > ctmin:
         canny = cv2.Canny(image, c_thrl, c_thrh)
         w = canny.mean()
         if w > wmin:
@@ -137,8 +143,8 @@ def find_canny(image, wmin = 6):
         else:
             if wmin - w < wmin:
                 print("{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
-        c_thrl = max(10, c_thrl - 9)
-        c_thrh = max(30, c_thrh - 9)
+        c_thrl = max(clmin, c_thrl - 5)
+        c_thrh = max(ctmin, c_thrh - 5)
 
     if w < wmin:
         print("Canny failed: {0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
@@ -190,7 +196,10 @@ def find_angles(img):
     drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, drawn_lines, 0.7, 0)
     save(img, "select", drawn_lines)
 
-    return angles, lines
+    img.select_lines = lines
+    img.angles = angles
+    img.slen = img.select_lines[:,0,4].min()
+    return img
 
 def find_intersections(img, lines):
     inter = []
@@ -263,31 +272,31 @@ def update_hull(img):
     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.hull3ch, 0.4, drawn_contours, 0.7, 0)
-    save(img, "updatehull", drawn_contours)
+    # save(img, "updatehull", drawn_contours)
     return hullxy
 
 def magic_lines(img):
     got_hough = False
-    k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
+    k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     img.canny = cv2.morphologyEx(img.canny, cv2.MORPH_DILATE, k_dil)
     save(img, "cannylast", img.canny)
-    h_maxg0 = 50
-    h_minl0 = round((img.hwidth + img.hheigth)*0.2)
-    h_thrv0 = round(h_minl0 / 2)
-    h_angl0 = np.pi / 720
+    h_maxg0 = 100
+    h_minl0 = round(img.slen)
+    h_thrv0 = round(h_minl0 / 1.2)
+    h_angl0 = np.pi / 1040
 
     h_maxg = h_maxg0
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
-    minlines = 32
-    while h_angl < (np.pi / 270):
+    minlines = 30
+    while h_angl < (np.pi / 720):
         th = 180*(h_angl/np.pi)
         lines = cv2.HoughLinesP(img.canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
         if lines is not None:
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
-            lines = filter_angles(img, lines)
+            # lines = filter_angles(img, lines)
             if lines.shape[0] >= minlines:
                 print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
                 got_hough = True
@@ -296,8 +305,8 @@ def magic_lines(img):
                 if th > random.uniform(0, th*4):
                     print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
         if h_minl > h_minl0 / 2:
-            h_minl -= 10
-            h_thrv = round(h_minl / 2)
+            h_minl -= 1
+            h_thrv = round(h_minl / 1.2)
 
         h_angl += np.pi / 14400
 
@@ -310,6 +319,7 @@ def magic_lines(img):
                 cv2.line(draw_lines,(x1,y1),(x2,y2), (0,0,255), 3)
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, draw_lines, 0.7, 0)
         save(img, "hough_magic", drawn_lines)
+        exit()
 
         dummy = np.copy(img.select_lines[:,:,0:6])
         lines = np.append(lines, dummy, axis=0)
@@ -325,7 +335,7 @@ def magic_lines(img):
         for p in inter:
             cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
         drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
-        save(img, "intersections", drawn_circles)
+        # save(img, "intersections", drawn_circles)
     else:
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         exit()
