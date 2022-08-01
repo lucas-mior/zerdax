@@ -32,11 +32,13 @@ def find_board(img):
 
 def create_cannys(img, w = 6):
     print("finding edges for gray, S, V images...")
-    img.cannyG = find_canny(img.claheG, wmin = w-1)
+    img.cannyG = find_canny(img.claheG, wmin = w)
     # img.cannyS = find_canny(img.claheS, wmin = w-4)
-    img.cannyV = find_canny(img.claheV, wmin = w+1)
+    img.cannyV = find_canny(img.claheV, wmin = w)
     # img.canny = cv2.bitwise_or(img.cannyS, img.cannyV)
     img.canny = cv2.bitwise_or(img.cannyG, img.cannyV)
+    k_close = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+    img.canny = cv2.morphologyEx(img.canny, cv2.MORPH_CLOSE, k_close)
     return img
 
 def bound_region(img):
@@ -495,7 +497,7 @@ def pre_process(img):
     img.V = cv2.GaussianBlur(img.V, (5,5), 1)
 
     print("applying distributed histogram equalization to image...")
-    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(8, 8))
+    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(10, 10))
     img.claheG = clahe.apply(img.G)
     # img.claheS = clahe.apply(img.S)
     img.claheV = clahe.apply(img.V)
