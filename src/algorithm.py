@@ -25,10 +25,12 @@ def reduce(img):
 def algorithm(filename):
     img = Image(filename)
     img = read_image(img)
+
     img = find_board(img)
     img = find_squares(img)
     img = find_pieces(img)
     img = generate_fen(img)
+
     draw_fen_terminal(img.longfen)
 
     return img.fen
