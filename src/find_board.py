@@ -75,14 +75,12 @@ def find_region(img, skip=False):
                 d1 = radius(quad[0][0], quad[0][1], quad[1][0], quad[1][1])
                 d2 = radius(quad[2][0], quad[2][1], quad[3][0], quad[3][1])
                 d3 = radius(quad[0][0], quad[0][1], quad[3][0], quad[3][1])
-                if abs(d1 - d3) < 80*(a/Amin) and abs(d1 - d2) < 80*(a/Amin):
+                if abs(d1 - d3) < 90*(a/Amin) and abs(d1 - d2) < 90*(a/Amin):
                     got_hull = True
                     break
                 else:
-                    print("problema é distancias")
-                    print("d1:", d1)
-                    print("d2:", d2)
-                    print("d3:", d3)
+                    print("problema é distancias:")
+                    print(d1, d2, d3)
             else:
                 print("problema é 4 lados")
         else:
@@ -93,11 +91,13 @@ def find_region(img, skip=False):
 
         drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
         cv2.drawContours(drawn_contours, [img.hullxy], -1, (255, 0, 0), thickness=3)
-        cv2.drawContours(drawn_contours, img.cont, -1, (0, 255, 0), thickness=1)
-        img.help = drawn_contours[:,:,0]
+        cv2.drawContours(drawn_contours, img.cont, -1, (0, 255, 0), thickness=5)
+        img.help = cv2.bitwise_or(img.help, drawn_contours[:,:,0])
+        img.help = cv2.bitwise_or(img.help, drawn_contours[:,:,1])
 
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
     save(img, "contours", drawn_contours)
+    exit()
 
     if not got_hull:
         print("finding board region failed")
@@ -126,8 +126,8 @@ def find_morph(img, Amin):
     a = cv2.contourArea(img.hullxy)
     img.medges = edges
 
-    save(img, "dilate", img.dilate)
-    save(img, "divide", img.divide)
+    # save(img, "dilate", img.dilate)
+    # save(img, "divide", img.divide)
     save(img, "medgesforcontour", img.medges)
 
     return img, a
