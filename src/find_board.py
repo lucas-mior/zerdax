@@ -33,7 +33,6 @@ def find_board(img):
 
     print("transforming perspective...")
     img = perspective_transform(img)
-    img.warped3ch = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR)
     save(img, "warped", img.warped)
 
     exit()

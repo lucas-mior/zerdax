@@ -9,6 +9,7 @@ import lffilter as lf
 import random
 
 def find_squares(img):
+    img.warped3ch = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR)
     img.wfilt = lf.ffilter(img.warped)
 
     img.wcanny = find_wcanny(img, wmin = 12)
