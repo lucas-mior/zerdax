@@ -66,17 +66,19 @@ def reduce_hull(img):
     img.hwidth = 900
     img.hfact = img.hwidth / img.hull.shape[1]
     img.hheigth = round(img.hfact * img.hull.shape[0])
-
-    img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
-    img.hullBGR = cv2.resize(img.hullBGR, (img.hwidth, img.hheigth))
-    img.gray3ch = cv2.resize(img.gray3ch, (img.hwidth, img.hheigth))
-    img.medges = cv2.resize(img.medges, (img.hwidth, img.hheigth))
-    img.G = cv2.resize(img.G, (img.hwidth, img.hheigth))
-    img.gray = cv2.resize(img.gray, (img.hwidth, img.hheigth))
-    img.claheG = cv2.resize(img.claheG, (img.hwidth, img.hheigth))
-    img.claheV = cv2.resize(img.claheV, (img.hwidth, img.hheigth))
-    img.fedges = cv2.resize(img.fedges, (img.hwidth, img.hheigth))
     img.harea = img.hwidth * img.hheigth
+    nsh = (img.hwidth, img.hheigth)
+
+    print("reducing all images to {} width".format(img.hwidth))
+    img.hull = cv2.resize(img.hull, nsh)
+    img.hullBGR = cv2.resize(img.hullBGR, nsh)
+    img.gray3ch = cv2.resize(img.gray3ch, nsh)
+    img.medges = cv2.resize(img.medges, nsh)
+    img.G = cv2.resize(img.G, nsh)
+    img.gray = cv2.resize(img.gray, nsh)
+    img.claheG = cv2.resize(img.claheG, nsh)
+    img.claheV = cv2.resize(img.claheV, nsh)
+    img.fedges = cv2.resize(img.fedges, nsh)
     return img
 
 def find_region(img):
