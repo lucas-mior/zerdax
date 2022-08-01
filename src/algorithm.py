@@ -24,21 +24,7 @@ def reduce(img):
 
 def algorithm(filename):
     img = Image(filename)
-    print("reading image in BGR...")
-    img.BGR = cv2.imread(img.filename)
-    print("reducing image to 1000 width...")
-    img = reduce(img)
-    print("creating HSV representation of image...")
-    img.HSV = cv2.cvtColor(img.BGR, cv2.COLOR_BGR2HSV)
-    img.H = img.HSV[:,:,0]
-    img.S = img.HSV[:,:,1]
-    img.V = img.HSV[:,:,2]
-
-    print("converting image to grayscale...")
-    img.gray = cv2.cvtColor(img.BGR, cv2.COLOR_BGR2GRAY)
-    print("generating 3 channel gray image for drawings...")
-    img.gray3ch = cv2.cvtColor(img.gray, cv2.COLOR_GRAY2BGR)
-
+    img = read_image(img)
     img = find_board(img)
     img = find_squares(img)
     img = find_pieces(img)
@@ -58,3 +44,21 @@ def draw_fen_terminal(fen):
     print("|")
 
     print("―"*19)
+
+def read_image(img):
+    print("reading image in BGR...")
+    img.BGR = cv2.imread(img.filename)
+    print("reducing image to 1000 width...")
+    img = reduce(img)
+    print("creating HSV representation of image...")
+    img.HSV = cv2.cvtColor(img.BGR, cv2.COLOR_BGR2HSV)
+    img.H = img.HSV[:,:,0]
+    img.S = img.HSV[:,:,1]
+    img.V = img.HSV[:,:,2]
+
+    print("converting image to grayscale...")
+    img.gray = cv2.cvtColor(img.BGR, cv2.COLOR_BGR2GRAY)
+    print("generating 3 channel gray image for drawings...")
+    img.gray3ch = cv2.cvtColor(img.gray, cv2.COLOR_GRAY2BGR)
+    
+    return img
