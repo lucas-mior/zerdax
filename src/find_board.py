@@ -21,6 +21,8 @@ def find_board(img):
 
     img = bound_region(img)
 
+    save(img, "hull", img.hull)
+
     img.canny = find_canny(img.clahe, wmin = 8)
     img.angles, img.select_lines = find_angles(img)
 
@@ -67,6 +69,13 @@ def find_region(img, skip=False):
         print("Canny wc:", wc)
         img.canny = find_canny(img.filt, wmin=wc)
         img, a = find_morph(img, Amin)
+
+        drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+        cv2.drawContours(drawn_contours, img.cont,     -1, (255, 0, 0), thickness=3)
+        cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
+        cv2.drawContours(drawn_contours, [img.poly],   -1, (0, 0, 255), thickness=3)
+        img.help = cv2.bitwise_or(drawn_contours[:,:,0], drawn_contours[:,:,1])
+
         if a > Amin:
             print("{} > {} : {}".format(a, Amin, a/Amin))
             quad = img.poly[:,0,:]
@@ -88,11 +97,6 @@ def find_region(img, skip=False):
         Amin = max(0.1*img.sarea, round(Amin - 0.05*img.sarea))
         wc += 1
 
-        drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-        cv2.drawContours(drawn_contours, img.cont,     -1, (255, 0, 0), thickness=3)
-        cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
-        cv2.drawContours(drawn_contours, [img.poly],   -1, (0, 0, 255), thickness=3)
-        img.help = cv2.bitwise_or(drawn_contours[:,:,0], drawn_contours[:,:,1])
         drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
         save(img, "contours", drawn_contours)
 
