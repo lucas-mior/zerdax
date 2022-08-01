@@ -4,16 +4,16 @@ import os
 import cv2
 from auxiliar import *
 
-from tensorflow.python.framework.ops import disable_eager_execution
-disable_eager_execution()
+# from tensorflow.python.framework.ops import disable_eager_execution
+# disable_eager_execution()
 
-import numpy as np
-from keras import backend as K
-from keras.models import load_model
-from keras.layers import Input
+# import numpy as np
+# from keras import backend as K
+# from keras.models import load_model
+# from keras.layers import Input
 
-from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body
-from yolo3.utils import image_preporcess
+# from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body
+# from yolo3.utils import image_preporcess
 
 class YOLO(object):
     _defaults = {

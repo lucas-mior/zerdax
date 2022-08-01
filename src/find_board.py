@@ -21,9 +21,11 @@ def find_board(img):
 
     img = bound_region(img)
 
+    # save(img, "fedges", img.fedges)
     # save(img, "hull", img.hull)
 
     img.canny = find_canny(img.clahe, wmin = 8)
+    # save(img, "canny0", img.canny)
     img = find_angles(img)
 
     lines,inter = magic_lines(img)
@@ -44,6 +46,7 @@ def bound_region(img):
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.filt = img.filt[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.clahe = img.clahe[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
+    img.fedges = img.fedges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     limx[0] = round(limx[0] / img.sfact)
     limx[1] = round(limx[1] / img.sfact)
     limy[0] = round(limy[0] / img.sfact)
@@ -105,7 +108,8 @@ def find_morph(img, Amin):
     img.divide = cv2.divide(img.filt, img.dilate, scale = 255)
     edges = cv2.threshold(img.divide, 0, 255, cv2.THRESH_OTSU)[1]
     edges = cv2.bitwise_not(edges)
-    edges = cv2.morphologyEx(edges, cv2.MORPH_ERODE, ko, iterations = 1)
+    img.fedges = np.copy(edges)
+    # edges = cv2.morphologyEx(edges, cv2.MORPH_ERODE, ko, iterations = 1)
     edges = cv2.bitwise_or(edges, img.canny)
     edges = cv2.bitwise_or(edges, img.help)
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -258,6 +262,7 @@ def reduce_hull(img):
     img.medges = cv2.resize(img.medges, (img.hwidth, img.hheigth))
     img.filt = cv2.resize(img.filt, (img.hwidth, img.hheigth))
     img.clahe = cv2.resize(img.clahe, (img.hwidth, img.hheigth))
+    img.fedges = cv2.resize(img.fedges, (img.hwidth, img.hheigth))
     img.harea = img.hwidth * img.hheigth
     return img
 
@@ -279,7 +284,10 @@ def magic_lines(img):
     got_hough = False
     k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     img.canny = cv2.morphologyEx(img.canny, cv2.MORPH_DILATE, k_dil)
-    save(img, "cannylast", img.canny)
+    img.canny = cv2.bitwise_and(img.canny, img.fedges)
+    # save(img, "and", img.canny)
+    img.canny = cv2.morphologyEx(img.canny, cv2.MORPH_CLOSE, k_dil)
+    save(img, "close", img.canny)
     h_maxg0 = 100
     h_minl0 = round(img.slen)
     h_thrv0 = round(h_minl0 / 1.2)
@@ -319,7 +327,6 @@ def magic_lines(img):
                 cv2.line(draw_lines,(x1,y1),(x2,y2), (0,0,255), 3)
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, draw_lines, 0.7, 0)
         save(img, "hough_magic", drawn_lines)
-        exit()
 
         dummy = np.copy(img.select_lines[:,:,0:6])
         lines = np.append(lines, dummy, axis=0)
