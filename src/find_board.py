@@ -54,18 +54,18 @@ def bound_region(img):
     margin = 10
     print("adding {} pixels margin...".format(margin))
     x0 = max(y-margin, 0)
-    x1 = min(y+h+margin, img.width)
+    x1 = min(y+h+margin, img.width)+1
     y0 = max(x-margin, 0)
-    y1 = max(x+w+margin, img.heigth)
+    y1 = max(x+w+margin, img.heigth)+1
 
-    img.medges = img.medges[x0:x1+1, y0:y1+1]
-    img.G = img.G[x0:x1+1, y0:y1+1]
-    img.claheG = img.claheG[x0:x1+1, y0:y1+1]
-    img.claheV = img.claheV[x0:x1+1, y0:y1+1]
-    img.fedges = img.fedges[x0:x1+1, y0:y1+1]
-    img.hull = img.gray[x0:x1+1, y0:y1+1]
-    img.hullBGR = img.BGR[x0:x1+1, y0:y1+1]
-    img.gray3ch = img.gray3ch[x0:x1+1, y0:y1+1]
+    img.medges = img.medges[x0:x1, y0:y1]
+    img.G = img.G[x0:x1, y0:y1]
+    img.claheG = img.claheG[x0:x1, y0:y1]
+    img.claheV = img.claheV[x0:x1, y0:y1]
+    img.fedges = img.fedges[x0:x1, y0:y1]
+    img.hull = img.gray[x0:x1, y0:y1]
+    img.hullBGR = img.BGR[x0:x1, y0:y1]
+    img.gray3ch = img.gray3ch[x0:x1, y0:y1]
     return img
 
 def reduce_hull(img):
