@@ -25,9 +25,11 @@ def reduce(img):
 def algorithm(filename):
     img = Image(filename)
     print("reading image...")
-    img.color = cv2.imread(img.filename)
+    img.BGR = cv2.imread(img.filename)
+    print("creating HSV representatio of image...")
+    img.HSV = cv2.cvtColor(img.BGR, cv2.COLOR_BGR2HSV)
     print("converting image to grayscale...")
-    img.gray = cv2.cvtColor(img.color, cv2.COLOR_BGR2GRAY)
+    img.gray = cv2.cvtColor(img.BGR, cv2.COLOR_BGR2GRAY)
     print("reducing image to 1000 width...")
     img = reduce(img)
     print("generating 3 channel gray image for drawings...")

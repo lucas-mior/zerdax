@@ -23,9 +23,8 @@ def find_board(img):
 
     # save(img, "fedges", img.fedges)
     save(img, "hull", img.hull)
-    save(img, "hullcolor", img.hullcolor)
+    save(img, "hullBGR", img.hullBGR)
 
-    img.HSV = cv2.cvtColor(img.hullcolor,cv2.COLOR_BGR2HSV)
     img.H = img.HSV[:,:,0]
     img.S = img.HSV[:,:,1]
     img.V = img.HSV[:,:,2]
@@ -79,7 +78,7 @@ def bound_region(img):
     limy[1] = round(limy[1] / img.sfact)
 
     img.hull = img.gray[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    img.hullcolor = img.color[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
+    img.hullBGR = img.BGR[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.hxoff = limx[0]
     img.hyoff = limy[0]
     img = reduce_hull(img)
@@ -285,7 +284,7 @@ def reduce_hull(img):
     img.hheigth = round(img.hfact * img.hull.shape[0])
 
     img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
-    img.hullcolor = cv2.resize(img.hullcolor, (img.hwidth, img.hheigth))
+    img.hullBGR = cv2.resize(img.hullBGR, (img.hwidth, img.hheigth))
     img.medges = cv2.resize(img.medges, (img.hwidth, img.hheigth))
     img.filt = cv2.resize(img.filt, (img.hwidth, img.hheigth))
     img.clahe = cv2.resize(img.clahe, (img.hwidth, img.hheigth))

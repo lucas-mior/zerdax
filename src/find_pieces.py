@@ -160,7 +160,7 @@ def find_pieces(img):
     img.pieces = np.zeros((32,6), dtype='int32')
 
     yolo = YOLO()
-    r_image, ObjectsList = yolo.detect_img(img.hullcolor)
+    r_image, ObjectsList = yolo.detect_img(img.hullRGB)
     yolo.close_session()
     img.yolopieces = r_image
     img.pieces = ObjectsList
