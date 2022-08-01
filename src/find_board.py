@@ -344,8 +344,7 @@ def magic_lines(img):
     return lines,inter
 
 def filter_lines(img, lines):
-    rem = np.empty(lines.shape[0])
-    rem = np.int32(rem)
+    rem = np.empty(lines.shape[0], dtype='int32')
 
     i = 0
     for line in lines:
@@ -367,8 +366,7 @@ def filter_lines(img, lines):
     return lines
 
 def filter_angles(img, lines, tol = 15):
-    rem = np.empty(lines.shape[0])
-    rem = np.int32(rem)
+    rem = np.empty(lines.shape[0], dtype='int32')
 
     i = 0
     for line in lines:
