@@ -315,7 +315,7 @@ def magic_lines(img):
 
         for line in lines:
             for x1,y1,x2,y2,r,t in line:
-                cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
+                cv2.line(draw_lines,(x1,y1),(x2,y2), (0,0,255), 3)
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, draw_lines, 0.7, 0)
         save(img, "hough_final", drawn_lines)
 
