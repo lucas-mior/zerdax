@@ -58,10 +58,10 @@ def bound_region(img):
     y0 = max(x-margin, 0)
     y1 = max(x+w+margin, img.heigth)+1
 
-    img.medges = img.medges[x0:x1, y0:y1]
     img.G = img.G[x0:x1, y0:y1]
     img.claheG = img.claheG[x0:x1, y0:y1]
     img.claheV = img.claheV[x0:x1, y0:y1]
+    img.medges = img.medges[x0:x1, y0:y1]
     img.fedges = img.fedges[x0:x1, y0:y1]
     img.hull = img.gray[x0:x1, y0:y1]
     img.hullBGR = img.BGR[x0:x1, y0:y1]
@@ -76,15 +76,14 @@ def reduce_hull(img):
     nsh = (img.hwidth, img.hheigth)
 
     print("reducing all images to {} width".format(img.hwidth))
-    img.hull = cv2.resize(img.hull, nsh)
+    img.G       = cv2.resize(img.G, nsh)
+    img.claheG  = cv2.resize(img.claheG, nsh)
+    img.claheV  = cv2.resize(img.claheV, nsh)
+    img.medges  = cv2.resize(img.medges, nsh)
+    img.fedges  = cv2.resize(img.fedges, nsh)
+    img.hull    = cv2.resize(img.hull, nsh)
     img.hullBGR = cv2.resize(img.hullBGR, nsh)
     img.gray3ch = cv2.resize(img.gray3ch, nsh)
-    img.medges = cv2.resize(img.medges, nsh)
-    img.G = cv2.resize(img.G, nsh)
-    img.gray = cv2.resize(img.gray, nsh)
-    img.claheG = cv2.resize(img.claheG, nsh)
-    img.claheV = cv2.resize(img.claheV, nsh)
-    img.fedges = cv2.resize(img.fedges, nsh)
     return img
 
 def find_region(img):
