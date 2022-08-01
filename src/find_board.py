@@ -496,8 +496,8 @@ def perspective_transform(img):
     TL = img.corners[3]
     orig_points = np.array(((TL[0], TL[1]), (TR[0], TR[1]), (BR[0], BR[1]), (BL[0], BL[1])), dtype="float32")
 
-    width = 412
-    height = 412
+    width = 512
+    height = 512
     img.wwidth = width
     img.wheigth = width
 
@@ -507,4 +507,3 @@ def perspective_transform(img):
     img.warped = cv2.warpPerspective(img.hull, img.warpMatrix, (width, height))
 
     return img
-

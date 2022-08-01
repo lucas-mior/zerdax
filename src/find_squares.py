@@ -259,7 +259,7 @@ def magic_vert_hori(img, vert, hori):
         new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 400, 0,0]]], dtype='int32')
         vert = np.append(vert, new, axis=0)
         vert = vert[vert[:,0,0].argsort()]
-    while abs(vert[-1,0,0] - 412) > (medv + 10):
+    while abs(vert[-1,0,0] - 512) > (medv + 10):
         new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,400, 0,0]]], dtype='int32')
         vert = np.append(vert, new, axis=0)
         vert = vert[vert[:,0,0].argsort()]
@@ -267,7 +267,7 @@ def magic_vert_hori(img, vert, hori):
         new = np.array([[[10, hori[0,0,1]-medh, 400, hori[0,0,1]-medh, 0,0]]], dtype='int32')
         hori = np.append(hori, new, axis=0)
         hori = hori[hori[:,0,1].argsort()]
-    while abs(hori[-1,0,1] - 412) > (medh + 10):
+    while abs(hori[-1,0,1] - 512) > (medh + 10):
         new = np.array([[[10, hori[-1,0,1]+medh, 400, hori[-1,0,1]+medh, 0,0]]], dtype='int32')
         hori = np.append(hori, new, axis=0)
         hori = hori[hori[:,0,1].argsort()]
@@ -290,7 +290,7 @@ def magic_vert_hori(img, vert, hori):
 
     if vert.shape[0] == 10:
         d1 = abs(vert[0,0,0]-0)
-        d2 = abs(vert[-1,0,0]-412)
+        d2 = abs(vert[-1,0,0]-512)
         if d1 < d2:
             vert = vert[1:]
         else:
@@ -300,7 +300,7 @@ def magic_vert_hori(img, vert, hori):
 
     if hori.shape[0] == 10:
         d1 = abs(hori[0,0,1]-0)
-        d2 = abs(hori[-1,0,1]-412)
+        d2 = abs(hori[-1,0,1]-512)
         if d1 < d2:
             hori = hori[1:]
         else:
