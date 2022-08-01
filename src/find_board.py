@@ -44,7 +44,7 @@ def bound_region(img):
     x,y,w,h = cv2.boundingRect(img.hullxy)
     limx = np.zeros((2), dtype='int32')
     limy = np.zeros((2), dtype='int32')
-    limx[0] = max(y-55, 0)
+    limx[0] = max(y-25, 0)
     limx[1] = min(y+h+25, img.width)
     limy[0] = max(x-25, 0)
     limy[1] = max(x+w+25, img.heigth)
@@ -66,18 +66,20 @@ def bound_region(img):
 
 def find_region(img):
     got_hull = False
-    wc = 5
+    Wc = 5
+    W0 = 10
     Amin = round(0.5 * img.area)
+    A0 = round(0.1 * img.area)
     img.help = np.copy(img.G) * 0
-    while wc <= 11:
+    while Wc <= W0 or Amin >= A0:
         print("Área mínima:", Amin)
-        print("Canny wc:", wc)
-        img = create_cannys(img, w = wc)
+        print("Canny Wc:", Wc)
+        img = create_cannys(img, w = Wc)
         img, a = find_morph(img)
 
         drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-        cv2.drawContours(drawn_contours, img.cont,     -1, (255, 0, 0), thickness=3)
-        cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
+        cv2.drawContours(drawn_contours, img.cont,     -1, (255, 0, 0), thickness=1)
+        cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=1)
         img.help = cv2.bitwise_or(drawn_contours[:,:,0], drawn_contours[:,:,1])
 
         if a > Amin:
@@ -85,10 +87,11 @@ def find_region(img):
             got_hull = True
             break
         else:
+            print("{} < {} : {}".format(a, Amin, a/Amin))
             print("problema é area")
 
-        Amin = max(0.1*img.area, round(Amin - 0.01*img.area))
-        wc += 0.5
+        Amin = max(A0, round(Amin - 0.01*img.area))
+        Wc = min(W0, Wc + 0.5)
 
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.7, 0)
     save(img, "contours", drawn_contours)
