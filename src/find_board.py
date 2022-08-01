@@ -10,16 +10,18 @@ import random
 
 def find_board(img):
     print("applying filter to image...")
-    img.filt0 = lf.ffilter(img.sgray)
+    img.filt = lf.ffilter(img.sgray)
+
+    print("applying distributed histogram equalization to image...")
+    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(10, 10))
+    img.clahe = clahe.apply(img.filt)
+
     print("finding region containing chess board...")
     img = find_region(img)
 
-    if not img.got_hull:
-        print("finding board region failed [find_morph()]")
-
     img = bound_region(img)
 
-    img.canny = find_canny(img, wmin = 8)
+    img.canny = find_canny(img.clahe, wmin = 8)
     img.angles, img.select_lines = find_angles(img)
 
     lines,inter = magic_lines(img)
@@ -54,100 +56,87 @@ def bound_region(img):
 
     return img
 
-def find_region(img, maxkd = 12, cmax = 12, nymax = 8, skip=False):
-    c = 3
-    wc = 6
-    a = 0
-    c0 = 12
-    c5 = 0
-    Amin = (c0-c5)*0.05 * img.sarea
-    while c <= cmax or c5 <= 10:
-        print("Amin: ", round(Amin))
-        print("Clahe: ", c)
-        alast = a
-        clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(c, c))
-        img.clahe = clahe.apply(img.filt0)
-        img.filt = lf.ffilter(img.clahe)
-        img.canny = find_canny(img, wmin=wc)
-        img, a = find_morph(img, Amin, maxkd, skip)
-        if c <= 12:
-            fmedges = img.medges
+def find_region(img, maxkd = 12, skip=False):
+    got_hull = False
+    img.filt = lf.ffilter(img.clahe)
+    wc = 8
+    Amin = round(0.5 * img.sarea)
+    img.help = np.copy(img.filt) * 0
+    while wc <= 12:
+        print("Área mínima:", Amin)
+        print("Canny wc:", wc)
+        img.canny = find_canny(img.filt, wmin=wc)
+        img, a = find_morph(img, Amin)
+        if a > Amin:
+            quad = img.hullxy[:,0,:]
+            if quad.shape[0] == 4:
+                d1 = radius(quad[0][0], quad[0][1], quad[1][0], quad[1][1])
+                d3 = radius(quad[0][0], quad[0][1], quad[3][0], quad[3][1])
+                d2 = radius(quad[2][0], quad[2][1], quad[3][0], quad[3][1])
+                if abs(d1 - d3) < 50 and abs(d1 - d2) < 80:
+                    got_hull = True
+                    break
+        Amin = max(0.1*img.sarea, round(Amin - 0.05*img.sarea))
+        wc += 1
 
-        if img.got_hull:
-            if c5 >= 5:
-                img.brect = False
-            else:
-                img.brect = True
-            break
-        else:
-            print("{} < {}".format(round(a), round(Amin)))
-            if abs(a - alast) < img.sarea*0.01:
-                print("c5 = ", c5, "NOT increasing")
-                if c5 < 10:
-                    c5 += 0.8
-                    Amin = (c0-c5)*0.05 * img.sarea
-            if c <= cmax:
-                c += 1
-            if wc <= nymax:
-                wc += 0.5
+    drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+    cv2.drawContours(drawn_contours, [img.hullxy], -1, (255, 0, 0), thickness=3)
+    cv2.drawContours(drawn_contours, img.cont, -1, (0, 255, 0), thickness=3)
+    drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
+    save(img, "contours", drawn_contours)
 
-    img.medges = fmedges
+    if not got_hull:
+        print("finding board region failed")
+        exit()
+
     return img
 
-def find_morph(img, Amin, kd=5, skip=False):
-    img.got_hull = False
+def find_morph(img, Amin):
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+    kd = 10
     kx = kd+round(kd/3)
     k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kx))
-    img.dilate = cv2.morphologyEx(img.filt, cv2.MORPH_DILATE, k_dil)
-    img.divide = cv2.divide(img.filt, img.dilate, scale = 255)
-    edges_thr = cv2.threshold(img.divide, 0, 255, cv2.THRESH_OTSU)[1]
-    edges_bin = cv2.bitwise_not(edges_thr)
-
-    edges_bin = cv2.morphologyEx(edges_bin, cv2.MORPH_ERODE, ko, iterations = 1)
-    edges_wcanny = cv2.bitwise_or(img.canny, edges_bin)
-    if skip:
-        edges_wcanny = cv2.bitwise_or(img.help, edges_wcanny)
-    contours, _ = cv2.findContours(edges_wcanny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    dilate = cv2.morphologyEx(img.filt, cv2.MORPH_DILATE, k_dil)
+    divide = cv2.divide(img.filt, dilate, scale = 255)
+    edges = cv2.threshold(divide, 0, 255, cv2.THRESH_OTSU)[1]
+    edges = cv2.bitwise_not(edges)
+    edges = cv2.morphologyEx(edges, cv2.MORPH_ERODE, ko, iterations = 1)
+    edges = cv2.bitwise_or(edges, img.canny)
+    edges = cv2.bitwise_or(edges, img.help)
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     areas = [cv2.contourArea(c) for c in contours]
-    max_index = np.argmax(areas)
-    img.cont = contours[max_index]
+    img.cont = contours[np.argmax(areas)]
     img.hullxy = cv2.convexHull(img.cont)
-    img.hullxy = cv2.approxPolyDP(img.hullxy,0.05*cv2.arcLength(img.hullxy,True),True)
+    arclen = cv2.arcLength(img.hullxy,True)
+    img.hullxy = cv2.approxPolyDP(img.hullxy,0.05*arclen,True)
     a = cv2.contourArea(img.hullxy)
-    if a > Amin:
-        print("{} > {} @ ksize = {} [GOTHULL]".format(a, Amin, kd))
-        img.got_hull = True
-    else:
-        print("{} < {} @ ksize = {}".format(a, Amin, kd))
-
-    img.medges = edges_bin
+    img.medges = edges
 
     return img, a
 
-def find_canny(img, wmin = 6):
+def find_canny(image, wmin = 6):
     c_thrl0 = 80
     c_thrh0 = 200
     c_thrl = c_thrl0
     c_thrh = c_thrh0
 
-    while c_thrh > 12:
-        img.canny = cv2.Canny(img.filt, c_thrl, c_thrh)
-        w = img.canny.mean()
+    while c_thrh > 30:
+        canny = cv2.Canny(image, c_thrl, c_thrh)
+        w = canny.mean()
         if w > wmin:
             print("{0:0=.2f} > {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
             break
         else:
             if wmin - w < wmin:
                 print("{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
-        c_thrl = max(2, c_thrl - 9)
-        c_thrh -= 9
+        c_thrl = max(10, c_thrl - 9)
+        c_thrh = max(30, c_thrh - 9)
 
     if w < wmin:
         print("Canny failed: {0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
         exit()
 
-    return img.canny
+    return canny
 
 def find_angles(img, getangles=True):
     got_hough = False
@@ -234,9 +223,8 @@ def find_intersections(img, lines):
             x = round(determinant(d, xdiff) / div)
             y = round(determinant(d, ydiff) / div)
 
-            if not img.brect:
-                dist = cv2.pointPolygonTest(img.shull, (x, y), True)
-            if not img.brect and dist < -20:
+            dist = cv2.pointPolygonTest(img.shull, (x, y), True)
+            if dist < -10:
                 j += 1
                 continue
             elif x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
@@ -332,11 +320,10 @@ def magic_lines(img):
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, draw_lines, 0.7, 0)
 
-        if img.got_hull:
-            ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-            img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
-            img.medges = cv2.bitwise_or(img.medges, draw_lines[:,:,0])
-            img.shull = update_hull(img)
+        ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+        img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
+        img.medges = cv2.bitwise_or(img.medges, draw_lines[:,:,0])
+        img.shull = update_hull(img)
         inter = find_intersections(img, lines[:,0,:])
 
         drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
