@@ -19,10 +19,13 @@ def find_board(img):
     # save(img, "fedges", img.fedges)
     # save(img, "hull", img.hull)
     save(img, "hullBGR", img.hullBGR)
-    exit()
 
+    img = create_cannys(img, w = 7)
+    save(img, "cannyhull1", img.canny)
     img = find_angles(img)
 
+    img = create_cannys(img, w = 8)
+    save(img, "cannyhull2", img.canny)
     lines,inter = magic_lines(img)
     img.corners = find_corners(img, inter)
     exit()
@@ -50,8 +53,6 @@ def bound_region(img):
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.G = img.G[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.claheG = img.claheG[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    # img.claheH = img.claheH[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    # img.claheS = img.claheS[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.claheV = img.claheV[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.fedges = img.fedges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.hull = img.gray[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
@@ -242,11 +243,7 @@ def find_intersections(img, lines):
             x = round(determinant(d, xdiff) / div)
             y = round(determinant(d, ydiff) / div)
 
-            dist = cv2.pointPolygonTest(img.shull, (x, y), True)
-            if dist < -20:
-                j += 1
-                continue
-            elif x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
+            if x > img.hwidth or y > img.hheigth or x < 0 or y < 0:
                 j += 1
                 continue
             else:
@@ -272,8 +269,6 @@ def reduce_hull(img):
     img.G = cv2.resize(img.G, (img.hwidth, img.hheigth))
     img.gray = cv2.resize(img.gray, (img.hwidth, img.hheigth))
     img.claheG = cv2.resize(img.claheG, (img.hwidth, img.hheigth))
-    # img.claheH = cv2.resize(img.claheH, (img.hwidth, img.hheigth))
-    # img.claheS = cv2.resize(img.claheS, (img.hwidth, img.hheigth))
     img.claheV = cv2.resize(img.claheV, (img.hwidth, img.hheigth))
     img.fedges = cv2.resize(img.fedges, (img.hwidth, img.hheigth))
     img.harea = img.hwidth * img.hheigth
@@ -297,11 +292,11 @@ def magic_lines(img):
     got_hough = False
     k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     img.canny = cv2.morphologyEx(img.canny, cv2.MORPH_DILATE, k_dil)
-    save(img, "dilate", img.canny)
+    # save(img, "dilate", img.canny)
     img.canny = cv2.bitwise_and(img.canny, img.fedges)
-    save(img, "and", img.canny)
+    # save(img, "and", img.canny)
     img.canny = cv2.bitwise_or(img.canny, img.select)
-    save(img, "orselect", img.canny)
+    # save(img, "orselect", img.canny)
     img.canny = cv2.morphologyEx(img.canny, cv2.MORPH_CLOSE, k_dil)
     save(img, "close", img.canny)
     h_maxg0 = 200
