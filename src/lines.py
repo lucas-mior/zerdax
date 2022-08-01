@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 class HoughBundler:     
-    def __init__(self,min_distance=8,min_angle=20):
+    def __init__(self,min_distance=6,min_angle=15):
         self.min_distance = min_distance
         self.min_angle = min_angle
     

@@ -143,16 +143,6 @@ def filter_90(img, lines):
     lines = A
     return lines
 
-def geo_lines(img, lines):
-    lines = radius_theta(lines)
-    vert = lines[abs(lines[:,0,5]) > 45]
-    hori = lines[abs(lines[:,0,5]) < 45]
-
-    vert = vert[vert[:,0,0].argsort()]
-    hori = hori[hori[:,0,1].argsort()]
-
-    return vert, hori
-
 def get_distances(vert,hori):
     distv = np.zeros((vert.shape[0], 2), dtype='int32')
     x1 = (vert[1,0,0]+vert[1,0,2])/2

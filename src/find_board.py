@@ -21,11 +21,11 @@ def find_board(img):
 
     img = bound_region(img)
 
-    # save(img, "fedges", img.fedges)
+    save(img, "fedges", img.fedges)
     # save(img, "hull", img.hull)
 
-    img.canny = find_canny(img.clahe, wmin = 8)
-    # save(img, "canny0", img.canny)
+    img.canny = find_canny(img.clahe, wmin = 10)
+    save(img, "canny0", img.canny)
     img = find_angles(img)
 
     lines,inter = magic_lines(img)
@@ -91,7 +91,7 @@ def find_region(img, skip=False):
 
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
     # save(img, "contours", drawn_contours)
-    # save(img, "medgesforcontour", img.medges)
+    save(img, "medgesforcontour", img.medges)
 
     if not got_hull:
         print("finding board region failed")
@@ -135,8 +135,8 @@ def find_canny(image, wmin = 6):
         clmin = 10
         ctmin = 30
     else:
-        clmin = 40
-        ctmin = 65
+        clmin = 30
+        ctmin = 55
 
     while c_thrh > ctmin:
         canny = cv2.Canny(image, c_thrl, c_thrh)
@@ -196,7 +196,8 @@ def find_angles(img):
     drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
-            cv2.line(drawn_lines,(x1,y1),(x2,y2), (0,0,250), 3)
+            cv2.line(drawn_lines,(x1,y1),(x2,y2), (0,0,255), 3)
+    img.select = drawn_lines[:,:,2]
     drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, drawn_lines, 0.7, 0)
     save(img, "select", drawn_lines)
 
@@ -277,18 +278,24 @@ def update_hull(img):
     cv2.drawContours(drawn_contours, [hullxy], -1, (0, 255, 0), thickness=3)
     cv2.drawContours(drawn_contours, cont, -1, (255, 0, 0), thickness=3)
     drawn_contours = cv2.addWeighted(img.hull3ch, 0.4, drawn_contours, 0.7, 0)
-    # save(img, "updatehull", drawn_contours)
+    save(img, "updatehull", drawn_contours)
     return hullxy
 
 def magic_lines(img):
     got_hough = False
     k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+    k_ope = cv2.getStructuringElement(cv2.MORPH_RECT, (1,1))
     img.canny = cv2.morphologyEx(img.canny, cv2.MORPH_DILATE, k_dil)
+    save(img, "dilate", img.canny)
+    img.canny = cv2.morphologyEx(img.canny, cv2.MORPH_ERODE, k_dil)
+    save(img, "open", img.canny)
     img.canny = cv2.bitwise_and(img.canny, img.fedges)
-    # save(img, "and", img.canny)
+    save(img, "and", img.canny)
+    img.canny = cv2.bitwise_or(img.canny, img.select)
+    save(img, "orselect", img.canny)
     img.canny = cv2.morphologyEx(img.canny, cv2.MORPH_CLOSE, k_dil)
     save(img, "close", img.canny)
-    h_maxg0 = 100
+    h_maxg0 = 200
     h_minl0 = round(img.slen)
     h_thrv0 = round(h_minl0 / 1.2)
     h_angl0 = np.pi / 1040
@@ -297,14 +304,17 @@ def magic_lines(img):
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
-    minlines = 20
-    while h_angl < (np.pi / 720):
+    minlines = 19
+    while h_angl < (np.pi / 480):
         th = 180*(h_angl/np.pi)
         lines = cv2.HoughLinesP(img.canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
         if lines is not None:
             lines = radius_theta(lines)
             lines = filter_lines(img, lines)
             lines = filter_angles(img, lines)
+            bundler = HoughBundler()
+            lines = bundler.process_lines(lines)
+            lines = radius_theta(lines)
             if lines.shape[0] >= minlines:
                 print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
                 got_hough = True
@@ -312,38 +322,37 @@ def magic_lines(img):
             else:
                 if th > random.uniform(0, th*4):
                     print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
-        if h_minl > h_minl0 / 2:
-            h_minl -= 1
-            h_thrv = round(h_minl / 1.2)
+        # if h_minl > h_minl0 / 2:
+        #     h_minl -= 1
+        #     h_thrv = round(h_minl / 1.2)
 
         h_angl += np.pi / 14400
 
-    if got_hough:
-        drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-        draw_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+    drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+    draw_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
 
-        for line in lines:
-            for x1,y1,x2,y2,r,t in line:
-                cv2.line(draw_lines,(x1,y1),(x2,y2), (0,0,255), 3)
-        drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, draw_lines, 0.7, 0)
-        save(img, "hough_magic", drawn_lines)
+    for line in lines:
+        for x1,y1,x2,y2,r,t in line:
+            cv2.line(draw_lines,(x1,y1),(x2,y2), (0,0,255), 3)
+    drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, draw_lines, 0.7, 0)
+    save(img, "hough_magic", drawn_lines)
 
-        dummy = np.copy(img.select_lines[:,:,0:6])
-        lines = np.append(lines, dummy, axis=0)
-        lines = filter_angles(img, lines)
+    dummy = np.copy(img.select_lines[:,:,0:6])
+    lines = np.append(lines, dummy, axis=0)
+    lines = filter_angles(img, lines)
 
-        ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-        img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
-        img.medges = cv2.bitwise_or(img.medges, draw_lines[:,:,0])
-        img.shull = update_hull(img)
-        inter = find_intersections(img, lines[:,0,:])
+    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+    img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
+    img.medges = cv2.bitwise_or(img.medges, draw_lines[:,:,0])
+    img.shull = update_hull(img)
+    inter = find_intersections(img, lines[:,0,:])
 
-        drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-        for p in inter:
-            cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
-        drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
-        # save(img, "intersections", drawn_circles)
-    else:
+    drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+    for p in inter:
+        cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
+    drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
+    save(img, "intersections", drawn_circles)
+    if not got_hough:
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         exit()
     return lines,inter
