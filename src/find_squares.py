@@ -9,9 +9,6 @@ import lffilter as lf
 import random
 
 def find_squares(img):
-    img = perspective_transform(img)
-    img.warped3ch = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR)
-
     img.wfilt = lf.ffilter(img.warped)
 
     img.wcanny = find_wcanny(img, wmin = 12)
@@ -33,25 +30,6 @@ def find_squares(img):
         sqback[i] = cv2.perspectiveTransform(squares[i], img.warpInvMatrix)
 
     img.sqback = np.int32(sqback)
-
-    return img
-
-def perspective_transform(img):
-    BR = img.corners[0]
-    BL = img.corners[1]
-    TR = img.corners[2]
-    TL = img.corners[3]
-    orig_points = np.array(((TL[0], TL[1]), (TR[0], TR[1]), (BR[0], BR[1]), (BL[0], BL[1])), dtype="float32")
-
-    width = 412
-    height = 412
-    img.wwidth = width
-    img.wheigth = width
-
-    newshape = np.array([[0,0], [width-1,0], [width-1,height-1], [0,height-1]],dtype="float32")
-    img.warpMatrix = cv2.getPerspectiveTransform(orig_points, newshape)
-    _, img.warpInvMatrix = cv2.invert(img.warpMatrix)
-    img.warped = cv2.warpPerspective(img.hull, img.warpMatrix, (width, height))
 
     return img
 
