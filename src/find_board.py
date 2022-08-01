@@ -412,16 +412,16 @@ def lines_kmeans(img, lines):
         B = lines[labels==1]
 
     diff = []
-    diff.append((abs(centers[0] - 90), -85))
-    diff.append((abs(centers[0] + 90), +85))
-    diff.append((abs(centers[1] - 90), -85))
-    diff.append((abs(centers[1] + 90), +85))
+    diff.append((abs(centers[0] - 85), -85))
+    diff.append((abs(centers[0] + 85), +85))
+    diff.append((abs(centers[1] - 85), -85))
+    diff.append((abs(centers[1] + 85), +85))
     if centers.shape[0] > 2:
         diff.append((abs(centers[2] - 90), -85))
         diff.append((abs(centers[2] + 90), +85))
 
     for d,k in diff:
-        if d < 20:
+        if d < 15:
             if abs(centers[0] - k) > 15 and abs(centers[1] - k) > 15:
                 centers = np.append(centers, k)
             elif len(centers) > 2:
@@ -482,7 +482,5 @@ def pre_process(img):
     print("applying filter again...")
     img.claheG = lf.ffilter(img.claheG)
     img.claheV = lf.ffilter(img.claheV)
-
-    # save(img, "claheG", img.claheG)
 
     return img
