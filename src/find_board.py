@@ -22,7 +22,6 @@ def find_board(img):
     img = bound_region(img)
 
     save(img, "hull", img.hull)
-    exit()
 
     img.canny = find_canny(img.clahe, wmin = 8)
     img.angles, img.select_lines = find_angles(img)
@@ -147,13 +146,10 @@ def find_canny(image, wmin = 6):
 
     return canny
 
-def find_angles(img, getangles=True):
+def find_angles(img):
     got_hough = False
     h_maxg0 = 2
-    if getangles:
-        h_minl0 = round((img.hwidth + img.hheigth)*0.2)
-    else:
-        h_minl0 = round((img.swidth + img.sheigth)*0.2)
+    h_minl0 = round((img.hwidth + img.hheigth)*0.2)
     h_thrv0 = round(h_minl0 / 8)
     h_angl0 = np.pi / 360
 
@@ -168,12 +164,9 @@ def find_angles(img, getangles=True):
         if lines is not None and lines.shape[0] >= minlines:
             print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
             lines = radius_theta(lines)
-            if getangles:
-                lines = filter_lines(img, lines)
-                lines, angles = lines_kmeans(img, lines)
-                print("angles: ", angles)
-            else:
-                angles = np.array([0,0])
+            lines = filter_lines(img, lines)
+            lines, angles = lines_kmeans(img, lines)
+            print("angles: ", angles)
             got_hough = True
             break
         elif lines is not None:
@@ -195,12 +188,11 @@ def find_angles(img, getangles=True):
         print("find_angles failed")
         exit()
 
-    if getangles:
-        drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-        for line in lines:
-            for x1,y1,x2,y2,r,t in line:
-                cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
-        drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, drawn_lines, 0.7, 0)
+    drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+    for line in lines:
+        for x1,y1,x2,y2,r,t in line:
+            cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
+    drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, drawn_lines, 0.7, 0)
 
     return angles, lines
 
