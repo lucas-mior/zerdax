@@ -23,13 +23,12 @@ def find_board(img):
 
     save(img, "hull", img.hull)
 
-    img.canny = find_canny(img.clahe, wmin = 9)
+    img.canny = find_canny(img.clahe, wmin = 8)
     img.angles, img.select_lines = find_angles(img)
 
     lines,inter = magic_lines(img)
-    exit()
-
     img.corners = find_corners(img, inter)
+    exit()
 
     return img
 
@@ -326,7 +325,6 @@ def magic_lines(img):
             cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
         drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
         save(img, "intersections", drawn_circles)
-        exit()
     else:
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         exit()
@@ -401,20 +399,20 @@ def lines_kmeans(img, lines):
         B = lines[labels==1]
 
     diff = []
-    diff.append((abs(centers[0] - 90), -90))
-    diff.append((abs(centers[0] + 90), +90))
-    diff.append((abs(centers[1] - 90), -90))
-    diff.append((abs(centers[1] + 90), +90))
+    diff.append((abs(centers[0] - 90), -85))
+    diff.append((abs(centers[0] + 90), +85))
+    diff.append((abs(centers[1] - 90), -85))
+    diff.append((abs(centers[1] + 90), +85))
     if centers.shape[0] > 2:
-        diff.append((abs(centers[2] - 90), -90))
-        diff.append((abs(centers[2] + 90), +90))
+        diff.append((abs(centers[2] - 90), -85))
+        diff.append((abs(centers[2] + 90), +85))
 
     for d,k in diff:
         if d < 20:
-            if abs(centers[0] - k) > 20 and abs(centers[1] - k):
+            if abs(centers[0] - k) > 15 and abs(centers[1] - k) > 15:
                 centers = np.append(centers, k)
             elif len(centers) > 2:
-                if abs(centers[2] - k) > 20:
+                if abs(centers[2] - k) > 15:
                     centers = np.append(centers, k)
             break
 
