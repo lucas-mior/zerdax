@@ -97,7 +97,6 @@ def find_region(img, skip=False):
 
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
     save(img, "contours", drawn_contours)
-    exit()
 
     if not got_hull:
         print("finding board region failed")
