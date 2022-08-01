@@ -24,7 +24,7 @@ def find_board(img):
     save(img, "fedges", img.fedges)
     # save(img, "hull", img.hull)
 
-    img.canny = find_canny(img.clahe, wmin = 10)
+    img.canny = find_canny(img.clahe, wmin = 9.5)
     save(img, "canny0", img.canny)
     img = find_angles(img)
 
@@ -284,11 +284,8 @@ def update_hull(img):
 def magic_lines(img):
     got_hough = False
     k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-    k_ope = cv2.getStructuringElement(cv2.MORPH_RECT, (1,1))
     img.canny = cv2.morphologyEx(img.canny, cv2.MORPH_DILATE, k_dil)
     save(img, "dilate", img.canny)
-    img.canny = cv2.morphologyEx(img.canny, cv2.MORPH_ERODE, k_dil)
-    save(img, "open", img.canny)
     img.canny = cv2.bitwise_and(img.canny, img.fedges)
     save(img, "and", img.canny)
     img.canny = cv2.bitwise_or(img.canny, img.select)
