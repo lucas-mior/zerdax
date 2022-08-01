@@ -10,52 +10,52 @@ import random
 
 def find_board(img):
     print("applying filter to image...")
-    img.filt = lf.ffilter(img.sgray)
-
-    print("applying distributed histogram equalization to image...")
-    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(10, 10))
-    img.clahe = clahe.apply(img.filt)
-
-    print("finding region containing chess board...")
-    img = find_region(img)
-
-    img = bound_region(img)
-
-    # save(img, "fedges", img.fedges)
-    save(img, "hull", img.hull)
-    save(img, "hullBGR", img.hullBGR)
-
-    img.H = img.HSV[:,:,0]
-    img.S = img.HSV[:,:,1]
-    img.V = img.HSV[:,:,2]
-    save(img, "H", img.H)
-    save(img, "S", img.S)
-    save(img, "V", img.V)
-
-    img.H = clahe.apply(img.H)
-    img.S = clahe.apply(img.S)
-    img.V = clahe.apply(img.V)
-
-    img.H = lf.ffilter(img.H)
+    img.G = lf.ffilter(img.gray)
     img.S = lf.ffilter(img.S)
     img.V = lf.ffilter(img.V)
 
-    img.cannyS = find_canny(img.S, wmin = 6)
-    save(img, "cannyS", img.cannyS)
-    img.cannyV = find_canny(img.V, wmin = 6)
-    save(img, "cannyV", img.cannyV)
-    img.union = cv2.bitwise_or(img.cannyS, img.cannyV)
-    save(img, "union", img.union)
-    img.cannyhull = find_canny(img.hull, wmin = 7)
-    save(img, "cannyhull", img.cannyhull)
-    img.canny = cv2.bitwise_or(img.union, img.cannyhull)
-    save(img, "canny000", img.canny)
+    print("applying distributed histogram equalization to image...")
+    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(10, 10))
+    img.claheG = clahe.apply(img.G)
+    img.claheS = clahe.apply(img.S)
+    img.claheV = clahe.apply(img.V)
+
+    print("applying filter again...")
+    img.claheG = lf.ffilter(img.claheG)
+    img.claheS = lf.ffilter(img.claheS)
+    img.claheV = lf.ffilter(img.claheV)
+
+    print("finding image edges...")
+    img = create_cannys(img)
+    exit()
+    print("finding region containing chess board...")
+    img = find_region(img)
+    print("cropping image to fit only board region...")
+    img = bound_region(img)
+
+    # save(img, "fedges", img.fedges)
+    # save(img, "hull", img.hull)
+    # save(img, "hullBGR", img.hullBGR)
 
     img = find_angles(img)
 
     lines,inter = magic_lines(img)
     img.corners = find_corners(img, inter)
     exit()
+
+    return img
+
+def create_cannys(img):
+    G = find_canny(img.claheG, wmin = 6)
+    save(img, "cannyG", G)
+    S = find_canny(img.claheS, wmin = 6)
+    save(img, "cannyS", S)
+    V = find_canny(img.claheV, wmin = 6)
+    save(img, "cannyV", V)
+
+    SV = cv2.bitwise_or(S, V)
+    img.canny = cv2.bitwise_or(G, SV)
+    save(img, "cannyGSV", img.canny)
 
     return img
 
@@ -86,7 +86,7 @@ def bound_region(img):
 
     return img
 
-def find_region(img, skip=False):
+def find_region(img):
     got_hull = False
     img.filt = lf.ffilter(img.clahe)
     wc = 5
@@ -111,8 +111,8 @@ def find_region(img, skip=False):
         else:
             print("problema é area")
 
-        Amin = max(0.1*img.sarea, round(Amin - 0.03*img.sarea))
-        wc += 1
+        Amin = max(0.1*img.sarea, round(Amin - 0.01*img.sarea))
+        wc += 0.5
 
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
     # save(img, "contours", drawn_contours)
@@ -126,7 +126,7 @@ def find_region(img, skip=False):
 
 def find_morph(img, Amin):
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-    kd = 10
+    kd = 8
     kx = kd+round(kd/3)
     k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kx))
     img.dilate = cv2.morphologyEx(img.filt, cv2.MORPH_DILATE, k_dil)

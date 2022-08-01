@@ -15,10 +15,10 @@ class Image:
 
 def reduce(img):
     img.swidth = 1000
-    img.sfact = img.swidth / img.gray.shape[1]
-    img.sheigth = round(img.sfact * img.gray.shape[0])
+    img.sfact = img.swidth / img.BGR.shape[1]
+    img.sheigth = round(img.sfact * img.BGR.shape[0])
 
-    img.sgray = cv2.resize(img.gray, (img.swidth, img.sheigth))
+    img.BGR = cv2.resize(img.BGR, (img.swidth, img.sheigth))
     img.sarea = img.sheigth * img.swidth
     return img
 
@@ -26,14 +26,18 @@ def algorithm(filename):
     img = Image(filename)
     print("reading image...")
     img.BGR = cv2.imread(img.filename)
-    print("creating HSV representatio of image...")
-    img.HSV = cv2.cvtColor(img.BGR, cv2.COLOR_BGR2HSV)
-    print("converting image to grayscale...")
-    img.gray = cv2.cvtColor(img.BGR, cv2.COLOR_BGR2GRAY)
     print("reducing image to 1000 width...")
     img = reduce(img)
+    print("creating HSV representatio of image...")
+    img.HSV = cv2.cvtColor(img.BGR, cv2.COLOR_BGR2HSV)
+    img.H = img.HSV[:,:,0]
+    img.S = img.HSV[:,:,1]
+    img.V = img.HSV[:,:,2]
+
+    print("converting image to grayscale...")
+    img.gray = cv2.cvtColor(img.BGR, cv2.COLOR_BGR2GRAY)
     print("generating 3 channel gray image for drawings...")
-    img.gray3ch = cv2.cvtColor(img.sgray, cv2.COLOR_GRAY2BGR)
+    img.gray3ch = cv2.cvtColor(img.gray, cv2.COLOR_GRAY2BGR)
 
     img = find_board(img)
     img = find_squares(img)
