@@ -43,10 +43,10 @@ def bound_region(img):
     x,y,w,h = cv2.boundingRect(img.hullxy)
     limx = np.zeros((2), dtype='int32')
     limy = np.zeros((2), dtype='int32')
-    limx[0] = max(y-25, 0)
-    limx[1] = min(y+h+25, img.width)
-    limy[0] = max(x-25, 0)
-    limy[1] = max(x+w+25, img.heigth)
+    limx[0] = max(y-20, 0)
+    limx[1] = min(y+h+20, img.width)
+    limy[0] = max(x-20, 0)
+    limy[1] = max(x+w+20, img.heigth)
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.G = img.G[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
