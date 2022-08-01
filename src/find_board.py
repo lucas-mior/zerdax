@@ -31,7 +31,7 @@ def find_board(img):
     return img
 
 def bound_region(img):
-    x,y,w,h = cv2.boundingRect(img.hullxy)
+    x,y,w,h = cv2.boundingRect(img.poly)
     limx = np.zeros((2), dtype='int32')
     limy = np.zeros((2), dtype='int32')
     limx[0] = max(y-65, 0)
@@ -59,23 +59,22 @@ def bound_region(img):
 def find_region(img, skip=False):
     got_hull = False
     img.filt = lf.ffilter(img.clahe)
-    save(img, "filt", img.filt)
-    wc = 8
+    wc = 6
     Amin = round(0.5 * img.sarea)
     img.help = np.copy(img.filt) * 0
-    while wc <= 12:
+    while wc <= 11:
         print("Área mínima:", Amin)
         print("Canny wc:", wc)
         img.canny = find_canny(img.filt, wmin=wc)
         img, a = find_morph(img, Amin)
         if a > Amin:
             print("{} > {} : {}".format(a, Amin, a/Amin))
-            quad = img.hullxy[:,0,:]
+            quad = img.poly[:,0,:]
             if quad.shape[0] == 4:
                 d1 = radius(quad[0][0], quad[0][1], quad[1][0], quad[1][1])
                 d2 = radius(quad[2][0], quad[2][1], quad[3][0], quad[3][1])
                 d3 = radius(quad[0][0], quad[0][1], quad[3][0], quad[3][1])
-                if abs(d1 - d3) < 90*(a/Amin) and abs(d1 - d2) < 90*(a/Amin):
+                if abs(d1 - d3) < 110*(a/Amin) and abs(d1 - d2) < 110*(a/Amin):
                     got_hull = True
                     break
                 else:
@@ -90,13 +89,12 @@ def find_region(img, skip=False):
         wc += 1
 
         drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-        cv2.drawContours(drawn_contours, [img.hullxy], -1, (255, 0, 0), thickness=3)
-        cv2.drawContours(drawn_contours, img.cont, -1, (0, 255, 0), thickness=5)
-        img.help = cv2.bitwise_or(img.help, drawn_contours[:,:,0])
-        img.help = cv2.bitwise_or(img.help, drawn_contours[:,:,1])
-
-    drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
-    save(img, "contours", drawn_contours)
+        cv2.drawContours(drawn_contours, img.cont,     -1, (255, 0, 0), thickness=3)
+        cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=3)
+        cv2.drawContours(drawn_contours, [img.poly],   -1, (0, 0, 255), thickness=3)
+        img.help = cv2.bitwise_or(drawn_contours[:,:,0], drawn_contours[:,:,1])
+        drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
+        save(img, "contours", drawn_contours)
 
     if not got_hull:
         print("finding board region failed")
@@ -116,13 +114,13 @@ def find_morph(img, Amin):
     edges = cv2.morphologyEx(edges, cv2.MORPH_ERODE, ko, iterations = 1)
     edges = cv2.bitwise_or(edges, img.canny)
     edges = cv2.bitwise_or(edges, img.help)
-    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     areas = [cv2.contourArea(c) for c in contours]
     img.cont = contours[np.argmax(areas)]
     img.hullxy = cv2.convexHull(img.cont)
     arclen = cv2.arcLength(img.hullxy,True)
-    img.hullxy = cv2.approxPolyDP(img.hullxy,0.05*arclen,True)
-    a = cv2.contourArea(img.hullxy)
+    img.poly = cv2.approxPolyDP(img.hullxy,0.05*arclen,True)
+    a = cv2.contourArea(img.poly)
     img.medges = edges
 
     # save(img, "dilate", img.dilate)
