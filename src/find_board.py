@@ -25,17 +25,15 @@ def find_board(img):
     img.claheS = lf.ffilter(img.claheS)
     img.claheV = lf.ffilter(img.claheV)
 
-    print("finding image edges...")
-    img = create_cannys(img)
-    exit()
     print("finding region containing chess board...")
     img = find_region(img)
     print("cropping image to fit only board region...")
     img = bound_region(img)
 
-    # save(img, "fedges", img.fedges)
-    # save(img, "hull", img.hull)
-    # save(img, "hullBGR", img.hullBGR)
+    save(img, "fedges", img.fedges)
+    save(img, "hull", img.hull)
+    save(img, "hullBGR", img.hullBGR)
+    exit()
 
     img = find_angles(img)
 
@@ -45,12 +43,12 @@ def find_board(img):
 
     return img
 
-def create_cannys(img):
-    G = find_canny(img.claheG, wmin = 6)
+def create_cannys(img, w = 6):
+    G = find_canny(img.claheG, wmin = w)
     save(img, "cannyG", G)
-    S = find_canny(img.claheS, wmin = 6)
+    S = find_canny(img.claheS, wmin = w)
     save(img, "cannyS", S)
-    V = find_canny(img.claheV, wmin = 6)
+    V = find_canny(img.claheV, wmin = w)
     save(img, "cannyV", V)
 
     SV = cv2.bitwise_or(S, V)
@@ -69,8 +67,11 @@ def bound_region(img):
     limy[1] = max(x+w+25, img.sheigth)
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    img.filt = img.filt[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
-    img.clahe = img.clahe[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
+    img.G = img.G[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
+    img.gray = img.gray[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
+    img.claheG = img.claheG[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
+    img.claheS = img.claheS[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
+    img.claheV = img.claheV[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.fedges = img.fedges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     limx[0] = round(limx[0] / img.sfact)
     limx[1] = round(limx[1] / img.sfact)
@@ -88,14 +89,13 @@ def bound_region(img):
 
 def find_region(img):
     got_hull = False
-    img.filt = lf.ffilter(img.clahe)
     wc = 5
     Amin = round(0.5 * img.sarea)
-    img.help = np.copy(img.filt) * 0
+    img.help = np.copy(img.G) * 0
     while wc <= 11:
         print("Área mínima:", Amin)
         print("Canny wc:", wc)
-        img.canny = find_canny(img.filt, wmin=wc)
+        img = create_cannys(img, w = wc)
         img, a = find_morph(img, Amin)
 
         drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
@@ -129,8 +129,8 @@ def find_morph(img, Amin):
     kd = 8
     kx = kd+round(kd/3)
     k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kx))
-    img.dilate = cv2.morphologyEx(img.filt, cv2.MORPH_DILATE, k_dil)
-    img.divide = cv2.divide(img.filt, img.dilate, scale = 255)
+    img.dilate = cv2.morphologyEx(img.G, cv2.MORPH_DILATE, k_dil)
+    img.divide = cv2.divide(img.G, img.dilate, scale = 255)
     edges = cv2.threshold(img.divide, 0, 255, cv2.THRESH_OTSU)[1]
     edges = cv2.bitwise_not(edges)
     img.fedges = np.copy(edges)
@@ -142,12 +142,8 @@ def find_morph(img, Amin):
     img.cont = contours[np.argmax(areas)]
     img.hullxy = cv2.convexHull(img.cont)
     arclen = cv2.arcLength(img.hullxy,True)
-    # img.poly = cv2.approxPolyDP(img.hullxy,0.05*arclen,True)
     a = cv2.contourArea(img.hullxy)
     img.medges = edges
-
-    # save(img, "dilate", img.dilate)
-    # save(img, "divide", img.divide)
 
     return img, a
 
@@ -286,8 +282,11 @@ def reduce_hull(img):
     img.hull = cv2.resize(img.hull, (img.hwidth, img.hheigth))
     img.hullBGR = cv2.resize(img.hullBGR, (img.hwidth, img.hheigth))
     img.medges = cv2.resize(img.medges, (img.hwidth, img.hheigth))
-    img.filt = cv2.resize(img.filt, (img.hwidth, img.hheigth))
-    img.clahe = cv2.resize(img.clahe, (img.hwidth, img.hheigth))
+    img.G = cv2.resize(img.G, (img.hwidth, img.hheigth))
+    img.gray = cv2.resize(img.gray, (img.hwidth, img.hheigth))
+    img.claheG = cv2.resize(img.claheG, (img.hwidth, img.hheigth))
+    img.claheS = cv2.resize(img.claheS, (img.hwidth, img.hheigth))
+    img.claheV = cv2.resize(img.claheV, (img.hwidth, img.hheigth))
     img.fedges = cv2.resize(img.fedges, (img.hwidth, img.hheigth))
     img.harea = img.hwidth * img.hheigth
     return img
