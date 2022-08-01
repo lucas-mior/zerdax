@@ -161,17 +161,18 @@ def find_angles(img):
     while h_angl < (np.pi / 180):
         th = 180*(h_angl/np.pi)
         lines = cv2.HoughLinesP(img.canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
-        if lines is not None and lines.shape[0] >= minlines:
-            print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
-            lines = radius_theta(lines)
-            lines = filter_lines(img, lines)
-            lines, angles = lines_kmeans(img, lines)
-            print("angles: ", angles)
-            got_hough = True
-            break
-        elif lines is not None:
-            if th > random.uniform(0, th*4):
+        if lines is not None:
+            if lines.shape[0] >= minlines:
                 print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
+                lines = radius_theta(lines)
+                lines = filter_lines(img, lines)
+                lines, angles = lines_kmeans(img, lines)
+                print("angles: ", angles)
+                got_hough = True
+                break
+            else:
+                if th > random.uniform(0, th*4):
+                    print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
         if h_minl > h_minl0 / 2:
             h_minl -= 10
             h_thrv = round(h_minl / 2)
