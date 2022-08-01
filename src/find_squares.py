@@ -211,7 +211,7 @@ def mean_dist(distv,disth):
 
     return medv,medh
 
-def iterate(dist, med):
+def wrong_lines(dist, med):
     rem = np.empty(dist.shape[0])
     rem = np.int32(rem)
     rem[:] = 0
@@ -226,7 +226,7 @@ def iterate(dist, med):
         i += 1
     return rem
 
-def iterate2(dist, med):
+def right_lines(dist, med):
     cer = np.empty(dist.shape[0])
     cer = np.int32(cer)
     cer[:] = 0
@@ -244,8 +244,8 @@ def magic_vert_hori(img, vert, hori):
     distv, disth = get_distances(vert,hori)
     medv, medh = mean_dist(distv,disth)
 
-    remv = iterate(distv, medv)
-    remh = iterate(disth, medh)
+    remv = wrong_lines(distv, medv)
+    remh = wrong_lines(disth, medh)
 
     vert = vert[remv==0]
     hori = hori[remh==0]
@@ -253,8 +253,8 @@ def magic_vert_hori(img, vert, hori):
     distv, disth = get_distances(vert,hori)
     medv, medh = mean_dist(distv,disth)
 
-    cerv = iterate2(distv, medv)
-    cerh = iterate2(disth, medh)
+    cerv = right_lines(distv, medv)
+    cerh = right_lines(disth, medh)
 
     vert = vert[cerv==1]
     hort = hori[cerh==1]
