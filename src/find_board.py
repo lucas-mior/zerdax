@@ -56,9 +56,10 @@ def bound_region(img):
 
     return img
 
-def find_region(img, maxkd = 12, skip=False):
+def find_region(img, skip=False):
     got_hull = False
     img.filt = lf.ffilter(img.clahe)
+    save(img, "filt", img.filt)
     wc = 8
     Amin = round(0.5 * img.sarea)
     img.help = np.copy(img.filt) * 0
@@ -68,20 +69,33 @@ def find_region(img, maxkd = 12, skip=False):
         img.canny = find_canny(img.filt, wmin=wc)
         img, a = find_morph(img, Amin)
         if a > Amin:
+            print("{} > {} : {}".format(a, Amin, a/Amin))
             quad = img.hullxy[:,0,:]
             if quad.shape[0] == 4:
                 d1 = radius(quad[0][0], quad[0][1], quad[1][0], quad[1][1])
-                d3 = radius(quad[0][0], quad[0][1], quad[3][0], quad[3][1])
                 d2 = radius(quad[2][0], quad[2][1], quad[3][0], quad[3][1])
-                if abs(d1 - d3) < 50 and abs(d1 - d2) < 80:
+                d3 = radius(quad[0][0], quad[0][1], quad[3][0], quad[3][1])
+                if abs(d1 - d3) < 80*(a/Amin) and abs(d1 - d2) < 80*(a/Amin):
                     got_hull = True
                     break
+                else:
+                    print("problema é distancias")
+                    print("d1:", d1)
+                    print("d2:", d2)
+                    print("d3:", d3)
+            else:
+                print("problema é 4 lados")
+        else:
+            print("problema é area")
+
         Amin = max(0.1*img.sarea, round(Amin - 0.05*img.sarea))
         wc += 1
 
-    drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-    cv2.drawContours(drawn_contours, [img.hullxy], -1, (255, 0, 0), thickness=3)
-    cv2.drawContours(drawn_contours, img.cont, -1, (0, 255, 0), thickness=3)
+        drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
+        cv2.drawContours(drawn_contours, [img.hullxy], -1, (255, 0, 0), thickness=3)
+        cv2.drawContours(drawn_contours, img.cont, -1, (0, 255, 0), thickness=1)
+        img.help = drawn_contours[:,:,0]
+
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.4, drawn_contours, 0.7, 0)
     save(img, "contours", drawn_contours)
 
@@ -96,9 +110,9 @@ def find_morph(img, Amin):
     kd = 10
     kx = kd+round(kd/3)
     k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (kd,kx))
-    dilate = cv2.morphologyEx(img.filt, cv2.MORPH_DILATE, k_dil)
-    divide = cv2.divide(img.filt, dilate, scale = 255)
-    edges = cv2.threshold(divide, 0, 255, cv2.THRESH_OTSU)[1]
+    img.dilate = cv2.morphologyEx(img.filt, cv2.MORPH_DILATE, k_dil)
+    img.divide = cv2.divide(img.filt, img.dilate, scale = 255)
+    edges = cv2.threshold(img.divide, 0, 255, cv2.THRESH_OTSU)[1]
     edges = cv2.bitwise_not(edges)
     edges = cv2.morphologyEx(edges, cv2.MORPH_ERODE, ko, iterations = 1)
     edges = cv2.bitwise_or(edges, img.canny)
@@ -111,6 +125,10 @@ def find_morph(img, Amin):
     img.hullxy = cv2.approxPolyDP(img.hullxy,0.05*arclen,True)
     a = cv2.contourArea(img.hullxy)
     img.medges = edges
+
+    save(img, "dilate", img.dilate)
+    save(img, "divide", img.divide)
+    save(img, "medgesforcontour", img.medges)
 
     return img, a
 
@@ -454,6 +472,7 @@ def find_corners(img, inter):
         cv2.circle(drawn_circles, p, radius=7, color=(0, 255, 0), thickness=-1)
 
     drawn_circles = cv2.addWeighted(img.hull3ch, 0.4, drawn_circles, 0.7, 0)
+    save(img, "corners", drawn_circles)
 
     corners = np.array([BR, BL, TR, TL])
     print("board corners:", corners)
