@@ -176,7 +176,7 @@ def find_angles(img):
         if h_minl > h_minl0 / 2:
             h_minl -= 10
             h_thrv = round(h_minl / 2)
-            
+
         h_angl += np.pi / 14400
 
     if not got_hough:
@@ -267,21 +267,21 @@ def update_hull(img):
     return hullxy
 
 def magic_lines(img):
+    got_hough = False
     k_dil = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
     img.canny = cv2.morphologyEx(img.canny, cv2.MORPH_DILATE, k_dil)
     save(img, "cannylast", img.canny)
-    got_hough = False
-    h_maxg0 = 0
-    h_minl0 = 70
-    h_thrv0 = 60
-    h_angl0 = np.pi / 180
+    h_maxg0 = 50
+    h_minl0 = round((img.hwidth + img.hheigth)*0.2)
+    h_thrv0 = round(h_minl0 / 2)
+    h_angl0 = np.pi / 720
 
     h_maxg = h_maxg0
     h_minl = h_minl0
     h_thrv = h_thrv0
     h_angl = h_angl0
-    minlines = 40
-    while h_angl < (np.pi / 60):
+    minlines = 32
+    while h_angl < (np.pi / 270):
         th = 180*(h_angl/np.pi)
         lines = cv2.HoughLinesP(img.canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
         if lines is not None:
@@ -295,11 +295,11 @@ def magic_lines(img):
             else:
                 if th > random.uniform(0, th*4):
                     print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
-        if h_minl > h_minl0 / 1.5:
-            h_minl -= 1
-            h_thrv -= 1
-            
-        h_angl += np.pi / 7200
+        if h_minl > h_minl0 / 2:
+            h_minl -= 10
+            h_thrv = round(h_minl / 2)
+
+        h_angl += np.pi / 14400
 
     if got_hough:
         drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
