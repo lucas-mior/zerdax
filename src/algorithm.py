@@ -14,21 +14,21 @@ class Image:
         self.basename = Path(self.filename).stem
 
 def reduce(img):
-    img.swidth = 1000
-    img.sfact = img.swidth / img.BGR.shape[1]
-    img.sheigth = round(img.sfact * img.BGR.shape[0])
+    img.width = 1000
+    img.fact = img.width / img.BGR.shape[1]
+    img.heigth = round(img.fact * img.BGR.shape[0])
 
-    img.BGR = cv2.resize(img.BGR, (img.swidth, img.sheigth))
-    img.sarea = img.sheigth * img.swidth
+    img.BGR = cv2.resize(img.BGR, (img.width, img.heigth))
+    img.area = img.heigth * img.width
     return img
 
 def algorithm(filename):
     img = Image(filename)
-    print("reading image...")
+    print("reading image in BGR...")
     img.BGR = cv2.imread(img.filename)
     print("reducing image to 1000 width...")
     img = reduce(img)
-    print("creating HSV representatio of image...")
+    print("creating HSV representation of image...")
     img.HSV = cv2.cvtColor(img.BGR, cv2.COLOR_BGR2HSV)
     img.H = img.HSV[:,:,0]
     img.S = img.HSV[:,:,1]
