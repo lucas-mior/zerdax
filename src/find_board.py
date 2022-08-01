@@ -15,6 +15,8 @@ def find_board(img):
     img = find_region(img)
     print("cropping image to fit only board region...")
     img = bound_region(img)
+    print("reducing images to default size...")
+    img = reduce_hull(img)
 
     # save(img, "fedges", img.fedges)
     # save(img, "hull", img.hull)
@@ -58,8 +60,6 @@ def bound_region(img):
     img.hull = img.gray[x0:x1+1, y0:y1+1]
     img.hullBGR = img.BGR[x0:x1+1, y0:y1+1]
     img.gray3ch = img.gray3ch[x0:x1+1, y0:y1+1]
-    img = reduce_hull(img)
-
     return img
 
 def reduce_hull(img):
