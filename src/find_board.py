@@ -67,16 +67,19 @@ def bound_region(img):
 
 def find_region(img):
     got_hull = False
+    h = False
     Wc = 5
-    W0 = 10
+    W0 = 12
     Amin = round(0.5 * img.area)
     A0 = round(0.1 * img.area)
     img.help = np.copy(img.G) * 0
     while Wc <= W0 or Amin >= A0:
         print("Área mínima:", Amin)
         print("Canny Wc:", Wc)
+        if Wc >= 9:
+            h = True
         img = create_cannys(img, w = Wc)
-        img, a = find_morph(img)
+        img, a = find_morph(img, h)
 
         drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
         cv2.drawContours(drawn_contours, img.cont,     -1, (255, 0, 0), thickness=1)
@@ -91,15 +94,15 @@ def find_region(img):
             print("{} < {} : {}".format(a, Amin, a/Amin))
             print("problema é area")
 
-        Amin = max(A0, round(Amin - 0.03*img.area))
+        Amin = max(A0, round(Amin - 0.02*img.area))
         Wc = min(W0, Wc + 0.5)
 
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.7, 0)
     # save(img, "dilate", img.dilate)
     # save(img, "divide", img.divide)
-    # save(img, "cannyG", img.cannyG)
+    save(img, "cannyG", img.cannyG)
     # save(img, "cannyS", img.cannyS)
-    # save(img, "cannyV", img.cannyV)
+    save(img, "cannyV", img.cannyV)
     save(img, "cannyGSV", img.canny)
     save(img, "medgesforcontour", img.medges)
     save(img, "contours", drawn_contours)
@@ -110,7 +113,7 @@ def find_region(img):
 
     return img
 
-def find_morph(img):
+def find_morph(img, h = False):
     ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     kd = 10
     kx = kd+round(kd/3)
@@ -122,7 +125,8 @@ def find_morph(img):
     img.fedges = np.copy(edges)
     edges = cv2.morphologyEx(edges, cv2.MORPH_ERODE, ko, iterations = 1)
     edges = cv2.bitwise_or(edges, img.canny)
-    # edges = cv2.bitwise_or(edges, img.help)
+    if h:
+        edges = cv2.bitwise_or(edges, img.help)
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     areas = [cv2.contourArea(c) for c in contours]
     img.cont = contours[np.argmax(areas)]
@@ -134,7 +138,7 @@ def find_morph(img):
     return img, a
 
 def find_canny(image, wmin = 6):
-    c_thrl0 = 180
+    c_thrl0 = 200
     c_thrh0 = 250
     c_thrl = c_thrl0
     c_thrh = c_thrh0
@@ -154,7 +158,7 @@ def find_canny(image, wmin = 6):
         else:
             if w > random.uniform(0, w*2):
                 print("{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
-        c_thrl = max(clmin, c_thrl - 15)
+        c_thrl = max(clmin, c_thrl - 12)
         c_thrh = max(ctmin, c_thrh - 9)
 
     if w < wmin:
