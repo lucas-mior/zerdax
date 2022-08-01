@@ -24,9 +24,11 @@ def find_board(img):
     save(img, "hull", img.hull)
 
     img.canny = find_canny(img.clahe, wmin = 8)
+    save(img, "cannylast", img.canny)
     img.angles, img.select_lines = find_angles(img)
 
     lines,inter = magic_lines(img)
+    exit()
 
     img.corners = find_corners(img, inter)
 
@@ -36,10 +38,10 @@ def bound_region(img):
     x,y,w,h = cv2.boundingRect(img.hullxy)
     limx = np.zeros((2), dtype='int32')
     limy = np.zeros((2), dtype='int32')
-    limx[0] = max(y-65, 0)
-    limx[1] = min(y+h+20, img.swidth)
-    limy[0] = max(x-20, 0)
-    limy[1] = max(x+w+20, img.sheigth)
+    limx[0] = max(y-60, 0)
+    limx[1] = min(y+h+25, img.swidth)
+    limy[0] = max(x-25, 0)
+    limy[1] = max(x+w+25, img.sheigth)
 
     img.medges = img.medges[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
     img.filt = img.filt[limx[0]:limx[1]+1, limy[0]:limy[1]+1]
@@ -148,9 +150,9 @@ def find_canny(image, wmin = 6):
 
 def find_angles(img):
     got_hough = False
-    h_maxg0 = 2
+    h_maxg0 = 50
     h_minl0 = round((img.hwidth + img.hheigth)*0.2)
-    h_thrv0 = round(h_minl0 / 8)
+    h_thrv0 = round(h_minl0 / 2)
     h_angl0 = np.pi / 360
 
     h_maxg = h_maxg0
@@ -158,7 +160,7 @@ def find_angles(img):
     h_thrv = h_thrv0
     h_angl = h_angl0
     minlines = 24
-    while h_angl < (np.pi / 30):
+    while h_angl < (np.pi / 180):
         th = 180*(h_angl/np.pi)
         lines = cv2.HoughLinesP(img.canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
         if lines is not None and lines.shape[0] >= minlines:
@@ -172,16 +174,10 @@ def find_angles(img):
         elif lines is not None:
             if th > random.uniform(0, th*4):
                 print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
-        if h_maxg < 20:
-            h_maxg += 1
         if h_minl > h_minl0 / 2:
             h_minl -= 10
-        if h_angl > (np.pi / 40):
-            h_minl = 32
-            h_maxg = 2
-            minlines = 60
-
-        h_thrv = round(h_minl / 8)
+            h_thrv = round(h_minl / 2)
+            
         h_angl += np.pi / 14400
 
     if not got_hough:
@@ -191,8 +187,9 @@ def find_angles(img):
     drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
-            cv2.line(drawn_lines,(x1,y1),(x2,y2),(0,0,250),round(2/img.sfact))
+            cv2.line(drawn_lines,(x1,y1),(x2,y2), (0,0,250), 3)
     drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, drawn_lines, 0.7, 0)
+    save(img, "select", drawn_lines)
 
     return angles, lines
 
@@ -320,6 +317,9 @@ def magic_lines(img):
             for x1,y1,x2,y2,r,t in line:
                 cv2.line(draw_lines,(x1,y1),(x2,y2),(0,0,255),round(2/img.sfact))
         drawn_lines = cv2.addWeighted(img.hull3ch, 0.4, draw_lines, 0.7, 0)
+        save(img, "hough_final", drawn_lines)
+
+        exit()
 
         ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
         img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
