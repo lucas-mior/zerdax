@@ -44,7 +44,7 @@ def bound_region(img):
     x,y,w,h = cv2.boundingRect(img.hullxy)
     limx = np.zeros((2), dtype='int32')
     limy = np.zeros((2), dtype='int32')
-    limx[0] = max(y-60, 0)
+    limx[0] = max(y-55, 0)
     limx[1] = min(y+h+25, img.width)
     limy[0] = max(x-25, 0)
     limy[1] = max(x+w+25, img.heigth)
