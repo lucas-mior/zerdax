@@ -17,6 +17,9 @@ def find_squares(img):
     vert,hori = w_lines(img)
     vert,hori = magic_vert_hori(img, vert, hori)
 
+    save_lines(img, "verthori", vert, hori)
+    exit()
+
     inter = find_intersections(img, vert[:,0,:], hori[:,0,:])
     drawn_circles = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
     for p in inter:

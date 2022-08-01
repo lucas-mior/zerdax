@@ -35,8 +35,6 @@ def find_board(img):
     img = perspective_transform(img)
     save(img, "warped", img.warped)
 
-    exit()
-
     return img
 
 def create_cannys(img, w = 6):
