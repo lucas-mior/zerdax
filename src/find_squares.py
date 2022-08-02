@@ -267,64 +267,9 @@ def magic_vert_hori(img, vert, hori):
     vert = vert[cerv==1]
     hort = hori[cerh==1]
 
-    while vert[0,0,0] > (medv + 10):
-        new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 500, 0,0]]], dtype='int32')
-        vert = np.append(vert, new, axis=0)
-        vert = vert[vert[:,0,0].argsort()]
-    while abs(vert[-1,0,0] - 512) > (medv + 10):
-        new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,500, 0,0]]], dtype='int32')
-        vert = np.append(vert, new, axis=0)
-        vert = vert[vert[:,0,0].argsort()]
-    while hori[0,0,1] > (medh + 10):
-        new = np.array([[[10, hori[0,0,1]-medh, 500, hori[0,0,1]-medh, 0,0]]], dtype='int32')
-        hori = np.append(hori, new, axis=0)
-        hori = hori[hori[:,0,1].argsort()]
-    while abs(hori[-1,0,1] - 512) > (medh + 10):
-        new = np.array([[[10, hori[-1,0,1]+medh, 500, hori[-1,0,1]+medh, 0,0]]], dtype='int32')
-        hori = np.append(hori, new, axis=0)
-        hori = hori[hori[:,0,1].argsort()]
-
-    i = 0
-    while i < (vert.shape[0] - 1):
-        if abs(vert[i,0,0] - vert[i+1,0,0]) > (medv*1.5):
-            new = np.array([[[vert[i,0,0]+medv, 10, vert[i,0,0]+medv, 500, 0,0]]], dtype='int32')
-            vert = np.append(vert, new, axis=0)
-            vert = vert[vert[:,0,0].argsort()]
-        i += 1
-
-    i = 0
-    while i < (hori.shape[0] - 1):
-        if abs(hori[i,0,1] - hori[i+1,0,1]) > (medh*1.5):
-            new = np.array([[[10, hori[i,0,1]+medh, 500, hori[i,0,1]+medh, 0,0]]], dtype='int32')
-            hori = np.append(hori, new, axis=0)
-            hori = hori[hori[:,0,1].argsort()]
-        i += 1
-
-    if vert.shape[0] == 10:
-        d1 = abs(vert[0,0,0]-0)
-        d2 = abs(vert[-1,0,0]-512)
-        if d1 < d2:
-            vert = vert[1:]
-        else:
-            vert = vert[0:-1]
-    elif vert.shape[0] == 11:
-        vert = vert[1:-1]
-    else:
-        print("There are 12 or more vertical lines")
-        exit()
-
-    if hori.shape[0] == 10:
-        d1 = abs(hori[0,0,1]-0)
-        d2 = abs(hori[-1,0,1]-512)
-        if d1 < d2:
-            hori = hori[1:]
-        else:
-            hori = hori[0:-1]
-    elif hori.shape[0] == 11:
-        hori = hori[1:-1]
-    else:
-        print("There are 12 or more horizontal lines")
-        exit()
+    vert, hori = remove_outer(vert, hori, medv, medh)
+    vert, hori = add_missing(vert, hori, medv, medh)
+    vert, hori = remove_extras(vert, hori)
 
     return vert, hori
 
@@ -368,14 +313,72 @@ def calc_squares(img, inter):
 
     return squares
 
-def save_lines(img, name, vert, hori):
-    drawn_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
-    draw_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
-    for line in vert:
-        for x1,y1,x2,y2,r,t in line:
-            cv2.line(draw_lines,(x1,y1),(x2,y2), color=(255,0,0), thickness=3)
-    for line in hori:
-        for x1,y1,x2,y2,r,t in line:
-            cv2.line(draw_lines,(x1,y1),(x2,y2), color=(0,255,0), thickness=3)
-    drawn_lines = cv2.addWeighted(img.warped3ch, 0.5, draw_lines, 0.5, 1)
-    save(img, name, drawn_lines)
+def remove_outer(vert, hori, medv, medh):
+    while vert[0,0,0] > (medv + 10):
+        new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 500, 0,0]]], dtype='int32')
+        vert = np.append(vert, new, axis=0)
+        vert = vert[vert[:,0,0].argsort()]
+    while abs(vert[-1,0,0] - 512) > (medv + 10):
+        new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,500, 0,0]]], dtype='int32')
+        vert = np.append(vert, new, axis=0)
+        vert = vert[vert[:,0,0].argsort()]
+    while hori[0,0,1] > (medh + 10):
+        new = np.array([[[10, hori[0,0,1]-medh, 500, hori[0,0,1]-medh, 0,0]]], dtype='int32')
+        hori = np.append(hori, new, axis=0)
+        hori = hori[hori[:,0,1].argsort()]
+    while abs(hori[-1,0,1] - 512) > (medh + 10):
+        new = np.array([[[10, hori[-1,0,1]+medh, 500, hori[-1,0,1]+medh, 0,0]]], dtype='int32')
+        hori = np.append(hori, new, axis=0)
+        hori = hori[hori[:,0,1].argsort()]
+
+    return vert, hori
+
+def add_missing(vert, hori, medv, medh):
+    i = 0
+    while i < (vert.shape[0] - 1):
+        if abs(vert[i,0,0] - vert[i+1,0,0]) > (medv*1.5):
+            new = np.array([[[vert[i,0,0]+medv, 10, vert[i,0,0]+medv, 500, 0,0]]], dtype='int32')
+            vert = np.append(vert, new, axis=0)
+            vert = vert[vert[:,0,0].argsort()]
+        i += 1
+
+    i = 0
+    while i < (hori.shape[0] - 1):
+        if abs(hori[i,0,1] - hori[i+1,0,1]) > (medh*1.5):
+            new = np.array([[[10, hori[i,0,1]+medh, 500, hori[i,0,1]+medh, 0,0]]], dtype='int32')
+            hori = np.append(hori, new, axis=0)
+            hori = hori[hori[:,0,1].argsort()]
+        i += 1
+
+    return vert, hori
+
+def remove_extras(vert, hori):
+    v = vert.shape[0]
+    if v == 10:
+        d1 = abs(vert[0,0,0]-0)
+        d2 = abs(vert[-1,0,0]-512)
+        if d1 < d2:
+            vert = vert[1:]
+        else:
+            vert = vert[0:-1]
+    elif v == 11:
+        vert = vert[1:-1]
+    elif v >= 12:
+        print("There are 12 or more vertical lines")
+        exit()
+
+    h = hori.shape[0]
+    if h == 10:
+        d1 = abs(hori[0,0,1]-0)
+        d2 = abs(hori[-1,0,1]-512)
+        if d1 < d2:
+            hori = hori[1:]
+        else:
+            hori = hori[0:-1]
+    elif h == 11:
+        hori = hori[1:-1]
+    elif h >= 12:
+        print("There are 12 or more horizontal lines")
+        exit()
+
+    return vert, hori
