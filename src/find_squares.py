@@ -26,7 +26,7 @@ def find_squares(img):
 
     inter = find_intersections(img, vert[:,0,:], hori[:,0,:])
 
-    squares = sq_inter(img, inter)
+    squares = calc_squares(img, inter)
     squares = np.float32(squares)
     sqback = np.zeros(squares.shape, dtype='float32')
     exit()
@@ -321,7 +321,7 @@ def magic_vert_hori(img, vert, hori):
 
     return vert, hori
 
-def sq_inter(img, inter):
+def calc_squares(img, inter):
     inter = inter[inter[:,0].argsort()]
     intersq = np.zeros((9,9,2), dtype='int32')
     print("inter.shape:", inter.shape)
