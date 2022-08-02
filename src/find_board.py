@@ -48,7 +48,7 @@ def find_board(img):
     return img
 
 def create_cannys(img, w = 6):
-    print("finding edges for gray, S, V images...")
+    logprint(img, "finding edges for gray, S, V images...")
     img.cannyG = find_canny(img, img.claheG, wmin = w)
     img.cannyV = find_canny(img, img.claheV, wmin = w)
     img.canny = cv2.bitwise_or(img.cannyG, img.cannyV)
