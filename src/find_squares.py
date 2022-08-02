@@ -52,11 +52,10 @@ def find_wcanny(img, wmin = 12):
         img.wcanny = cv2.Canny(img.warped, c_thrl, c_thrh)
         w = img.wcanny.mean()
         if w > wmin:
-            print("{0:0=.2f} > {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
+            logprint(img, "{0:0=.2f} > {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
             break
-        else:
-            if wmin - w < wmin:
-                print("{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
+        elif w > random.uniform(0, w*2):
+            logprint(img, "{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
         if c_thrl > 10:
             c_thrl -= 9
         c_thrh -= 9
@@ -89,13 +88,11 @@ def w_lines(img):
                 lines = radius_theta(lines)
                 vert,hori = geo_lines(img,lines)
                 if vert.shape[0] >= minlines and hori.shape[0] >= minlines:
-                    print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
+                    logprint(img, "{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
                     got_hough = True
                     break
-
-        if lines is not None:
             if th > random.uniform(0, th*4):
-                print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
+                logprint(img, "{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         j += 1
         h_angl += np.pi / 1800
         if h_angl > (np.pi / 40) and tuned < 20:
