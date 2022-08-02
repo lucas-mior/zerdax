@@ -31,7 +31,6 @@ def find_squares(img):
         exit()
 
     squares = calc_squares(img, inter)
-    squares = np.float32(squares)
     sqback = np.zeros(squares.shape, dtype='float32')
     exit()
 
@@ -311,6 +310,7 @@ def calc_squares(img, inter):
     drawn_contours = cv2.addWeighted(img.warped3ch, 0.5, drawn_lines, 0.5, 1)
     save(img, "A1E4C5", drawn_contours)
 
+    squares = np.float32(squares)
     return squares
 
 def remove_outer(vert, hori, medv, medh):
