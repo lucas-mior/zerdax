@@ -21,11 +21,23 @@ def find_board(img):
     save(img, "hullBGR", img.hullBGR)
 
     img = create_cannys(img, w = 7)
+    print("finding angles of best lines...")
     img = find_angles(img)
 
     img = create_cannys(img, w = 8)
-    lines,inter = magic_lines(img)
-    img.corners = find_corners(img, inter)
+    print("finding all lines of board...")
+    lines = magic_lines(img)
+    print("finding all intersections...")
+    inter = find_intersections(img, lines[:,0,:])
+
+    drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+    for p in inter:
+        cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
+    drawn_circles = cv2.addWeighted(img.gray3ch, 0.4, drawn_circles, 0.7, 0)
+    save(img, "intersections", drawn_circles)
+
+    print("calculating 4 corners of board...")
+    img.corners = calc_corners(img, inter)
 
     print("transforming perspective...")
     img = perspective_transform(img)
@@ -196,7 +208,7 @@ def find_angles(img):
                 lines = radius_theta(lines)
                 lines = filter_lines(img, lines)
                 lines, angles = lines_kmeans(img, lines)
-                print("lines angles means: ", angles)
+                print("lines angles means:\n", angles, sep='')
                 got_hough = True
                 break
             else:
@@ -322,20 +334,10 @@ def magic_lines(img):
     lines = np.append(lines, dummy, axis=0)
     lines = filter_angles(img, lines)
 
-    ko = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-    img.medges = cv2.morphologyEx(img.medges, cv2.MORPH_CLOSE, ko, iterations = 1)
-    img.medges = cv2.bitwise_or(img.medges, draw_lines[:,:,0])
-    inter = find_intersections(img, lines[:,0,:])
-
-    drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-    for p in inter:
-        cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
-    drawn_circles = cv2.addWeighted(img.gray3ch, 0.4, drawn_circles, 0.7, 0)
-    save(img, "intersections", drawn_circles)
     if not got_hough:
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         exit()
-    return lines,inter
+    return lines
 
 def filter_lines(img, lines):
     rem = np.empty(lines.shape[0], dtype='int32')
@@ -424,7 +426,7 @@ def lines_kmeans(img, lines):
     lines = np.int32(lines)
     return lines, centers
 
-def find_corners(img, inter):
+def calc_corners(img, inter):
     psum = np.empty((inter.shape[0], 3), dtype='int32')
     psub = np.empty((inter.shape[0], 3), dtype='int32')
 
@@ -457,7 +459,7 @@ def find_corners(img, inter):
     save(img, "corners", drawn_circles)
 
     corners = np.array([BR, BL, TR, TL])
-    print("board corners:", corners)
+    print("board corners:\n", corners, sep='')
 
     return corners
 
