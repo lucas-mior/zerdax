@@ -9,12 +9,17 @@ import lffilter as lf
 import random
 
 def find_squares(img):
+    print("generating 3 channel gray warped image for drawings...")
     img.warped3ch = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR)
+    print("filtering warped image...")
     img.wfilt = lf.ffilter(img.warped)
 
+    print("finding edges on warped image...")
     img.wcanny = find_wcanny(img, wmin = 12)
 
+    print("finding vertical and horizontal lines...")
     vert,hori = w_lines(img)
+    print("adjusting vertical and horizontal lines...")
     vert,hori = magic_vert_hori(img, vert, hori)
 
     save_lines(img, "verthori", vert, hori)
