@@ -22,8 +22,9 @@ def reduce(img):
     img.area = img.heigth * img.width
     return img
 
-def algorithm(filename):
+def algorithm(filename, log):
     img = Image(filename)
+    img.log = log
     img = read_image(img)
 
     img = find_board(img)

@@ -31,12 +31,14 @@ def find_board(img):
     img = perspective_transform(img)
     save(img, "warped", img.warped)
 
+    exit()
+
     return img
 
 def create_cannys(img, w = 6):
     print("finding edges for gray, S, V images...")
-    img.cannyG = find_canny(img.claheG, wmin = w)
-    img.cannyV = find_canny(img.claheV, wmin = w)
+    img.cannyG = find_canny(img, img.claheG, wmin = w)
+    img.cannyV = find_canny(img, img.claheV, wmin = w)
     img.canny = cv2.bitwise_or(img.cannyG, img.cannyV)
     k_close = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     img.canny = cv2.morphologyEx(img.canny, cv2.MORPH_CLOSE, k_close)
@@ -88,8 +90,8 @@ def find_region(img):
     A0 = round(0.1 * img.area)
     img.help = np.copy(img.G) * 0
     while Wc <= W0 or Amin >= A0:
-        print("Área mínima:", Amin)
-        print("Canny Wc:", Wc)
+        logprint(img, "Área mínima: {}".format(Amin))
+        logprint(img, "Canny Wc: {}".format(Wc))
         if Wc >= 9:
             h = True
         img = create_cannys(img, w = Wc)
@@ -101,11 +103,11 @@ def find_region(img):
         img.help = cv2.bitwise_or(drawn_contours[:,:,0], drawn_contours[:,:,1])
 
         if a > Amin:
-            print("{} > {} : {}".format(a, Amin, a/Amin))
+            logprint(img, "{} > {} : {}".format(a, Amin, a/Amin))
             got_hull = True
             break
         else:
-            print("{} < {} : {}".format(a, Amin, a/Amin))
+            logprint(img, "{} < {} : {}".format(a, Amin, a/Amin))
 
         Amin = max(A0, round(Amin - 0.02*img.area))
         Wc = min(W0, Wc + 0.5)
@@ -143,7 +145,7 @@ def find_morph(img, h = False):
 
     return img, a
 
-def find_canny(image, wmin = 6):
+def find_canny(img, image, wmin = 6):
     c_thrl0 = 200
     c_thrh0 = 250
     c_thrl = c_thrl0
@@ -159,11 +161,11 @@ def find_canny(image, wmin = 6):
         canny = cv2.Canny(image, c_thrl, c_thrh)
         w = canny.mean()
         if w > wmin:
-            print("{0:0=.2f} > {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
+            logprint(img, "{0:0=.2f} > {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
             break
         else:
             if w > random.uniform(0, w*2):
-                print("{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
+                logprint(img, "{0:0=.2f} < {1}, @ {2}, {3}".format(w, wmin, c_thrl, c_thrh))
         c_thrl = max(clmin, c_thrl - 12)
         c_thrh = max(ctmin, c_thrh - 9)
 
@@ -190,16 +192,16 @@ def find_angles(img):
         lines = cv2.HoughLinesP(img.canny, 1, h_angl,  h_thrv,  None, h_minl, h_maxg)
         if lines is not None:
             if lines.shape[0] >= minlines:
-                print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
+                logprint(img, "{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
                 lines = radius_theta(lines)
                 lines = filter_lines(img, lines)
                 lines, angles = lines_kmeans(img, lines)
-                print("angles: ", angles)
+                print("lines angles means: ", angles)
                 got_hough = True
                 break
             else:
-                if th > random.uniform(0, th*4):
-                    print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
+                if th > random.uniform(0, th*2):
+                    logprint(img, "{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
         if h_minl > h_minl0 / 2:
             h_minl -= 10
             h_thrv = round(h_minl / 2)
@@ -295,12 +297,12 @@ def magic_lines(img):
             lines = bundler.process_lines(lines)
             lines = radius_theta(lines)
             if lines.shape[0] >= minlines:
-                print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
+                logprint(img, "{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
                 got_hough = True
                 break
             else:
-                if th > random.uniform(0, th*4):
-                    print("{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
+                if th > random.uniform(0, th*2):
+                    logprint(img, "{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
         if h_minl > h_minl0 / 2:
             h_minl -= 5
             h_thrv = round(h_minl / 1.2)
