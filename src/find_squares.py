@@ -309,6 +309,9 @@ def magic_vert_hori(img, vert, hori):
             vert = vert[0:-1]
     elif vert.shape[0] == 11:
         vert = vert[1:-1]
+    else:
+        print("There are 12 or more vertical lines")
+        exit()
 
     if hori.shape[0] == 10:
         d1 = abs(hori[0,0,1]-0)
@@ -319,6 +322,9 @@ def magic_vert_hori(img, vert, hori):
             hori = hori[0:-1]
     elif hori.shape[0] == 11:
         hori = hori[1:-1]
+    else:
+        print("There are 12 or more horizontal lines")
+        exit()
 
     return vert, hori
 
