@@ -207,7 +207,7 @@ def find_angles(img):
                 logprint(img, "{0} lines @ {1:1=.4f}º, {2}, {3}, {4}".format(lines.shape[0],th, h_thrv, h_minl, h_maxg))
                 lines = radius_theta(lines)
                 lines = filter_lines(img, lines)
-                lines, angles = lines_kmeans(img, lines)
+                angles = lines_kmeans(img, lines)
                 print("lines angles means:\n", angles, sep='')
                 got_hough = True
                 break
@@ -411,8 +411,8 @@ def lines_kmeans(img, lines):
     diff.append((abs(centers[1] - 85), -85))
     diff.append((abs(centers[1] + 85), +85))
     if centers.shape[0] > 2:
-        diff.append((abs(centers[2] - 90), -85))
-        diff.append((abs(centers[2] + 90), +85))
+        diff.append((abs(centers[2] - 85), -85))
+        diff.append((abs(centers[2] + 85), +85))
 
     for d,k in diff:
         if d < 15:
@@ -423,8 +423,8 @@ def lines_kmeans(img, lines):
                     centers = np.append(centers, k)
             break
 
-    lines = np.int32(lines)
-    return lines, centers
+    centers = np.int32(centers)
+    return centers
 
 def calc_corners(img, inter):
     psum = np.empty((inter.shape[0], 3), dtype='int32')
