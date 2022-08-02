@@ -322,11 +322,10 @@ def magic_lines(img):
         h_angl += np.pi / 14400
 
     drawn_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-    draw_lines = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
 
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
-            draw_lines = cv2.line(draw_lines,(x1,y1),(x2,y2), color=(0,0,255), thickness=3)
+            drawn_lines = cv2.line(drawn_lines,(x1,y1),(x2,y2), color=(0,0,255), thickness=3)
     drawn_lines = cv2.addWeighted(img.gray3ch, 0.6, drawn_lines, 0.4, 1)
     save(img, "hough_magic", drawn_lines)
 
