@@ -23,17 +23,13 @@ def find_squares(img):
     vert,hori = magic_vert_hori(img, vert, hori)
 
     save_lines(img, "verthori", vert, hori)
-    exit()
 
     inter = find_intersections(img, vert[:,0,:], hori[:,0,:])
-    drawn_circles = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
-    for p in inter:
-        cv2.circle(drawn_circles, p, radius=5, color=(255, 0, 0), thickness=-1)
-    drawn_circles = cv2.addWeighted(img.warped3ch, 0.5, drawn_circles, 0.5, 1)
 
     squares = sq_inter(img, inter)
     squares = np.float32(squares)
     sqback = np.zeros(squares.shape, dtype='float32')
+    exit()
 
     for i in range(0, 8):
         sqback[i] = cv2.perspectiveTransform(squares[i], img.warpInvMatrix)
@@ -202,6 +198,12 @@ def find_intersections(img, vert, hori):
                     last = (x,y)
         i += 1
 
+    drawn_circles = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
+    for p in inter:
+        cv2.circle(drawn_circles, p, radius=5, color=(255,0,0), thickness=-1)
+    drawn_circles = cv2.addWeighted(img.warped3ch, 0.5, drawn_circles, 0.5, 1)
+    save(img, "interboard", drawn_circles)
+
     inter = np.array(inter, dtype='int32')
     return inter
 
@@ -352,9 +354,11 @@ def sq_inter(img, inter):
             squares[i,j,3] = intersq[i,j+1]
 
     drawn_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
-    cv2.drawContours(drawn_lines, [squares[0,0]], -1, (255, 0, 0), thickness=2)
-    cv2.drawContours(drawn_lines, [squares[2,4]], -1, (0, 0, 255), thickness=2)
+    cv2.drawContours(drawn_lines, [squares[0,0]], -1, color=(255,0,0), thickness=2) #A1
+    cv2.drawContours(drawn_lines, [squares[4,3]], -1, color=(0,255,0), thickness=2) #E4
+    cv2.drawContours(drawn_lines, [squares[2,4]], -1, color=(0,0,255), thickness=2) #C5
     drawn_contours = cv2.addWeighted(img.warped3ch, 0.5, drawn_lines, 0.5, 1)
+    save(img, "A1E4C5", drawn_contours)
 
     return squares
 
@@ -363,9 +367,9 @@ def save_lines(img, name, vert, hori):
     draw_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
     for line in vert:
         for x1,y1,x2,y2,r,t in line:
-            cv2.line(draw_lines,(x1,y1),(x2,y2), (255,0,0),3)
+            cv2.line(draw_lines,(x1,y1),(x2,y2), color=(255,0,0), thickness=3)
     for line in hori:
         for x1,y1,x2,y2,r,t in line:
-            cv2.line(draw_lines,(x1,y1),(x2,y2), (0,255,0),3)
+            cv2.line(draw_lines,(x1,y1),(x2,y2), color=(0,255,0), thickness=3)
     drawn_lines = cv2.addWeighted(img.warped3ch, 0.5, draw_lines, 0.5, 1)
     save(img, name, drawn_lines)
