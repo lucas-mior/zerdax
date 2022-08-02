@@ -274,7 +274,7 @@ def find_intersections(img, lines):
     inter = np.array(inter, dtype='int32')
     drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
     for p in inter:
-        cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
+        cv2.circle(drawn_circles, p, radius=7, color=(255,0,0), thickness=-1)
     drawn_circles = cv2.addWeighted(img.gray3ch, 0.7, drawn_circles, 0.3, 1)
     save(img, "intersections", drawn_circles)
 
@@ -453,7 +453,7 @@ def calc_corners(img, inter):
 
     drawn_circles = np.copy(img.gray3ch) * 0
     for p in BR, BL, TR, TL:
-        cv2.circle(drawn_circles, p, radius=7, color=(0, 255, 0), thickness=-1)
+        cv2.circle(drawn_circles, p, radius=7, color=(0,255,0), thickness=-1)
 
     drawn_circles = cv2.addWeighted(img.gray3ch, 0.7, drawn_circles, 0.3, 1)
     save(img, "corners", drawn_circles)
