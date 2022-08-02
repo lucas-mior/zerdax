@@ -30,12 +30,6 @@ def find_board(img):
     print("finding all intersections...")
     inter = find_intersections(img, lines[:,0,:])
 
-    drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
-    for p in inter:
-        cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
-    drawn_circles = cv2.addWeighted(img.gray3ch, 0.4, drawn_circles, 0.7, 0)
-    save(img, "intersections", drawn_circles)
-
     print("calculating 4 corners of board...")
     img.corners = calc_corners(img, inter)
 
@@ -110,8 +104,8 @@ def find_region(img):
         img, a = find_morph(img, h)
 
         drawn_contours = np.empty(img.gray3ch.shape, dtype='uint8') * 0
-        cv2.drawContours(drawn_contours, img.cont,     -1, (255, 0, 0), thickness=1)
-        cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=1)
+        drawn_contours = cv2.drawContours(drawn_contours, img.cont,     -1, (255, 0, 0), thickness=1)
+        drawn_contours = cv2.drawContours(drawn_contours, [img.hullxy], -1, (0, 255, 0), thickness=1)
         img.help = cv2.bitwise_or(drawn_contours[:,:,0], drawn_contours[:,:,1])
 
         if a > Amin:
@@ -278,6 +272,12 @@ def find_intersections(img, lines):
         i += 1
 
     inter = np.array(inter, dtype='int32')
+    drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
+    for p in inter:
+        cv2.circle(drawn_circles, p, radius=7, color=(255, 0, 0), thickness=-1)
+    drawn_circles = cv2.addWeighted(img.gray3ch, 0.4, drawn_circles, 0.7, 0)
+    save(img, "intersections", drawn_circles)
+
     return inter
 
 def magic_lines(img):
