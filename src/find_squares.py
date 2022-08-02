@@ -24,7 +24,11 @@ def find_squares(img):
 
     save_lines(img, "verthori", vert, hori)
 
-    inter = find_intersections(img, vert[:,0,:], hori[:,0,:])
+    print("calculating intersections...")
+    inter = calc_intersections(img, vert[:,0,:], hori[:,0,:])
+    if inter.shape[0] != 81:
+        print("There should be exacly 81 intersections")
+        exit()
 
     squares = calc_squares(img, inter)
     squares = np.float32(squares)
@@ -163,7 +167,7 @@ def get_distances(vert,hori):
 
     return distv, disth
 
-def find_intersections(img, vert, hori):
+def calc_intersections(img, vert, hori):
     inter = []
     last = (0,0)
 
@@ -324,7 +328,6 @@ def magic_vert_hori(img, vert, hori):
 def calc_squares(img, inter):
     inter = inter[inter[:,0].argsort()]
     intersq = np.zeros((9,9,2), dtype='int32')
-    print("inter.shape:", inter.shape)
     interA = inter[00:9]  # A
     interB = inter[9:18]  # B
     interC = inter[18:27] # C
