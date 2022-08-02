@@ -18,16 +18,12 @@ def find_board(img):
     print("reducing images to default size...")
     img = reduce_hull(img)
 
-    # save(img, "fedges", img.fedges)
-    # save(img, "hull", img.hull)
     save(img, "hullBGR", img.hullBGR)
 
     img = create_cannys(img, w = 7)
-    save(img, "cannyhull1", img.canny)
     img = find_angles(img)
 
     img = create_cannys(img, w = 8)
-    save(img, "cannyhull2", img.canny)
     lines,inter = magic_lines(img)
     img.corners = find_corners(img, inter)
 
@@ -115,12 +111,6 @@ def find_region(img):
         Wc = min(W0, Wc + 0.5)
 
     drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.7, 0)
-    # save(img, "dilate", img.dilate)
-    # save(img, "divide", img.divide)
-    # save(img, "cannyG", img.cannyG)
-    # save(img, "cannyV", img.cannyV)
-    # save(img, "cannyGSV", img.canny)
-    # save(img, "medgesforcontour", img.medges)
     save(img, "contours", drawn_contours)
 
     if not got_hull:
