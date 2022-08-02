@@ -452,7 +452,7 @@ def calc_corners(img, inter):
 
     drawn_circles = np.copy(img.gray3ch) * 0
     for p in BR, BL, TR, TL:
-        drawn_circles = cv2.circle(drawn_circles, p, radius=7, color=(0,255,0), thickness=-1)
+        drawn_circles = cv2.circle(drawn_circles, p, radius=9, color=(0,255,0), thickness=-1)
 
     drawn_circles = cv2.addWeighted(img.gray3ch, 0.6, drawn_circles, 0.4, 1)
     save(img, "corners", drawn_circles)
