@@ -267,26 +267,26 @@ def magic_vert_hori(img, vert, hori):
     hort = hori[cerh==1]
 
     while vert[0,0,0] > (medv + 10):
-        new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 400, 0,0]]], dtype='int32')
+        new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 500, 0,0]]], dtype='int32')
         vert = np.append(vert, new, axis=0)
         vert = vert[vert[:,0,0].argsort()]
     while abs(vert[-1,0,0] - 512) > (medv + 10):
-        new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,400, 0,0]]], dtype='int32')
+        new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,500, 0,0]]], dtype='int32')
         vert = np.append(vert, new, axis=0)
         vert = vert[vert[:,0,0].argsort()]
     while hori[0,0,1] > (medh + 10):
-        new = np.array([[[10, hori[0,0,1]-medh, 400, hori[0,0,1]-medh, 0,0]]], dtype='int32')
+        new = np.array([[[10, hori[0,0,1]-medh, 500, hori[0,0,1]-medh, 0,0]]], dtype='int32')
         hori = np.append(hori, new, axis=0)
         hori = hori[hori[:,0,1].argsort()]
     while abs(hori[-1,0,1] - 512) > (medh + 10):
-        new = np.array([[[10, hori[-1,0,1]+medh, 400, hori[-1,0,1]+medh, 0,0]]], dtype='int32')
+        new = np.array([[[10, hori[-1,0,1]+medh, 500, hori[-1,0,1]+medh, 0,0]]], dtype='int32')
         hori = np.append(hori, new, axis=0)
         hori = hori[hori[:,0,1].argsort()]
 
     i = 0
     while i < (vert.shape[0] - 1):
         if abs(vert[i,0,0] - vert[i+1,0,0]) > (medv*1.5):
-            new = np.array([[[vert[i,0,0]+medv, 10, vert[i,0,0]+medv, 400, 0,0]]], dtype='int32')
+            new = np.array([[[vert[i,0,0]+medv, 10, vert[i,0,0]+medv, 500, 0,0]]], dtype='int32')
             vert = np.append(vert, new, axis=0)
             vert = vert[vert[:,0,0].argsort()]
         i += 1
@@ -294,7 +294,7 @@ def magic_vert_hori(img, vert, hori):
     i = 0
     while i < (hori.shape[0] - 1):
         if abs(hori[i,0,1] - hori[i+1,0,1]) > (medh*1.5):
-            new = np.array([[[10, hori[i,0,1]+medh, 400, hori[i,0,1]+medh, 0,0]]], dtype='int32')
+            new = np.array([[[10, hori[i,0,1]+medh, 500, hori[i,0,1]+medh, 0,0]]], dtype='int32')
             hori = np.append(hori, new, axis=0)
             hori = hori[hori[:,0,1].argsort()]
         i += 1
