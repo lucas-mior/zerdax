@@ -314,7 +314,7 @@ def calc_squares(img, inter):
     return squares
 
 def remove_outer(vert, hori, medv, medh):
-    while vert[0,0,0] > (medv + 10):
+    while abs(vert[0,0,0] - 0) > (medv + 10):
         new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 500, 0,0]]], dtype='int32')
         vert = np.append(vert, new, axis=0)
         vert = vert[vert[:,0,0].argsort()]
@@ -322,7 +322,7 @@ def remove_outer(vert, hori, medv, medh):
         new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,500, 0,0]]], dtype='int32')
         vert = np.append(vert, new, axis=0)
         vert = vert[vert[:,0,0].argsort()]
-    while hori[0,0,1] > (medh + 10):
+    while abs(hori[0,0,1] - 0) > (medh + 10):
         new = np.array([[[10, hori[0,0,1]-medh, 500, hori[0,0,1]-medh, 0,0]]], dtype='int32')
         hori = np.append(hori, new, axis=0)
         hori = hori[hori[:,0,1].argsort()]
