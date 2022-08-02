@@ -24,7 +24,7 @@ def find_squares(img):
     drawn_circles = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
     for p in inter:
         cv2.circle(drawn_circles, p, radius=5, color=(255, 0, 0), thickness=-1)
-    drawn_circles = cv2.addWeighted(img.warped3ch, 0.4, drawn_circles, 0.7, 0)
+    drawn_circles = cv2.addWeighted(img.warped3ch, 0.5, drawn_circles, 0.5, 1)
 
     squares = sq_inter(img, inter)
     squares = np.float32(squares)
@@ -349,7 +349,7 @@ def sq_inter(img, inter):
     drawn_lines = cv2.cvtColor(img.warped, cv2.COLOR_GRAY2BGR) * 0
     cv2.drawContours(drawn_lines, [squares[0,0]], -1, (255, 0, 0), thickness=2)
     cv2.drawContours(drawn_lines, [squares[2,4]], -1, (0, 0, 255), thickness=2)
-    drawn_contours = cv2.addWeighted(img.warped3ch, 0.4, drawn_lines, 0.7, 0)
+    drawn_contours = cv2.addWeighted(img.warped3ch, 0.5, drawn_lines, 0.5, 1)
 
     return squares
 
@@ -362,5 +362,5 @@ def save_lines(img, name, vert, hori):
     for line in hori:
         for x1,y1,x2,y2,r,t in line:
             cv2.line(draw_lines,(x1,y1),(x2,y2), (0,255,0),3)
-    drawn_lines = cv2.addWeighted(img.warped3ch, 0.5, draw_lines, 0.7, 0)
+    drawn_lines = cv2.addWeighted(img.warped3ch, 0.5, draw_lines, 0.5, 1)
     save(img, name, drawn_lines)

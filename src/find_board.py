@@ -37,8 +37,6 @@ def find_board(img):
     img = perspective_transform(img)
     save(img, "warped", img.warped)
 
-    exit()
-
     return img
 
 def create_cannys(img, w = 6):
@@ -118,7 +116,7 @@ def find_region(img):
         Amin = max(A0, round(Amin - 0.02*img.area))
         Wc = min(W0, Wc + 0.5)
 
-    drawn_contours = cv2.addWeighted(img.gray3ch, 0.6, drawn_contours, 0.4, 1)
+    drawn_contours = cv2.addWeighted(img.gray3ch, 0.5, drawn_contours, 0.5, 1)
     save(img, "contours", drawn_contours)
 
     if not got_hull:
@@ -223,7 +221,7 @@ def find_angles(img):
         for x1,y1,x2,y2,r,t in line:
             drawn_lines = cv2.line(drawn_lines,(x1,y1),(x2,y2), color=(0,255,255), thickness=3)
     img.select = drawn_lines[:,:,2]
-    drawn_lines = cv2.addWeighted(img.gray3ch, 0.6, drawn_lines, 0.4, 1)
+    drawn_lines = cv2.addWeighted(img.gray3ch, 0.5, drawn_lines, 0.5, 1)
     save(img, "select", drawn_lines)
 
     img.select_lines = lines
@@ -275,7 +273,7 @@ def find_intersections(img, lines):
     drawn_circles = cv2.cvtColor(img.hull, cv2.COLOR_GRAY2BGR) * 0
     for p in inter:
         drawn_circles = cv2.circle(drawn_circles, p, radius=7, color=(255,0,0), thickness=-1)
-    drawn_circles = cv2.addWeighted(img.gray3ch, 0.6, drawn_circles, 0.4, 1)
+    drawn_circles = cv2.addWeighted(img.gray3ch, 0.5, drawn_circles, 0.5, 1)
     save(img, "intersections", drawn_circles)
 
     return inter
@@ -326,7 +324,7 @@ def magic_lines(img):
     for line in lines:
         for x1,y1,x2,y2,r,t in line:
             drawn_lines = cv2.line(drawn_lines,(x1,y1),(x2,y2), color=(0,0,255), thickness=3)
-    drawn_lines = cv2.addWeighted(img.gray3ch, 0.6, drawn_lines, 0.4, 1)
+    drawn_lines = cv2.addWeighted(img.gray3ch, 0.5, drawn_lines, 0.5, 1)
     save(img, "hough_magic", drawn_lines)
 
     dummy = np.copy(img.select_lines[:,:,0:6])
@@ -454,7 +452,7 @@ def calc_corners(img, inter):
     for p in BR, BL, TR, TL:
         drawn_circles = cv2.circle(drawn_circles, p, radius=9, color=(0,255,0), thickness=-1)
 
-    drawn_circles = cv2.addWeighted(img.gray3ch, 0.6, drawn_circles, 0.4, 1)
+    drawn_circles = cv2.addWeighted(img.gray3ch, 0.5, drawn_circles, 0.5, 1)
     save(img, "corners", drawn_circles)
 
     corners = np.array([BR, BL, TR, TL])
