@@ -25,7 +25,7 @@ def find_squares(img):
     save_lines(img, "verthori", vert, hori)
 
     print("calculating intersections...")
-    inter = calc_intersections(img, vert[:,0,:], hori[:,0,:])
+    inter = calc_intersections(img, vert, hori)
     if inter.shape[0] != 81:
         print("There should be exacly 81 intersections")
         exit()
@@ -107,7 +107,7 @@ def w_lines(img):
         print("FAILED @ {}, {}, {}, {}".format(180*(h_angl/np.pi), h_thrv, h_minl, h_maxg))
         exit()
 
-    return vert,hori
+    return vert[:,0,:],hori[:,0,:]
 
 def filter_90(img, lines):
     rem = np.empty(lines.shape[0])
@@ -128,36 +128,36 @@ def filter_90(img, lines):
 
 def get_distances(vert,hori):
     distv = np.zeros((vert.shape[0], 2), dtype='int32')
-    x1 = (vert[1,0,0]+vert[1,0,2])/2
-    x2 = (vert[0,0,0]+vert[0,0,2])/2
+    x1 = (vert[1,0]+vert[1,2])/2
+    x2 = (vert[0,0]+vert[0,2])/2
     distv[0,0] = abs(x1 - x2)
     distv[0,1] = abs(x1 - x2)
     for i in range (1, vert.shape[0]-1):
-        x1 = (vert[i-1,0,0]+vert[i-1,0,2])/2
-        x2 = (vert[i+0,0,0]+vert[i+0,0,2])/2
-        x3 = (vert[i+1,0,0]+vert[i+1,0,2])/2
+        x1 = (vert[i-1,0]+vert[i-1,2])/2
+        x2 = (vert[i+0,0]+vert[i+0,2])/2
+        x3 = (vert[i+1,0]+vert[i+1,2])/2
         distv[i,0] = abs(x1 - x2)
         distv[i,1] = abs(x1 - x2)
     i += 1
-    x1 = (vert[i-1,0,0]+vert[i-1,0,2])/2
-    x2 = (vert[i+0,0,0]+vert[i+0,0,2])/2
+    x1 = (vert[i-1,0]+vert[i-1,2])/2
+    x2 = (vert[i+0,0]+vert[i+0,2])/2
     distv[i,0] = abs(x1 - x2)
     distv[i,1] = abs(x1 - x2)
 
     disth = np.zeros((hori.shape[0], 2), dtype='int32')
-    x1 = (hori[1,0,1]+hori[1,0,3])/2
-    x2 = (hori[0,0,1]+hori[0,0,3])/2
+    x1 = (hori[1,1]+hori[1,3])/2
+    x2 = (hori[0,1]+hori[0,3])/2
     disth[0,0] = abs(x1 - x2)
     disth[0,1] = abs(x1 - x2)
     for i in range (1, hori.shape[0]-1):
-        x1 = (hori[i-1,0,1]+hori[i-1,0,3])/2
-        x2 = (hori[i+0,0,1]+hori[i+0,0,3])/2
-        x3 = (hori[i+1,0,1]+hori[i+1,0,3])/2
+        x1 = (hori[i-1,1]+hori[i-1,3])/2
+        x2 = (hori[i+0,1]+hori[i+0,3])/2
+        x3 = (hori[i+1,1]+hori[i+1,3])/2
         disth[i,0] = abs(x1 - x2)
         disth[i,1] = abs(x1 - x2)
     i += 1
-    x1 = (hori[i-1,0,1]+hori[i-1,0,3])/2
-    x2 = (hori[i+0,0,1]+hori[i+0,0,3])/2
+    x1 = (hori[i-1,1]+hori[i-1,3])/2
+    x2 = (hori[i+0,1]+hori[i+0,3])/2
     disth[i,0] = abs(x1 - x2)
     disth[i,1] = abs(x1 - x2)
 
@@ -314,40 +314,40 @@ def calc_squares(img, inter):
     return squares
 
 def add_outer(vert, hori, medv, medh):
-    while abs(vert[0,0,0] - 0) > (medv + 10):
-        new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 500, 0,0]]], dtype='int32')
+    while abs(vert[0,0] - 0) > (medv + 10):
+        new = np.array([[vert[0,0]-medv, 10, vert[0,0]-medv, 500, 0,0]], dtype='int32')
         vert = np.append(vert, new, axis=0)
-        vert = vert[vert[:,0,0].argsort()]
-    while abs(vert[-1,0,0] - 512) > (medv + 10):
-        new = np.array([[[vert[-1,0,0]+medv, 10, vert[-1,0,0]+medv,500, 0,0]]], dtype='int32')
+        vert = vert[vert[:,0].argsort()]
+    while abs(vert[-1,0] - 512) > (medv + 10):
+        new = np.array([[vert[-1,0]+medv, 10, vert[-1,0]+medv,500, 0,0]], dtype='int32')
         vert = np.append(vert, new, axis=0)
-        vert = vert[vert[:,0,0].argsort()]
-    while abs(hori[0,0,1] - 0) > (medh + 10):
-        new = np.array([[[10, hori[0,0,1]-medh, 500, hori[0,0,1]-medh, 0,0]]], dtype='int32')
+        vert = vert[vert[:,0].argsort()]
+    while abs(hori[0,1] - 0) > (medh + 10):
+        new = np.array([[10, hori[0,1]-medh, 500, hori[0,1]-medh, 0,0]], dtype='int32')
         hori = np.append(hori, new, axis=0)
-        hori = hori[hori[:,0,1].argsort()]
-    while abs(hori[-1,0,1] - 512) > (medh + 10):
-        new = np.array([[[10, hori[-1,0,1]+medh, 500, hori[-1,0,1]+medh, 0,0]]], dtype='int32')
+        hori = hori[hori[:,1].argsort()]
+    while abs(hori[-1,1] - 512) > (medh + 10):
+        new = np.array([[10, hori[-1,1]+medh, 500, hori[-1,1]+medh, 0,0]], dtype='int32')
         hori = np.append(hori, new, axis=0)
-        hori = hori[hori[:,0,1].argsort()]
+        hori = hori[hori[:,1].argsort()]
 
     return vert, hori
 
 def add_middle(vert, hori, medv, medh):
     i = 0
     while i < (vert.shape[0] - 1):
-        if abs(vert[i,0,0] - vert[i+1,0,0]) > (medv*1.5):
-            new = np.array([[[vert[i,0,0]+medv, 10, vert[i,0,0]+medv, 500, 0,0]]], dtype='int32')
+        if abs(vert[i,0] - vert[i+1,0]) > (medv*1.5):
+            new = np.array([[[vert[i,0]+medv, 10, vert[i,0]+medv, 500, 0,0]]], dtype='int32')
             vert = np.append(vert, new, axis=0)
-            vert = vert[vert[:,0,0].argsort()]
+            vert = vert[vert[:,0].argsort()]
         i += 1
 
     i = 0
     while i < (hori.shape[0] - 1):
-        if abs(hori[i,0,1] - hori[i+1,0,1]) > (medh*1.5):
-            new = np.array([[[10, hori[i,0,1]+medh, 500, hori[i,0,1]+medh, 0,0]]], dtype='int32')
+        if abs(hori[i,1] - hori[i+1,1]) > (medh*1.5):
+            new = np.array([[[10, hori[i,1]+medh, 500, hori[i,1]+medh, 0,0]]], dtype='int32')
             hori = np.append(hori, new, axis=0)
-            hori = hori[hori[:,0,1].argsort()]
+            hori = hori[hori[:,1].argsort()]
         i += 1
 
     return vert, hori
@@ -355,8 +355,8 @@ def add_middle(vert, hori, medv, medh):
 def remove_extras(vert, hori):
     v = vert.shape[0]
     if v == 10:
-        d1 = abs(vert[0,0,0]-0)
-        d2 = abs(vert[-1,0,0]-512)
+        d1 = abs(vert[0,0]-0)
+        d2 = abs(vert[-1,0]-512)
         if d1 < d2:
             vert = vert[1:]
         else:
@@ -369,8 +369,8 @@ def remove_extras(vert, hori):
 
     h = hori.shape[0]
     if h == 10:
-        d1 = abs(hori[0,0,1]-0)
-        d2 = abs(hori[-1,0,1]-512)
+        d1 = abs(hori[0,1]-0)
+        d2 = abs(hori[-1,1]-512)
         if d1 < d2:
             hori = hori[1:]
         else:
