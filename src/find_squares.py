@@ -267,7 +267,7 @@ def magic_vert_hori(img, vert, hori):
     hort = hori[cerh==1]
 
     vert, hori = add_outer(vert, hori, medv, medh)
-    vert, hori = add_missing(vert, hori, medv, medh)
+    vert, hori = add_middle(vert, hori, medv, medh)
     vert, hori = remove_extras(vert, hori)
 
     return vert, hori
@@ -333,7 +333,7 @@ def add_outer(vert, hori, medv, medh):
 
     return vert, hori
 
-def add_missing(vert, hori, medv, medh):
+def add_middle(vert, hori, medv, medh):
     i = 0
     while i < (vert.shape[0] - 1):
         if abs(vert[i,0,0] - vert[i+1,0,0]) > (medv*1.5):
