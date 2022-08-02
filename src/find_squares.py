@@ -266,7 +266,7 @@ def magic_vert_hori(img, vert, hori):
     vert = vert[cerv==1]
     hort = hori[cerh==1]
 
-    vert, hori = remove_outer(vert, hori, medv, medh)
+    vert, hori = add_outer(vert, hori, medv, medh)
     vert, hori = add_missing(vert, hori, medv, medh)
     vert, hori = remove_extras(vert, hori)
 
@@ -313,7 +313,7 @@ def calc_squares(img, inter):
     squares = np.float32(squares)
     return squares
 
-def remove_outer(vert, hori, medv, medh):
+def add_outer(vert, hori, medv, medh):
     while abs(vert[0,0,0] - 0) > (medv + 10):
         new = np.array([[[vert[0,0,0]-medv, 10, vert[0,0,0]-medv, 500, 0,0]]], dtype='int32')
         vert = np.append(vert, new, axis=0)
